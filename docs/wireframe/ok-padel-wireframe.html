@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ok Padel — Wireframe</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #1a1a1a;
+      background: #f5f5f5;
+    }
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    h1 { font-size: 24px; margin: 0 0 6px; font-weight: 600; }
+    h2 { font-size: 18px; margin: 0; font-weight: 600; }
+    .muted { color: #666; }
+    .small { font-size: 12px; }
+    .tertiary { color: #999; }
+    .semibold { font-weight: 600; }
+    .stack { display: flex; flex-direction: column; }
+    .gap-6 { gap: 6px; }
+    .gap-8 { gap: 8px; }
+    .gap-10 { gap: 10px; }
+    .gap-12 { gap: 12px; }
+    .gap-14 { gap: 14px; }
+    .gap-16 { gap: 16px; }
+    .gap-20 { gap: 20px; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .row.center { justify-content: center; }
+    .row.between { justify-content: space-between; width: 100%; }
+    .spacer { flex: 1; }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 16px;
+    }
+    .grid-slots {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    @media (max-width: 640px) {
+      .grid-3, .grid-4, .grid-2col { grid-template-columns: 1fr; }
+      .grid-slots { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .btn {
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #333;
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn:hover { background: #eee; }
+    .btn.primary {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+    .btn.primary:hover { background: #1d4ed8; }
+    .btn.secondary { background: #e8e8e8; }
+    .btn.ghost {
+      background: transparent;
+      border-color: transparent;
+      color: #555;
+    }
+    .btn.ghost:hover { background: #eee; border-color: #ddd; }
+    .btn.active-tab {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+    .screen { display: none; }
+    .screen.visible { display: flex; flex-direction: column; gap: 12px; }
+    .browser {
+      border: 1px solid #ccc;
+      background: #fff;
+      overflow: hidden;
+    }
+    .browser-url {
+      padding: 8px 12px;
+      background: #e8e8e8;
+      border-bottom: 1px solid #ddd;
+      font-size: 12px;
+      color: #888;
+    }
+    .browser-nav {
+      padding: 10px 14px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .browser-body { padding: 16px; }
+    .card {
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 8px 12px;
+      border-bottom: 1px solid #ddd;
+      font-size: 12px;
+      font-weight: 600;
+      background: #fafafa;
+    }
+    .card-body { padding: 12px; }
+    .card-narrow { max-width: 360px; width: 100%; }
+    .card-profile { max-width: 420px; }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border: 1px solid #ccc;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #f0f0f0;
+    }
+    .pill.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+    .photo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eee;
+      border: 1px dashed #bbb;
+      color: #999;
+      font-size: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .field input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+      color: #999;
+      font-size: 12px;
+      border-radius: 2px;
+    }
+    .slot {
+      padding: 8px 6px;
+      border: 1px solid #ddd;
+      text-align: center;
+      font-size: 11px;
+    }
+    .slot.libre { background: #f0f0f0; }
+    .slot.ocupado { background: #e0e0e0; color: #888; }
+    .slot.sel {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+    .slot .sub { font-size: 10px; margin-top: 2px; }
+    .slot.sel .sub { color: rgba(255,255,255,0.85); }
+    .slot.ocupado .sub { color: #aaa; }
+    .slot.libre .sub { color: #999; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th { background: #f5f5f5; font-weight: 600; font-size: 12px; }
+    tr:nth-child(even) td { background: #fafafa; }
+    .callout {
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+      font-size: 13px;
+    }
+    .callout-title { font-weight: 600; margin-bottom: 4px; }
+    .callout.info { border-left: 3px solid #2563eb; }
+    .callout.neutral { border-left: 3px solid #888; }
+    .callout.warning { border-left: 3px solid #d97706; }
+    .divider {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 8px 0;
+    }
+    .stat {
+      padding: 12px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 4px;
+    }
+    .stat-value { font-weight: 600; margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="page stack gap-20">
+    <div class="stack gap-6">
+      <h1>Ok Padel — wireframe</h1>
+      <p class="muted">
+        Prototipo para TP Prog IV. Clickeá una pantalla
+        para recorrer el flujo de reserva de canchas.
+      </p>
+    </div>
+
+    <nav class="tabs" id="tabs" aria-label="Pantallas">
+      <button class="btn active-tab" data-screen="home">Home</button>
+      <button class="btn" data-screen="login">Login</button>
+      <button class="btn" data-screen="courts">Canchas</button>
+      <button class="btn" data-screen="detail">Reservar</button>
+      <button class="btn" data-screen="reservations">Mis reservas</button>
+      <button class="btn" data-screen="profile">Perfil</button>
+      <button class="btn" data-screen="admin">Admin</button>
+    </nav>
+
+    <!-- HOME -->
+    <section class="screen visible" id="screen-home" data-id="home">
+      <div class="browser">
+        <div class="browser-url">okpadel.local/</div>
+        <div class="browser-nav">
+          <span class="semibold">OK PADEL</span>
+          <button class="btn primary" data-go="home">Canchas</button>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-go="login">Iniciar sesión</button>
+          <button class="btn secondary" data-go="login">Registrarse</button>
+        </div>
+        <div class="browser-body stack gap-16">
+          <div class="stack gap-8">
+            <h2>Reservá tu cancha de pádel</h2>
+            <p class="muted">Turnos de 90 minutos · indoor y outdoor · confirmación por mail</p>
+            <button class="btn primary" data-go="courts">Ver canchas disponibles</button>
+          </div>
+          <div class="photo" style="height:88px">Imagen hero del club</div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-header">Cancha 1</div>
+              <div class="card-body stack gap-8">
+                <div class="photo" style="height:72px">Foto</div>
+                <p class="small muted">Indoor · Césped · $8000</p>
+                <button class="btn primary" data-go="detail">Reservar</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">Cancha 2</div>
+              <div class="card-body stack gap-8">
+                <div class="photo" style="height:72px">Foto</div>
+                <p class="small muted">Outdoor · Cemento · $6000</p>
+                <button class="btn primary" data-go="detail">Reservar</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">Cancha 3</div>
+              <div class="card-body stack gap-8">
+                <div class="photo" style="height:72px">Foto</div>
+                <p class="small muted">Indoor · Césped · $8500</p>
+                <button class="btn primary" data-go="detail">Reservar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout info">
+        <div class="callout-title">Home</div>
+        Landing pública. CTA principal lleva al listado. Sin sesión no se
+        confirma reserva: al elegir turno pide login.
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section class="screen" id="screen-login" data-id="login">
+      <div class="browser">
+        <div class="browser-url">okpadel.local/users/sign_in</div>
+        <div class="browser-nav">
+          <span class="semibold">OK PADEL</span>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-go="login">Iniciar sesión</button>
+          <button class="btn secondary" data-go="login">Registrarse</button>
+        </div>
+        <div class="browser-body row center">
+          <div class="card card-narrow">
+            <div class="card-header">Iniciar sesión</div>
+            <div class="card-body stack gap-12">
+              <div class="field">
+                <label>Email</label>
+                <input type="text" value="juan@mail.com" readonly>
+              </div>
+              <div class="field">
+                <label>Password</label>
+                <input type="text" value="••••••••" readonly>
+              </div>
+              <p class="small muted">Recordarme</p>
+              <button class="btn primary" data-go="courts">Entrar</button>
+              <p class="small muted">¿Olvidaste tu contraseña? · ¿No tenés cuenta? Registrarse</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout info">
+        <div class="callout-title">Login (Devise)</div>
+        Email + password. Registro aparte: nombre, email, password, confirmar.
+        Sesión requerida para confirmar un turno.
+      </div>
+    </section>
+
+    <!-- COURTS -->
+    <section class="screen" id="screen-courts" data-id="courts">
+      <div class="browser">
+        <div class="browser-url">okpadel.local/canchas</div>
+        <div class="browser-nav">
+          <span class="semibold">OK PADEL</span>
+          <button class="btn primary" data-go="courts">Canchas</button>
+          <button class="btn ghost" data-go="reservations">Mis reservas</button>
+          <button class="btn ghost" data-go="profile">Perfil</button>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-go="home">Salir</button>
+        </div>
+        <div class="browser-body stack gap-14">
+          <h2>Canchas</h2>
+          <div class="row gap-8">
+            <span class="pill">Tipo: todas</span>
+            <span class="pill">Cubierta: todas</span>
+            <span class="pill">Fecha: 10/09/2026</span>
+            <button class="btn secondary">Buscar</button>
+          </div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-header">Cancha 1</div>
+              <div class="card-body stack gap-8">
+                <div class="photo" style="height:72px">Foto</div>
+                <p class="small muted">Indoor · Césped · $8000 / 90 min</p>
+                <button class="btn primary" data-go="detail">Reservar</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">Cancha 2</div>
+              <div class="card-body stack gap-8">
+                <div class="photo" style="height:72px">Foto</div>
+                <p class="small muted">Outdoor · Cemento · $6000 / 90 min</p>
+                <button class="btn primary" data-go="detail">Reservar</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">Cancha 3</div>
+              <div class="card-body stack gap-8">
+                <div class="photo" style="height:72px">Foto</div>
+                <p class="small muted">Indoor · Césped · $8500 / 90 min</p>
+                <button class="btn primary" data-go="detail">Reservar</button>
+              </div>
+            </div>
+          </div>
+          <p class="small tertiary">Paginación (Pagy): 1  2  3</p>
+        </div>
+      </div>
+      <div class="callout info">
+        <div class="callout-title">Listado</div>
+        Cards con foto (Active Storage), tipo, precio y CTA. Filtros por tipo,
+        cubierta y fecha. Paginado con Pagy.
+      </div>
+    </section>
+
+    <!-- DETAIL -->
+    <section class="screen" id="screen-detail" data-id="detail">
+      <div class="browser">
+        <div class="browser-url">okpadel.local/canchas/1</div>
+        <div class="browser-nav">
+          <span class="semibold">OK PADEL</span>
+          <button class="btn primary" data-go="courts">Canchas</button>
+          <button class="btn ghost" data-go="reservations">Mis reservas</button>
+          <button class="btn ghost" data-go="profile">Perfil</button>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-go="home">Salir</button>
+        </div>
+        <div class="browser-body stack gap-14">
+          <button class="btn ghost" data-go="courts">← Volver a canchas</button>
+          <div class="grid-2col">
+            <div class="stack gap-10">
+              <div class="photo" style="height:160px">Foto cancha 1</div>
+              <h2>Cancha 1</h2>
+              <p class="muted">Indoor · Césped sintético</p>
+              <div class="row gap-8">
+                <span class="pill active">Iluminación</span>
+                <span class="pill">$8000 / 90 min</span>
+              </div>
+            </div>
+            <div class="stack gap-10">
+              <p class="semibold">Elegí fecha</p>
+              <span class="pill active">10/09/2026</span>
+              <p class="semibold">Turnos</p>
+              <div class="grid-slots">
+                <div class="slot libre"><div>08:00</div><div class="sub">Libre</div></div>
+                <div class="slot ocupado"><div>09:30</div><div class="sub">Ocupado</div></div>
+                <div class="slot libre"><div>11:00</div><div class="sub">Libre</div></div>
+                <div class="slot libre"><div>12:30</div><div class="sub">Libre</div></div>
+                <div class="slot ocupado"><div>14:00</div><div class="sub">Ocupado</div></div>
+                <div class="slot libre"><div>15:30</div><div class="sub">Libre</div></div>
+                <div class="slot sel"><div>17:00</div><div class="sub">Elegido</div></div>
+                <div class="slot libre"><div>18:30</div><div class="sub">Libre</div></div>
+                <div class="slot ocupado"><div>20:00</div><div class="sub">Ocupado</div></div>
+                <div class="slot libre"><div>21:30</div><div class="sub">Libre</div></div>
+                <div class="slot libre"><div>23:00</div><div class="sub">Libre</div></div>
+              </div>
+              <p class="small">Turno seleccionado: 17:00 – 18:30</p>
+              <button class="btn primary" data-go="reservations">Confirmar reserva</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout neutral">
+        <div class="callout-title">Pantalla clave</div>
+        Grilla de turnos de 90 min. Ocupado no se clickea. Confirmar genera
+        reserva y envía mail (letter_opener en desarrollo).
+      </div>
+    </section>
+
+    <!-- RESERVATIONS -->
+    <section class="screen" id="screen-reservations" data-id="reservations">
+      <div class="browser">
+        <div class="browser-url">okpadel.local/reservas</div>
+        <div class="browser-nav">
+          <span class="semibold">OK PADEL</span>
+          <button class="btn ghost" data-go="courts">Canchas</button>
+          <button class="btn primary" data-go="reservations">Mis reservas</button>
+          <button class="btn ghost" data-go="profile">Perfil</button>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-go="home">Salir</button>
+        </div>
+        <div class="browser-body stack gap-12">
+          <h2>Mis reservas</h2>
+          <div class="row gap-8">
+            <span class="pill active">Próximas</span>
+            <span class="pill">Historial</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Cancha</th>
+                <th>Horario</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>10/09</td><td>Cancha 1</td><td>17:00–18:30</td><td>Confirmada</td><td>Cancelar</td>
+              </tr>
+              <tr>
+                <td>12/09</td><td>Cancha 3</td><td>20:00–21:30</td><td>Confirmada</td><td>Cancelar</td>
+              </tr>
+              <tr>
+                <td>01/09</td><td>Cancha 2</td><td>09:30–11:00</td><td>Jugada</td><td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout info">
+        <div class="callout-title">Mis reservas</div>
+        El jugador ve solo las suyas. Cancelar con regla de anticipación
+        (a definir en el enunciado). Historial de partidos jugados.
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="screen" id="screen-profile" data-id="profile">
+      <div class="browser">
+        <div class="browser-url">okpadel.local/perfil</div>
+        <div class="browser-nav">
+          <span class="semibold">OK PADEL</span>
+          <button class="btn ghost" data-go="courts">Canchas</button>
+          <button class="btn ghost" data-go="reservations">Mis reservas</button>
+          <button class="btn primary" data-go="profile">Perfil</button>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-go="home">Salir</button>
+        </div>
+        <div class="browser-body">
+          <div class="card card-profile">
+            <div class="card-header">Mi perfil</div>
+            <div class="card-body stack gap-12">
+              <div class="photo" style="height:64px">Avatar</div>
+              <div class="field">
+                <label>Nombre</label>
+                <input type="text" value="Juan Pérez" readonly>
+              </div>
+              <div class="field">
+                <label>Email</label>
+                <input type="text" value="juan@mail.com" readonly>
+              </div>
+              <div class="field">
+                <label>Teléfono</label>
+                <input type="text" value="11 5555-1234" readonly>
+              </div>
+              <div class="row gap-8">
+                <button class="btn primary">Guardar cambios</button>
+                <button class="btn ghost">Cambiar contraseña</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout info">
+        <div class="callout-title">Perfil</div>
+        Datos de Devise + teléfono. Foto opcional con Active Storage.
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="screen" id="screen-admin" data-id="admin">
+      <div class="browser">
+        <div class="browser-url">okpadel.local/admin/canchas</div>
+        <div class="browser-nav">
+          <span class="semibold">ADMIN</span>
+          <span class="pill active">Canchas</span>
+          <span class="small muted">Usuarios</span>
+          <span class="small muted">Reservas</span>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-go="home">Volver al sitio</button>
+        </div>
+        <div class="browser-body stack gap-12">
+          <div class="row between">
+            <h2>Canchas</h2>
+            <button class="btn primary">Nueva cancha</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cancha 1</td><td>Indoor</td><td>$8000</td><td>Activa</td><td>Editar · Baja</td>
+              </tr>
+              <tr>
+                <td>Cancha 2</td><td>Outdoor</td><td>$6000</td><td>Activa</td><td>Editar · Baja</td>
+              </tr>
+              <tr>
+                <td>Cancha 3</td><td>Indoor</td><td>$8500</td><td>Activa</td><td>Editar · Baja</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="small muted">
+            Form alta/edición: nombre, tipo, superficie, precio, cubierta,
+            foto, activa sí/no.
+          </p>
+        </div>
+      </div>
+      <div class="callout warning">
+        <div class="callout-title">Admin</div>
+        Rol administrador. ABM de canchas, usuarios y vista de todas las
+        reservas. El jugador no ve esta sección.
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <div>
+      <h2>Flujo</h2>
+      <div class="grid-4" style="margin-top:12px">
+        <div class="stat">
+          <div class="stat-value">Visitante</div>
+          <div class="stat-label">Home → login / registro</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">Jugador</div>
+          <div class="stat-label">Canchas → turno → confirmar</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">Reservas</div>
+          <div class="stat-label">Listar, cancelar, historial</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">Admin</div>
+          <div class="stat-label">ABM canchas y usuarios</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const screens = document.querySelectorAll(".screen");
+    const tabs = document.querySelectorAll("#tabs .btn");
+
+    function showScreen(id) {
+      screens.forEach(function (el) {
+        el.classList.toggle("visible", el.dataset.id === id);
+      });
+      tabs.forEach(function (btn) {
+        btn.classList.toggle("active-tab", btn.dataset.screen === id);
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.getElementById("tabs").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-screen]");
+      if (btn) showScreen(btn.dataset.screen);
+    });
+
+    document.body.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-go]");
+      if (btn) showScreen(btn.dataset.go);
+    });
+  </script>
+</body>
+</html>

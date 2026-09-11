@@ -409,7 +409,7 @@ function BrowserFrame({
   children,
 }: {
   url: string;
-  nav: ReturnType<typeof GuestNav>;
+  nav?: ReturnType<typeof Row>;
   children: ReturnType<typeof Stack>;
 }) {
   const theme = useHostTheme();
@@ -432,14 +432,16 @@ function BrowserFrame({
           {url}
         </Text>
       </div>
-      <div
-        style={{
-          padding: "10px 14px",
-          borderBottom: `1px solid ${theme.stroke.tertiary}`,
-        }}
-      >
-        {nav}
-      </div>
+      {nav ? (
+        <div
+          style={{
+            padding: "10px 14px",
+            borderBottom: `1px solid ${theme.stroke.tertiary}`,
+          }}
+        >
+          {nav}
+        </div>
+      ) : null}
       <div style={{ padding: 16 }}>{children}</div>
     </div>
   );
