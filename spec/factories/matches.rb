@@ -1,11 +1,14 @@
 FactoryBot.define do
   factory :match do
-    court { nil }
-    creator { nil }
-    time_slot { nil }
-    date { "2026-09-02 22:39:30" }
-    duration { 1 }
-    status { 1 }
-    level_required { 1 }
+    court
+    creator { association :user, :player }
+    date { 1.week.from_now.change(hour: 10, min: 0) }
+    duration { 90 }
+    status { :open }
+    level_required { :intermediate }
+
+    trait :with_time_slot do
+      time_slot { association :time_slot, court: court, day_of_week: date.wday }
+    end
   end
 end

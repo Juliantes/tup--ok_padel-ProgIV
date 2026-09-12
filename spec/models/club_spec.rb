@@ -1,5 +1,16 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Club, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+  subject { build(:club) }
+
+  describe "associations" do
+    it { is_expected.to belong_to(:owner).class_name("User") }
+    it { is_expected.to have_many(:courts).dependent(:destroy) }
+  end
+
+  describe "validations" do
+    it { is_expected.to validate_presence_of(:name) }
+    it { is_expected.to validate_presence_of(:address) }
+    it { is_expected.to validate_presence_of(:phone) }
+  end
 end

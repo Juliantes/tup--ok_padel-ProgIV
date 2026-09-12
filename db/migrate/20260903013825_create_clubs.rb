@@ -1,4 +1,6 @@
-class CreateClubs < ActiveRecord::Migration[8.0]
+# frozen_string_literal: true
+
+class CreateClubs < ActiveRecord::Migration[8.1]
   def change
     create_table :clubs do |t|
       t.string :name, null: false

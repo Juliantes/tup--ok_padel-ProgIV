@@ -9,6 +9,12 @@ class Match < ApplicationRecord
   has_many :reviews, dependent: :destroy
   has_many :messages, dependent: :destroy
 
+  enum :status, { open: 0, full: 1, confirmed: 2, completed: 3, cancelled: 4 }
+  enum :level_required, { beginner: 0, intermediate: 1, advanced: 2, open_level: 3 }, prefix: true
+
+  validates :date, :duration, presence: true
+  validates :duration, numericality: { greater_than: 0, only_integer: true }
+
   validate :time_slot_belongs_to_court
   validate :date_matches_time_slot_day
 

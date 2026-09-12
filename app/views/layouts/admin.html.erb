@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Admin - Ok Padel" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+  </head>
+
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <%= link_to "ADMIN", admin_root_path, class: "navbar-brand fw-bold" %>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item"><%= admin_nav_link "Courts", admin_courts_path %></li>
+            <li class="nav-item"><%= admin_nav_link "Users", admin_users_path %></li>
+            <li class="nav-item"><%= admin_nav_link "Matches", admin_matches_path %></li>
+          </ul>
+          <div class="d-flex align-items-center gap-3">
+            <span class="text-light small"><%= current_user.name %></span>
+            <%= link_to "Back to site", root_path, class: "btn btn-outline-light btn-sm" %>
+            <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "btn btn-outline-light btn-sm" %>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      <% if notice.present? %>
+        <div class="alert alert-success"><%= notice %></div>
+      <% end %>
+      <% if alert.present? %>
+        <div class="alert alert-danger"><%= alert %></div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+  </body>
+</html>

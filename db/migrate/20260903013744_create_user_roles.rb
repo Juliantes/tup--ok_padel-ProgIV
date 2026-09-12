@@ -1,4 +1,6 @@
-class CreateUserRoles < ActiveRecord::Migration[8.0]
+# frozen_string_literal: true
+
+class CreateUserRoles < ActiveRecord::Migration[8.1]
   def change
     create_table :user_roles do |t|
       t.references :user, null: false, foreign_key: true
@@ -7,7 +9,6 @@ class CreateUserRoles < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    # Índice único: un usuario no puede tener el mismo rol dos veces
-    add_index :user_roles, [:user_id, :role], unique: true
+    add_index :user_roles, [ :user_id, :role ], unique: true
   end
 end

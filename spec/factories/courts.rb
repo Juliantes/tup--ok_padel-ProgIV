@@ -1,10 +1,10 @@
 FactoryBot.define do
   factory :court do
-    club { nil }
-    name { "MyString" }
-    court_type { 1 }
-    price_per_hour { "9.99" }
-    status { 1 }
-    description { "MyText" }
+    club
+    sequence(:name) { |n| "Cancha #{n}" }
+    court_type { :indoor }
+    price_per_hour { rand(5_000..10_000) }
+    status { :active }
+    description { Faker::Lorem.sentence }
   end
 end

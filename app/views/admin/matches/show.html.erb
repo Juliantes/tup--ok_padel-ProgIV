@@ -1,0 +1,51 @@
+<% content_for :title, "Match - Admin" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Match details</h1>
+  <%= link_to "Edit", edit_admin_match_path(@match), class: "btn btn-primary" %>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Court</dt>
+      <dd class="col-sm-9"><%= @match.court.name %></dd>
+      <dt class="col-sm-3">Creator</dt>
+      <dd class="col-sm-9"><%= @match.creator.name %></dd>
+      <dt class="col-sm-3">Date</dt>
+      <dd class="col-sm-9"><%= @match.date.strftime("%d/%m/%Y %H:%M") %></dd>
+      <dt class="col-sm-3">Duration</dt>
+      <dd class="col-sm-9"><%= @match.duration %> minutes</dd>
+      <dt class="col-sm-3">Status</dt>
+      <dd class="col-sm-9"><span class="badge text-bg-secondary"><%= @match.status %></span></dd>
+      <dt class="col-sm-3">Level required</dt>
+      <dd class="col-sm-9"><%= @match.level_required %></dd>
+    </dl>
+  </div>
+</div>
+
+<h2 class="h5">Players</h2>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Team</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @match.match_players.includes(:user).each do |match_player| %>
+          <tr>
+            <td><%= match_player.user.name %></td>
+            <td><%= match_player.team %></td>
+            <td><%= match_player.status %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%= link_to "Back to matches", admin_matches_path, class: "btn btn-link mt-3" %>

@@ -1,9 +1,9 @@
 FactoryBot.define do
   factory :time_slot do
-    court { nil }
+    court
     day_of_week { 1 }
-    start_time { "2026-09-02 22:39:10" }
-    end_time { "2026-09-02 22:39:10" }
-    is_available { false }
+    start_time { Time.zone.parse("10:00") }
+    end_time { Time.zone.parse("11:30") }
+    is_available { true }
   end
 end
