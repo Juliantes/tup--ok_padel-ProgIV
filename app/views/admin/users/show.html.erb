@@ -1,0 +1,29 @@
+<% content_for :title, "#{@user.name} - Admin" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0"><%= @user.name %></h1>
+  <%= link_to "Edit", edit_admin_user_path(@user), class: "btn btn-primary" %>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Email</dt>
+      <dd class="col-sm-9"><%= @user.email %></dd>
+      <dt class="col-sm-3">Phone</dt>
+      <dd class="col-sm-9"><%= @user.phone %></dd>
+      <dt class="col-sm-3">Self level</dt>
+      <dd class="col-sm-9"><%= @user.self_level %></dd>
+      <dt class="col-sm-3">Roles</dt>
+      <dd class="col-sm-9">
+        <% @user.user_roles.each do |user_role| %>
+          <span class="badge text-bg-secondary me-1"><%= user_role.role %></span>
+        <% end %>
+      </dd>
+      <dt class="col-sm-3">Bio</dt>
+      <dd class="col-sm-9"><%= @user.bio.presence || "—" %></dd>
+    </dl>
+  </div>
+</div>
+
+<%= link_to "Back to users", admin_users_path, class: "btn btn-link mt-3" %>

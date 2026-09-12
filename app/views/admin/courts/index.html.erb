@@ -1,0 +1,40 @@
+<% content_for :title, "Courts - Admin" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Courts</h1>
+  <%= link_to "New court", new_admin_court_path, class: "btn btn-primary" %>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Club</th>
+          <th>Type</th>
+          <th>Price/hour</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @courts.each do |court| %>
+          <tr>
+            <td><%= court.name %></td>
+            <td><%= court.club.name %></td>
+            <td><%= court.court_type %></td>
+            <td>$<%= court.price_per_hour %></td>
+            <td><span class="badge text-bg-secondary"><%= court.status %></span></td>
+            <td class="text-end">
+              <%= link_to "View", admin_court_path(court), class: "btn btn-sm btn-outline-secondary" %>
+              <%= link_to "Edit", edit_admin_court_path(court), class: "btn btn-sm btn-outline-primary" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%== @pagy.bootstrap_series_nav if @pagy.pages > 1 %>

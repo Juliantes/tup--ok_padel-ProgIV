@@ -1,0 +1,56 @@
+<% content_for :title, "Dashboard - Admin" %>
+
+<h1 class="h3 mb-4">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5 text-muted">Courts</h2>
+        <p class="display-6 mb-0"><%= @courts_count %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5 text-muted">Users</h2>
+        <p class="display-6 mb-0"><%= @users_count %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5 text-muted">Matches</h2>
+        <p class="display-6 mb-0"><%= @matches_count %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h5 mb-3">Recent matches</h2>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Court</th>
+          <th>Creator</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_matches.each do |match| %>
+          <tr>
+            <td><%= link_to match.court.name, admin_match_path(match) %></td>
+            <td><%= match.creator.name %></td>
+            <td><%= match.date.strftime("%d/%m/%Y %H:%M") %></td>
+            <td><span class="badge text-bg-secondary"><%= match.status %></span></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

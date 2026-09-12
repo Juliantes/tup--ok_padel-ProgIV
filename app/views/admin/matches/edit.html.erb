@@ -1,0 +1,32 @@
+<% content_for :title, "Edit match - Admin" %>
+
+<h1 class="h3 mb-4">Edit match</h1>
+
+<%= form_with model: [:admin, @match], html: { class: "row g-3" } do |f| %>
+  <% if @match.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          <% @match.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="col-md-6">
+    <%= f.label :status, class: "form-label" %>
+    <%= f.select :status, Match.statuses.keys, {}, class: "form-select" %>
+  </div>
+
+  <div class="col-md-6">
+    <%= f.label :level_required, class: "form-label" %>
+    <%= f.select :level_required, Match.level_requireds.keys, {}, class: "form-select" %>
+  </div>
+
+  <div class="col-12">
+    <%= f.submit "Save changes", class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_match_path(@match), class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>
