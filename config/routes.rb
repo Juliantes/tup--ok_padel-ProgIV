@@ -11,5 +11,15 @@ Rails.application.routes.draw do
     resources :matches, only: %i[index show edit update]
   end
 
+  namespace :api do
+    namespace :v1 do
+      post "login", to: "sessions#create"
+      get "profile", to: "users#show"
+      patch "profile", to: "users#update"
+
+      resources :courts, only: %i[index show]
+    end
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
 end

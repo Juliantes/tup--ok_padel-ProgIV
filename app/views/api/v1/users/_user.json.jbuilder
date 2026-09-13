@@ -1,0 +1,9 @@
+json.id user.id
+json.name user.name
+json.email user.email
+json.phone user.phone
+json.self_level user.self_level
+json.bio user.bio
+json.average_level user.average_level
+json.average_stars user.average_stars
+json.matches_played user.matches_played
