@@ -6,9 +6,12 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "dashboard#index"
 
+    resources :clubs
     resources :courts
-    resources :users, only: %i[index show edit update]
-    resources :matches, only: %i[index show edit update]
+    resources :users
+    resources :matches, only: %i[index show edit update] do
+      resources :match_players, only: %i[create destroy]
+    end
   end
 
   namespace :api do

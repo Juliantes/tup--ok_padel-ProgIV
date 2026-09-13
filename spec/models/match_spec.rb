@@ -13,6 +13,11 @@ RSpec.describe Match, type: :model do
     it { is_expected.to validate_presence_of(:date) }
     it { is_expected.to validate_presence_of(:duration) }
     it { is_expected.to validate_numericality_of(:duration).only_integer.is_greater_than(0) }
+    it {
+      is_expected.to validate_numericality_of(:duration)
+        .only_integer
+        .is_less_than_or_equal_to(Match::MAX_DURATION)
+    }
   end
 
   describe "custom validations" do

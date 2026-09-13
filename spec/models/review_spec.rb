@@ -12,7 +12,7 @@ RSpec.describe Review, type: :model do
   describe "validations" do
     it { is_expected.to validate_presence_of(:level_rating) }
     it { is_expected.to validate_presence_of(:stars) }
-    it { is_expected.to validate_inclusion_of(:level_rating).in_range(1..5) }
+    it { is_expected.to validate_inclusion_of(:level_rating).in_range(PlayerCategory::RANGE) }
     it { is_expected.to validate_inclusion_of(:stars).in_range(1..5) }
   end
 

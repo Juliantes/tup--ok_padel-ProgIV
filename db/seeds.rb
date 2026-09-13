@@ -71,7 +71,7 @@ match = Match.find_or_create_by!(
   record.time_slot = sample_slot
   record.duration = 90
   record.status = :open
-  record.level_required = :intermediate
+  record.level_required = :fifth
 end
 
 MatchPlayer.find_or_create_by!(match: match, user: player) do |record|

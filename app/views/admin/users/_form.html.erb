@@ -1,0 +1,69 @@
+<%= form_with model: [:admin, user], html: { class: "row g-3" } do |f| %>
+  <% if user.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          <% user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <% if user.new_record? %>
+    <div class="col-md-6">
+      <%= f.label :email, class: "form-label" %>
+      <%= f.email_field :email, class: "form-control", required: true %>
+    </div>
+  <% end %>
+
+  <div class="col-md-6">
+    <%= f.label :name, class: "form-label" %>
+    <%= f.text_field :name, class: "form-control", required: true, maxlength: 255 %>
+  </div>
+
+  <div class="col-md-6">
+    <%= f.label :phone, class: "form-label" %>
+    <%= f.telephone_field :phone, class: "form-control", required: true, maxlength: 255 %>
+  </div>
+
+  <div class="col-md-6">
+    <%= f.label :self_level, "Categoría", class: "form-label" %>
+    <%= f.select :self_level,
+      options_for_select(User.category_options_for_select, user.self_level),
+      { prompt: "Seleccioná una categoría" },
+      class: "form-select",
+      required: true %>
+  </div>
+
+  <div class="col-12">
+    <%= f.label :bio, class: "form-label" %>
+    <%= f.text_area :bio, rows: 3, class: "form-control" %>
+  </div>
+
+  <div class="col-md-6">
+    <%= label_tag "user_password", user.new_record? ? "Password" : "New password (optional)", class: "form-label" %>
+    <%= password_field_tag "user[password]", nil, class: "form-control", required: user.new_record? %>
+  </div>
+
+  <div class="col-md-6">
+    <%= label_tag "user_password_confirmation", "Password confirmation", class: "form-label" %>
+    <%= password_field_tag "user[password_confirmation]", nil, class: "form-control", required: user.new_record? %>
+  </div>
+
+  <div class="col-12">
+    <p class="form-label mb-2">Roles</p>
+    <% User::ROLES.each do |role| %>
+      <div class="form-check">
+        <%= check_box_tag "user[role_#{role}]", "1", user.has_role?(role), class: "form-check-input", id: "user_role_#{role}" %>
+        <%= label_tag "user_role_#{role}", role.humanize, class: "form-check-label" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="col-12">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", user.persisted? ? admin_user_path(user) : admin_users_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>

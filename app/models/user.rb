@@ -1,6 +1,12 @@
 class User < ApplicationRecord
+  include PlayerCategory
+  include PhoneValidatable
+  include ImageAttachable
+
   ROLES = %w[admin player club_owner].freeze
-  SELF_LEVEL_RANGE = (1..7).freeze
+  SELF_LEVEL_RANGE = RANGE
+  MAX_AVERAGE_LEVEL = BigDecimal("99.9")
+  MAX_AVERAGE_STARS = BigDecimal("9.99")
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
@@ -21,8 +27,23 @@ class User < ApplicationRecord
   has_many :received_messages, class_name: "Message", foreign_key: :receiver_id, dependent: :destroy
 
   validates :name, :phone, :self_level, presence: true
+  validates :name, :phone, length: { maximum: 255 }
   validates :phone, uniqueness: true
   validates :self_level, inclusion: { in: SELF_LEVEL_RANGE }
+  validates :average_level,
+            numericality: {
+              greater_than_or_equal_to: 0,
+              less_than_or_equal_to: MAX_AVERAGE_LEVEL
+            },
+            allow_nil: true
+  validates :average_stars,
+            numericality: {
+              greater_than_or_equal_to: 0,
+              less_than_or_equal_to: MAX_AVERAGE_STARS
+            },
+            allow_nil: true
+
+  validates_image_attachment :avatar
 
   after_create :ensure_player_stat!
 
@@ -40,6 +61,10 @@ class User < ApplicationRecord
 
   def club_owner?
     has_role?(:club_owner)
+  end
+
+  def category_label
+    self.class.category_label(self_level)
   end
 
   private

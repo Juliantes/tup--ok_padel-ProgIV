@@ -1,6 +1,9 @@
 <% content_for :title, "Users - Admin" %>
 
-<h1 class="h3 mb-4">Users</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Users</h1>
+  <%= link_to "New user", new_admin_user_path, class: "btn btn-primary" %>
+</div>
 
 <div class="card">
   <div class="table-responsive">

@@ -1,6 +1,7 @@
 module Admin
   class DashboardController < BaseController
     def index
+      @clubs_count = Club.count
       @courts_count = Court.count
       @users_count = User.count
       @matches_count = Match.count

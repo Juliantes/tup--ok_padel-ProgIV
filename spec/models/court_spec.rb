@@ -14,7 +14,51 @@ RSpec.describe Court, type: :model do
     it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_presence_of(:price_per_hour) }
     it { is_expected.to validate_numericality_of(:price_per_hour).is_greater_than(0) }
+    it {
+      is_expected.to validate_numericality_of(:price_per_hour)
+        .is_less_than_or_equal_to(Court::MAX_PRICE_PER_HOUR)
+    }
+    it { is_expected.to validate_length_of(:name).is_at_most(255) }
     it { is_expected.to validate_uniqueness_of(:name).scoped_to(:club_id) }
+
+    it "rejects zero price" do
+      court = build(:court, price_per_hour: 0)
+
+      expect(court).not_to be_valid
+      expect(court.errors[:price_per_hour]).to be_present
+    end
+
+    it "rejects negative price" do
+      court = build(:court, price_per_hour: -1)
+
+      expect(court).not_to be_valid
+      expect(court.errors[:price_per_hour]).to be_present
+    end
+
+    it "rejects price above database limit" do
+      court = build(:court, price_per_hour: 100_000_000)
+
+      expect(court).not_to be_valid
+      expect(court.errors[:price_per_hour]).to be_present
+    end
+
+    it "accepts maximum allowed price" do
+      court = build(:court, price_per_hour: Court::MAX_PRICE_PER_HOUR)
+
+      expect(court).to be_valid
+    end
+
+    it "rejects unsupported image content types" do
+      court = build(:court)
+      court.image.attach(
+        io: StringIO.new("not an image"),
+        filename: "test.txt",
+        content_type: "text/plain"
+      )
+
+      expect(court).not_to be_valid
+      expect(court.errors[:image]).to be_present
+    end
   end
 
   describe "enums" do

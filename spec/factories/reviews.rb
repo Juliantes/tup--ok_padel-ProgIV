@@ -3,7 +3,7 @@ FactoryBot.define do
     reviewer { association :user, :player }
     reviewed_user { association :user, :player }
     match
-    level_rating { 4 }
+    level_rating { 5 }
     stars { 5 }
     comment { Faker::Lorem.sentence }
     is_upgradable { true }

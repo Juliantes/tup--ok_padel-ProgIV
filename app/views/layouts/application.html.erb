@@ -32,7 +32,8 @@
             <span class="small text-muted"><%= current_user.name %></span>
             <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "btn btn-outline-secondary btn-sm" %>
           <% else %>
-            <%= link_to "Sign in", new_user_session_path, class: "btn btn-primary btn-sm" %>
+            <%= link_to "Sign in", new_user_session_path, class: "btn btn-outline-primary btn-sm" %>
+            <%= link_to "Sign up", new_user_registration_path, class: "btn btn-primary btn-sm" %>
           <% end %>
         </div>
       </div>

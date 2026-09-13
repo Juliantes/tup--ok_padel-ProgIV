@@ -3,7 +3,7 @@ FactoryBot.define do
     owner { association :user, :club_owner }
     name { "#{Faker::Company.name} Padel" }
     address { Faker::Address.full_address }
-    phone { Faker::PhoneNumber.cell_phone }
+    sequence(:phone) { |n| "11#{format('%08d', n)}" }
     email { Faker::Internet.email }
   end
 end

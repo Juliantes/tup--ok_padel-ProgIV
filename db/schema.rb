@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.datetime "updated_at", null: false
     t.index ["club_id", "name"], name: "index_courts_on_club_id_and_name", unique: true
     t.index ["club_id"], name: "index_courts_on_club_id"
+    t.check_constraint "price_per_hour > 0::numeric AND price_per_hour <= 99999999.99", name: "courts_price_per_hour_range"
   end
 
   create_table "match_players", force: :cascade do |t|
@@ -113,6 +114,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
     t.index ["status"], name: "index_matches_on_status"
     t.index ["time_slot_id"], name: "index_matches_on_time_slot_id"
+    t.check_constraint "duration > 0 AND duration <= 240", name: "matches_duration_range"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -141,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.decimal "win_rate", precision: 5, scale: 2, default: "0.0"
     t.integer "wins", default: 0, null: false
     t.index ["user_id"], name: "index_player_stats_on_user_id", unique: true
+    t.check_constraint "win_rate >= 0::numeric AND win_rate <= 100::numeric", name: "player_stats_win_rate_range"
   end
 
   create_table "reviews", force: :cascade do |t|
@@ -202,6 +205,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["phone"], name: "index_users_on_phone", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.check_constraint "average_level >= 0::numeric AND average_level <= 99.9", name: "users_average_level_range"
+    t.check_constraint "average_stars >= 0::numeric AND average_stars <= 9.99", name: "users_average_stars_range"
+    t.check_constraint "self_level >= 1 AND self_level <= 8", name: "users_self_level_range"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

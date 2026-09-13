@@ -21,8 +21,8 @@
   </div>
 
   <div class="col-md-6">
-    <%= f.label :level_required, class: "form-label" %>
-    <%= f.select :level_required, Match.level_requireds.keys, {}, class: "form-select" %>
+    <%= f.label :level_required, "Categoría requerida", class: "form-label" %>
+    <%= f.select :level_required, match_level_required_options, {}, class: "form-select" %>
   </div>
 
   <div class="col-12">
@@ -30,3 +30,5 @@
     <%= link_to "Cancel", admin_match_path(@match), class: "btn btn-outline-secondary" %>
   </div>
 <% end %>
+
+<%= render "roster", return_to: "edit" %>
