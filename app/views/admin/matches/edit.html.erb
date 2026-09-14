@@ -15,12 +15,17 @@
     </div>
   <% end %>
 
-  <div class="col-md-6">
+  <div class="col-md-4">
     <%= f.label :status, class: "form-label" %>
     <%= f.select :status, Match.statuses.keys, {}, class: "form-select" %>
   </div>
 
-  <div class="col-md-6">
+  <div class="col-md-4">
+    <%= f.label :roster_mode, "Formato del partido", class: "form-label" %>
+    <%= f.select :roster_mode, match_roster_mode_options, {}, class: "form-select" %>
+  </div>
+
+  <div class="col-md-4">
     <%= f.label :level_required, "Categoría requerida", class: "form-label" %>
     <%= f.select :level_required, match_level_required_options, {}, class: "form-select" %>
   </div>

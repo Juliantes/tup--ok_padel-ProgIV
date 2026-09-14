@@ -74,10 +74,33 @@ match = Match.find_or_create_by!(
   record.level_required = :fifth
 end
 
-MatchPlayer.find_or_create_by!(match: match, user: player) do |record|
-  record.status = :confirmed
-  record.team = :team_a
+extra_players = [
+  { email: "player2@okpadel.local", name: "Jugador Demo 2", phone: "1100000004" },
+  { email: "player3@okpadel.local", name: "Jugador Demo 3", phone: "1100000005" },
+  { email: "player4@okpadel.local", name: "Jugador Demo 4", phone: "1100000006" }
+].map do |data|
+  User.find_or_create_by!(email: data[:email]) do |user|
+    user.password = "password123"
+    user.name = data[:name]
+    user.phone = data[:phone]
+    user.self_level = 4
+    user.bio = "Jugador de prueba"
+  end.tap { |user| user.user_roles.find_or_create_by!(role: "player") }
 end
+
+[
+  [ player, :team_a ],
+  [ extra_players[0], :team_a ],
+  [ extra_players[1], :team_b ],
+  [ extra_players[2], :team_b ]
+].each do |match_user, team|
+  MatchPlayer.find_or_create_by!(match: match, user: match_user) do |record|
+    record.status = :confirmed
+    record.team = team
+  end
+end
+
+match.refresh_roster_status!
 
 puts "Done."
 puts "  Admin:  admin@okpadel.local / password123"

@@ -6,6 +6,11 @@ FactoryBot.define do
     duration { 90 }
     status { :open }
     level_required { :fifth }
+    roster_mode { :pairs }
+
+    trait :individual do
+      roster_mode { :individual }
+    end
 
     trait :with_time_slot do
       time_slot { association :time_slot, court: court, day_of_week: date.wday }

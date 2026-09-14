@@ -4,14 +4,15 @@ module Admin
     before_action :set_match_player, only: :destroy
 
     def create
-      @match_player = @match.match_players.build(match_player_params)
-      @match_player.status ||= :confirmed
+      @match_player = MatchPlayer.enroll(
+        match: @match,
+        user: User.find(match_player_params[:user_id]),
+        **match_player_params.except(:user_id).to_h.symbolize_keys
+      )
 
-      if @match_player.save
-        redirect_to redirect_path, notice: "Player was successfully added to the match."
-      else
-        redirect_to redirect_path, alert: @match_player.errors.full_messages.to_sentence
-      end
+      redirect_to redirect_path, notice: "Player was successfully added to the match."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to redirect_path, alert: e.record.errors.full_messages.to_sentence
     end
 
     def destroy

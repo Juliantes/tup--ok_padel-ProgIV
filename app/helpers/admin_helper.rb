@@ -17,4 +17,15 @@ module AdminHelper
       [label, key]
     end
   end
+
+  def match_roster_mode_options
+    [
+      ["Parejas (2 de 2)", "pairs"],
+      ["Jugadores sueltos (4)", "individual"]
+    ]
+  end
+
+  def roster_mode_label(mode)
+    match_roster_mode_options.find { |_, key| key == mode }&.first || mode.to_s.humanize
+  end
 end

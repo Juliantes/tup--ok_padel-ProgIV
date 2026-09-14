@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_230000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210000) do
     t.index ["match_id", "user_id"], name: "index_match_players_on_match_id_and_user_id", unique: true
     t.index ["match_id"], name: "index_match_players_on_match_id"
     t.index ["user_id"], name: "index_match_players_on_user_id"
+    t.check_constraint "status = ANY (ARRAY[0, 1, 2])", name: "match_players_status_range"
+    t.check_constraint "team IS NULL OR (team = ANY (ARRAY[1, 2]))", name: "match_players_team_range"
   end
 
   create_table "match_results", force: :cascade do |t|
@@ -106,12 +108,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210000) do
     t.datetime "date", null: false
     t.integer "duration", default: 90, null: false
     t.integer "level_required", default: 0, null: false
+    t.integer "roster_mode", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.bigint "time_slot_id"
     t.datetime "updated_at", null: false
     t.index ["court_id"], name: "index_matches_on_court_id"
     t.index ["creator_id"], name: "index_matches_on_creator_id"
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
+    t.index ["roster_mode"], name: "index_matches_on_roster_mode"
     t.index ["status"], name: "index_matches_on_status"
     t.index ["time_slot_id"], name: "index_matches_on_time_slot_id"
     t.check_constraint "duration > 0 AND duration <= 240", name: "matches_duration_range"
