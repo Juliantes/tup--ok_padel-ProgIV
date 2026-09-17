@@ -15,14 +15,19 @@
     </div>
   <% end %>
 
-  <div class="col-md-6">
+  <div class="col-md-4">
     <%= f.label :status, class: "form-label" %>
     <%= f.select :status, Match.statuses.keys, {}, class: "form-select" %>
   </div>
 
-  <div class="col-md-6">
-    <%= f.label :level_required, class: "form-label" %>
-    <%= f.select :level_required, Match.level_requireds.keys, {}, class: "form-select" %>
+  <div class="col-md-4">
+    <%= f.label :roster_mode, "Formato del partido", class: "form-label" %>
+    <%= f.select :roster_mode, match_roster_mode_options, {}, class: "form-select" %>
+  </div>
+
+  <div class="col-md-4">
+    <%= f.label :level_required, "Categoría requerida", class: "form-label" %>
+    <%= f.select :level_required, match_level_required_options, {}, class: "form-select" %>
   </div>
 
   <div class="col-12">
@@ -30,3 +35,5 @@
     <%= link_to "Cancel", admin_match_path(@match), class: "btn btn-outline-secondary" %>
   </div>
 <% end %>
+
+<%= render "roster", return_to: "edit" %>

@@ -1,6 +1,7 @@
 module Admin
   class MatchesController < BaseController
     before_action :set_match, only: %i[show edit update]
+    before_action :load_roster_data, only: %i[show edit]
 
     def index
       scope = Match.includes(:court, :creator).order(date: :desc)
@@ -29,7 +30,12 @@ module Admin
     end
 
     def match_params
-      params.require(:match).permit(:status, :level_required)
+      params.require(:match).permit(:status, :level_required, :roster_mode)
+    end
+
+    def load_roster_data
+      enrolled_user_ids = @match.active_match_players.pluck(:user_id)
+      @available_users = User.order(:name).where.not(id: enrolled_user_ids)
     end
   end
 end

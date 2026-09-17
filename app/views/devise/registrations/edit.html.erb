@@ -1,0 +1,56 @@
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h1 class="h3 mb-4">Edit account</h1>
+
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+      <%= render "devise/shared/error_messages", resource: resource %>
+
+      <div class="mb-3">
+        <%= f.label :email, class: "form-label" %>
+        <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control", required: true %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :name, class: "form-label" %>
+        <%= f.text_field :name, autocomplete: "name", class: "form-control", maxlength: 255, required: true %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :phone, class: "form-label" %>
+        <%= f.telephone_field :phone, autocomplete: "tel", class: "form-control", maxlength: 255, required: true %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :self_level, "Categoría", class: "form-label" %>
+        <%= f.select :self_level,
+          options_for_select(User.category_options_for_select, resource.self_level),
+          {},
+          class: "form-select",
+          required: true %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :bio, class: "form-label" %>
+        <%= f.text_area :bio, rows: 3, class: "form-control" %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :password, "New password (optional)", class: "form-label" %>
+        <%= f.password_field :password, autocomplete: "new-password", class: "form-control" %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :password_confirmation, class: "form-label" %>
+        <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.label :current_password, class: "form-label" %>
+        <div class="form-text">Necesitamos tu contraseña actual para confirmar los cambios</div>
+        <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control", required: true %>
+      </div>
+
+      <%= f.submit "Update", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>

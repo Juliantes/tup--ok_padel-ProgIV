@@ -29,5 +29,12 @@ RSpec.describe MatchResult, type: :model do
 
       expect(result).to be_valid
     end
+
+    it "rejects scores above the allowed maximum" do
+      result = build(:match_result, team_a_score: 100, team_b_score: 4, winner_team: :team_a)
+
+      expect(result).not_to be_valid
+      expect(result.errors[:team_a_score]).to be_present
+    end
   end
 end

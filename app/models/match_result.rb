@@ -6,6 +6,16 @@ class MatchResult < ApplicationRecord
   enum :status, { pending: 0, approved: 1, disputed: 2 }
   enum :winner_team, { team_a: 1, team_b: 2 }, prefix: true
 
+  MAX_SCORE = 99
+
+  validates :team_a_score, :team_b_score,
+            numericality: {
+              greater_than_or_equal_to: 0,
+              less_than_or_equal_to: MAX_SCORE,
+              only_integer: true
+            },
+            allow_nil: true
+
   validate :scores_and_winner_consistency
 
   private

@@ -1,0 +1,7 @@
+<% return_to ||= "edit" %>
+
+<% if @match.roster_mode_pairs? %>
+  <%= render "roster_pairs", return_to: return_to %>
+<% else %>
+  <%= render "roster_individual", return_to: return_to %>
+<% end %>

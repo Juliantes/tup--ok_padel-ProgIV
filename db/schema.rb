@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_13_230000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.datetime "updated_at", null: false
     t.index ["club_id", "name"], name: "index_courts_on_club_id_and_name", unique: true
     t.index ["club_id"], name: "index_courts_on_club_id"
+    t.check_constraint "price_per_hour > 0::numeric AND price_per_hour <= 99999999.99", name: "courts_price_per_hour_range"
   end
 
   create_table "match_players", force: :cascade do |t|
@@ -80,6 +81,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.index ["match_id", "user_id"], name: "index_match_players_on_match_id_and_user_id", unique: true
     t.index ["match_id"], name: "index_match_players_on_match_id"
     t.index ["user_id"], name: "index_match_players_on_user_id"
+    t.check_constraint "status = ANY (ARRAY[0, 1, 2])", name: "match_players_status_range"
+    t.check_constraint "team IS NULL OR (team = ANY (ARRAY[1, 2]))", name: "match_players_team_range"
   end
 
   create_table "match_results", force: :cascade do |t|
@@ -105,14 +108,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.datetime "date", null: false
     t.integer "duration", default: 90, null: false
     t.integer "level_required", default: 0, null: false
+    t.integer "roster_mode", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.bigint "time_slot_id"
     t.datetime "updated_at", null: false
     t.index ["court_id"], name: "index_matches_on_court_id"
     t.index ["creator_id"], name: "index_matches_on_creator_id"
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
+    t.index ["roster_mode"], name: "index_matches_on_roster_mode"
     t.index ["status"], name: "index_matches_on_status"
     t.index ["time_slot_id"], name: "index_matches_on_time_slot_id"
+    t.check_constraint "duration > 0 AND duration <= 240", name: "matches_duration_range"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -141,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.decimal "win_rate", precision: 5, scale: 2, default: "0.0"
     t.integer "wins", default: 0, null: false
     t.index ["user_id"], name: "index_player_stats_on_user_id", unique: true
+    t.check_constraint "win_rate >= 0::numeric AND win_rate <= 100::numeric", name: "player_stats_win_rate_range"
   end
 
   create_table "reviews", force: :cascade do |t|
@@ -202,6 +209,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_014128) do
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["phone"], name: "index_users_on_phone", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.check_constraint "average_level >= 0::numeric AND average_level <= 99.9", name: "users_average_level_range"
+    t.check_constraint "average_stars >= 0::numeric AND average_stars <= 9.99", name: "users_average_stars_range"
+    t.check_constraint "self_level >= 1 AND self_level <= 8", name: "users_self_level_range"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

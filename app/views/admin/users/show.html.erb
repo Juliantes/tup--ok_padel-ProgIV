@@ -2,7 +2,10 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1 class="h3 mb-0"><%= @user.name %></h1>
-  <%= link_to "Edit", edit_admin_user_path(@user), class: "btn btn-primary" %>
+  <div class="d-flex gap-2">
+    <%= link_to "Edit", edit_admin_user_path(@user), class: "btn btn-primary" %>
+    <%= button_to "Delete", admin_user_path(@user), method: :delete, class: "btn btn-outline-danger", data: { turbo_confirm: "Are you sure you want to delete this user?" } %>
+  </div>
 </div>
 
 <div class="card">
@@ -12,8 +15,8 @@
       <dd class="col-sm-9"><%= @user.email %></dd>
       <dt class="col-sm-3">Phone</dt>
       <dd class="col-sm-9"><%= @user.phone %></dd>
-      <dt class="col-sm-3">Self level</dt>
-      <dd class="col-sm-9"><%= @user.self_level %></dd>
+      <dt class="col-sm-3">Categoría</dt>
+      <dd class="col-sm-9"><%= category_label(@user.self_level) %></dd>
       <dt class="col-sm-3">Roles</dt>
       <dd class="col-sm-9">
         <% @user.user_roles.each do |user_role| %>

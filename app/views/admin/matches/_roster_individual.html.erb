@@ -1,0 +1,65 @@
+<% return_to ||= "edit" %>
+
+<h2 class="h5 mt-4 mb-3">Players (<%= @match.active_match_players.count %>/4)</h2>
+
+<div class="card mb-4">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @match.active_match_players.includes(:user).any? %>
+          <% @match.active_match_players.includes(:user).each do |match_player| %>
+            <tr>
+              <td><%= match_player.user.name %></td>
+              <td><%= match_player.status %></td>
+              <td class="text-end">
+                <%= button_to "Remove",
+                  admin_match_match_player_path(@match, match_player, return_to: return_to),
+                  method: :delete,
+                  class: "btn btn-sm btn-outline-danger",
+                  data: { turbo_confirm: "Remove #{match_player.user.name} from this match?" } %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="3" class="text-muted">No players assigned yet.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% if @match.active_match_players.count < MatchPlayer::MAX_PLAYERS %>
+  <h3 class="h6 mb-3">Add player</h3>
+  <%= form_with url: admin_match_match_players_path(@match), html: { class: "row g-3 align-items-end" } do |f| %>
+    <%= hidden_field_tag :return_to, return_to %>
+
+    <div class="col-md-5">
+      <%= label_tag "match_player_user_id", "Player", class: "form-label" %>
+      <%= select_tag "match_player[user_id]",
+        options_from_collection_for_select(@available_users, :id, :name),
+        { prompt: "Select a player", class: "form-select", required: true } %>
+    </div>
+
+    <div class="col-md-4">
+      <%= label_tag "match_player_status", "Status", class: "form-label" %>
+      <%= select_tag "match_player[status]",
+        options_for_select(MatchPlayer.statuses.keys, "confirmed"),
+        class: "form-select" %>
+    </div>
+
+    <div class="col-md-3">
+      <%= submit_tag "Add player", class: "btn btn-primary w-100" %>
+    </div>
+  <% end %>
+<% else %>
+  <p class="text-muted mb-0">Match is full (4 players).</p>
+<% end %>

@@ -1,0 +1,49 @@
+es:
+  activerecord:
+    attributes:
+      court:
+        price_per_hour: "Precio por hora"
+        name: "Nombre"
+      user:
+        self_level: "Categoría"
+        phone: "Teléfono"
+        avatar: "Avatar"
+      club:
+        phone: "Teléfono"
+      match:
+        level_required: "Categoría requerida"
+      review:
+        level_rating: "Categoría evaluada"
+    errors:
+      models:
+        court:
+          attributes:
+            price_per_hour:
+              greater_than: "debe ser mayor que 0"
+              less_than_or_equal_to: "no puede superar %{count}"
+            image:
+              content_type: "debe ser PNG, JPEG o WebP"
+              file_size_out_of_range: "no puede superar 5 MB"
+        user:
+          attributes:
+            phone:
+              invalid: "no es un teléfono válido"
+            avatar:
+              content_type: "debe ser PNG, JPEG o WebP"
+              file_size_out_of_range: "no puede superar 5 MB"
+        club:
+          attributes:
+            phone:
+              invalid: "no es un teléfono válido"
+    enums:
+      match:
+        level_required:
+          open: "Libre"
+          eighth: "8va"
+          seventh: "7ma"
+          sixth: "6ta"
+          fifth: "5ta"
+          fourth: "4ta"
+          third: "3ra"
+          second: "2da"
+          first: "1ra"

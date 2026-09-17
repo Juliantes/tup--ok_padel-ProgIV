@@ -13,6 +13,67 @@ RSpec.describe Match, type: :model do
     it { is_expected.to validate_presence_of(:date) }
     it { is_expected.to validate_presence_of(:duration) }
     it { is_expected.to validate_numericality_of(:duration).only_integer.is_greater_than(0) }
+    it {
+      is_expected.to validate_numericality_of(:duration)
+        .only_integer
+        .is_less_than_or_equal_to(Match::MAX_DURATION)
+    }
+  end
+
+  describe "enums" do
+    it { is_expected.to define_enum_for(:roster_mode).with_values(pairs: 0, individual: 1).with_prefix(:roster_mode) }
+  end
+
+  describe "roster" do
+    context "in pairs mode" do
+      let(:match) { create(:match, status: :open, roster_mode: :pairs) }
+
+      it "is complete when both pairs have two players" do
+        create_list(:match_player, 2, match: match, team: :team_a)
+        create_list(:match_player, 2, match: match, team: :team_b)
+
+        expect(match.roster_complete?).to be(true)
+        expect(match.team_roster_full?(:team_a)).to be(true)
+        expect(match.team_roster_full?(:team_b)).to be(true)
+      end
+
+      it "is not complete when a pair is missing players" do
+        create(:match_player, match: match, team: :team_a)
+
+        expect(match.roster_complete?).to be(false)
+        expect(match.team_roster_full?(:team_a)).to be(false)
+      end
+
+      it "does not allow switching from individual to pairs when players have no team" do
+        individual_match = create(:match, :individual)
+        create(:match_player, :without_team, match: individual_match)
+
+        expect(individual_match.update(roster_mode: :pairs)).to be(false)
+        expect(individual_match.errors[:roster_mode]).to be_present
+      end
+    end
+
+    context "in individual mode" do
+      let(:match) { create(:match, :individual, status: :open) }
+
+      it "is complete with four active players regardless of team" do
+        create_list(:match_player, 4, match: match, team: :team_a)
+
+        expect(match.roster_complete?).to be(true)
+      end
+
+      it "is not complete with fewer than four players" do
+        create_list(:match_player, 3, match: match)
+
+        expect(match.roster_complete?).to be(false)
+      end
+
+      it "marks the match as full with four individual players" do
+        create_list(:match_player, 4, match: match, team: nil)
+
+        expect(match.reload).to be_full
+      end
+    end
   end
 
   describe "custom validations" do
