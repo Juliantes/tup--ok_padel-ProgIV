@@ -15,12 +15,12 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "sends to the user email" do
-      expect(mail.to).to eq([user.email])
+      expect(mail.to).to eq([ user.email ])
     end
 
     it "sets from and reply_to" do
-      expect(mail.from).to eq(["no-reply@okpadel.local"])
-      expect(mail.reply_to).to eq(["soporte@okpadel.local"])
+      expect(mail.from).to eq([ "no-reply@okpadel.local" ])
+      expect(mail.reply_to).to eq([ "soporte@okpadel.local" ])
     end
 
     it "includes the user name in the body" do

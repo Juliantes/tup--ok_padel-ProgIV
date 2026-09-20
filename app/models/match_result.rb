@@ -25,9 +25,9 @@ class MatchResult < ApplicationRecord
 
     expected_winner = if team_a_score > team_b_score
                         "team_a"
-                      elsif team_b_score > team_a_score
+    elsif team_b_score > team_a_score
                         "team_b"
-                      end
+    end
 
     if expected_winner.nil?
       errors.add(:winner_team, "cannot be set when scores are tied")

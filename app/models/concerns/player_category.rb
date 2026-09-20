@@ -23,7 +23,7 @@ module PlayerCategory
     end
 
     def category_options_for_select
-      LABELS.map { |value, label| [label, value] }
+      LABELS.map { |value, label| [ label, value ] }
     end
   end
 end

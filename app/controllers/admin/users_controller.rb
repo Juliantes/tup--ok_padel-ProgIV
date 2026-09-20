@@ -64,7 +64,7 @@ module Admin
 
     def selected_roles(default_player: false)
       roles = User::ROLES.select { |role| params.dig(:user, "role_#{role}") == "1" }
-      roles = ["player"] if roles.empty? && default_player
+      roles = [ "player" ] if roles.empty? && default_player
       roles
     end
 

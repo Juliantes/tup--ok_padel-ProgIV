@@ -17,9 +17,9 @@ class ApplicationMailer < ActionMailer::Base
 
     base = if port.present?
              "#{protocol}://#{host}:#{port}"
-           else
+    else
              "#{protocol}://#{host}"
-           end
+    end
 
     return "#{base}/" if path == "/" || path.blank?
 

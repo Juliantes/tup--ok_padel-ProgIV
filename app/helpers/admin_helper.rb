@@ -14,14 +14,14 @@ module AdminHelper
     Match.level_requireds.keys.map do |key|
       value = Match.level_requireds[key]
       label = value.zero? ? "Libre" : Match.category_label(value)
-      [label, key]
+      [ label, key ]
     end
   end
 
   def match_roster_mode_options
     [
-      ["Parejas (2 de 2)", "pairs"],
-      ["Jugadores sueltos (4)", "individual"]
+      [ "Parejas (2 de 2)", "pairs" ],
+      [ "Jugadores sueltos (4)", "individual" ]
     ]
   end
 

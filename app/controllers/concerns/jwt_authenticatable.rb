@@ -15,7 +15,7 @@ module JwtAuthenticatable
     return render_error("Unauthorized", status: :unauthorized) if payload.blank?
 
     @current_user = User.find_by(id: payload[:user_id])
-    return render_error("Unauthorized", status: :unauthorized) unless @current_user
+    render_error("Unauthorized", status: :unauthorized) unless @current_user
   end
 
   def current_user
