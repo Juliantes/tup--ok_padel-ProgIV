@@ -19,9 +19,15 @@
 7. Documentar en README (sección Emails) el nuevo mail y variables si aplica.
 8. Verificar cola/jobs en producción y no romper contratos `api/v1`.
 
+### Deuda planificada — Sprint 1.5 (API matches avanzada)
+
+1. **`join_policy`:** migración y enum en `Match` (`auto`, `approval_required`, etc.), niveles `auto_confirm_levels`, endpoint de aprobación de solicitudes pendientes; reemplazar `"join_policy": "auto"` hardcodeado en `_match.json.jbuilder`.
+2. **Política de tiempo restante:** reglas de negocio para `leave`, `join` y cancelación según horas/minutos antes del `date` del partido.
+3. **Transferencia de responsabilidad del creador:** cuando el creador sale con jugadores activos restantes, designar nuevo responsable o bloquear según reglas acordadas.
+
 ## Estado de calidad
-- `bundle exec rspec` → 161 examples, 0 failures ✅
-- `bundle exec rubocop` → 117 files, 0 offenses ✅
+- `bundle exec rspec` → 182 examples, 0 failures ✅
+- `bundle exec rubocop` → 127 files, 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 
 ## Regla operativa

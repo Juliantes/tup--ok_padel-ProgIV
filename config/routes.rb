@@ -21,6 +21,15 @@ Rails.application.routes.draw do
       patch "profile", to: "users#update"
 
       resources :courts, only: %i[index show]
+
+      get "me/matches", to: "matches#mine"
+
+      resources :matches, only: %i[index show create] do
+        member do
+          post :join
+          delete :leave
+        end
+      end
     end
   end
 

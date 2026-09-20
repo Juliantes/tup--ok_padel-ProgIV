@@ -14,7 +14,7 @@ Aplicación web para gestionar clubes, canchas y partidos de pádel. TP1 de Prog
 **Alcance del TP1 (esta entrega):**
 
 - **Back-office** (`/admin`): CRUD de clubes, canchas y usuarios; consulta/edición de partidos y gestión de jugadores en el roster (sin alta/baja de partidos desde admin).
-- **API REST JSON** (`/api/v1`): login con JWT, perfil del jugador y listado/detalle de canchas activas.
+- **API REST JSON** (`/api/v1`): login con JWT, perfil del jugador, canchas activas y partidos (listado, detalle, alta, join/leave, mis partidos).
 - **Web pública:** home, registro e inicio de sesión con Devise.
 - **Emails:** mail de bienvenida al registrarse (`UserMailer#welcome`).
 
@@ -295,6 +295,14 @@ Base URL en desarrollo: `http://localhost:3000`
 | PATCH | `/api/v1/profile` | Sí | Actualizar `name`, `phone`, `self_level`, `bio` |
 | GET | `/api/v1/courts` | No | Listar canchas **activas** |
 | GET | `/api/v1/courts/:id` | No | Detalle de cancha activa |
+| GET | `/api/v1/matches` | No | Listar partidos **open/full** (filtros y paginación) |
+| GET | `/api/v1/matches/:id` | No | Detalle de partido |
+| POST | `/api/v1/matches` | Sí | Crear partido (`auto_join` opcional, default `true`) |
+| POST | `/api/v1/matches/:id/join` | Sí | Unirse al partido |
+| DELETE | `/api/v1/matches/:id/leave` | Sí | Salir del partido (soft delete) |
+| GET | `/api/v1/me/matches` | Sí | Partidos del usuario (inscripto o creador) |
+
+**Paginación (listados de partidos):** query `page` (default 1), `per_page` (default 20, máx. 50). Respuesta incluye `meta` con `current_page`, `per_page`, `total_pages`, `total_count`. La API v1 incluye `Pagy::Method` en `Api::V1::BaseController` (misma API que el back-office: `pagy(:offset, ...)`).
 
 ### Ejemplos
 
@@ -409,6 +417,56 @@ curl -s http://localhost:3000/api/v1/courts/1
 Respuesta `200`: objeto `{ "court": { ... } }` con el mismo partial que en el listado.
 
 Errores: `404` → `{ "error": "Not found" }` (id inexistente o cancha no activa).
+
+#### POST `/api/v1/matches`
+
+```bash
+TOKEN="<jwt>"
+curl -s -X POST http://localhost:3000/api/v1/matches \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "court_id": 1,
+    "date": "2026-09-25T10:00:00-03:00",
+    "duration": 90,
+    "roster_mode": "pairs",
+    "level_required": "fifth",
+    "auto_join": true
+  }'
+```
+
+Respuesta `201`:
+
+```json
+{
+  "match": {
+    "id": 1,
+    "date": "2026-09-25T10:00:00.000-03:00",
+    "duration": 90,
+    "status": "open",
+    "roster_mode": "pairs",
+    "level_required": "fifth",
+    "join_policy": "auto",
+    "court": { "id": 1, "name": "Cancha 1", "club_id": 1 },
+    "creator": { "id": 3, "name": "Jugador Demo" },
+    "match_players": [
+      {
+        "id": 1,
+        "user_id": 3,
+        "team": "team_a",
+        "status": "confirmed",
+        "joined_at": "2026-09-20T12:00:00.000-03:00"
+      }
+    ],
+    "players_count": 1,
+    "max_players": 4,
+    "time_slot": null,
+    "match_result": null
+  }
+}
+```
+
+Errores: `401` sin auth; `422` validaciones del modelo.
 
 ## Back-office
 

@@ -2,6 +2,7 @@ module Api
   module V1
     class BaseController < ActionController::API
       include JwtAuthenticatable
+      include Pagy::Method
 
       rescue_from ActiveRecord::RecordNotFound, with: :not_found
       rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity

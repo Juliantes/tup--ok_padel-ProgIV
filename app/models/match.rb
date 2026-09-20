@@ -70,6 +70,13 @@ class Match < ApplicationRecord
     end
   end
 
+  def cancel_if_creator_left_empty_roster!(user)
+    return unless user.id == creator_id
+    return if active_match_players.exists?
+
+    update!(status: :cancelled)
+  end
+
   private
 
   def time_slot_belongs_to_court
