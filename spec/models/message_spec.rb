@@ -17,14 +17,14 @@ RSpec.describe Message, type: :model do
       message = build(:message, receiver: nil, is_group_chat: false)
 
       expect(message).not_to be_valid
-      expect(message.errors[:receiver]).to include("can't be blank")
+      expect(message.errors[:receiver]).to include("no puede estar en blanco")
     end
 
     it "requires a match for group chats" do
       message = build(:message, match: nil, is_group_chat: true, receiver: nil)
 
       expect(message).not_to be_valid
-      expect(message.errors[:match]).to include("can't be blank")
+      expect(message.errors[:match]).to include("no puede estar en blanco")
     end
   end
 end
