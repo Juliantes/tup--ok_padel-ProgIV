@@ -18,3 +18,15 @@
 6. Añadir `spec/mailers/match_mailer_spec.rb` (mismo nivel que `user_mailer_spec.rb`).
 7. Documentar en README (sección Emails) el nuevo mail y variables si aplica.
 8. Verificar cola/jobs en producción y no romper contratos `api/v1`.
+
+## Estado de calidad
+- `bundle exec rspec` → 161 examples, 0 failures ✅
+- `bundle exec rubocop` → 117 files, 0 offenses ✅
+- `bundle exec brakeman -q` → 0 warnings ✅
+
+## Regla operativa
+Antes de cerrar cualquier sprint:
+1. `bundle exec rspec` verde.
+2. `bundle exec rubocop` sin ofensas nuevas.
+3. `bundle exec brakeman -q` sin warnings nuevos.
+Si hay ofensas nuevas, se arreglan en el mismo sprint.
