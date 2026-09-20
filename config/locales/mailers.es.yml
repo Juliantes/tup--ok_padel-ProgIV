@@ -1,0 +1,22 @@
+es:
+  mailers:
+    user_mailer:
+      welcome:
+        subject: "¡Bienvenido a Ok Padel, %{name}!"
+        greeting: "¡Hola %{name}!"
+        account_active: "Tu cuenta en Ok Padel ya está activa. Categoría: %{category}."
+        intro: "Con Ok Padel podés:"
+        bullet_reserve: "Reservar canchas en los mejores clubes."
+        bullet_join: "Sumarte a partidos abiertos o crear los tuyos."
+        bullet_stats: "Llevar tu historial y estadísticas de juego."
+        cta: "Encontrá tu partido"
+        closing: "¡Nos vemos en la cancha!"
+        signature: "El equipo de Ok Padel"
+        footer_reason: "Recibiste este correo porque te registraste en Ok Padel."
+        footer_support: "Soporte: %{email}"
+    # TODO: Parte 2 — MatchMailer
+    match_mailer:
+      match_confirmed:
+        subject: ""
+        # greeting: ""
+        # body: ""

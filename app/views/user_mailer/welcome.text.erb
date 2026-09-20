@@ -1,0 +1,19 @@
+<% scope = "mailers.user_mailer.welcome" %>
+
+<%= t("#{scope}.greeting", name: @user.name) %>
+
+<%= t("#{scope}.account_active", category: @user.category_label) %>
+
+<%= t("#{scope}.intro") %>
+- <%= t("#{scope}.bullet_reserve") %>
+- <%= t("#{scope}.bullet_join") %>
+- <%= t("#{scope}.bullet_stats") %>
+
+<%= t("#{scope}.cta") %>: <%= app_url("/") %>
+
+<%= t("#{scope}.closing") %>
+<%= t("#{scope}.signature") %>
+
+---
+<%= t("#{scope}.footer_reason") %>
+<%= t("#{scope}.footer_support", email: "soporte@okpadel.local") %>

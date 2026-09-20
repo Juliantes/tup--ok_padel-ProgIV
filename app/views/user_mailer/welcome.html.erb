@@ -1,0 +1,25 @@
+<% scope = "mailers.user_mailer.welcome" %>
+
+<p><%= t("#{scope}.greeting", name: @user.name) %></p>
+
+<p><%= t("#{scope}.account_active", category: @user.category_label) %></p>
+
+<p><%= t("#{scope}.intro") %></p>
+<ul>
+  <li><%= t("#{scope}.bullet_reserve") %></li>
+  <li><%= t("#{scope}.bullet_join") %></li>
+  <li><%= t("#{scope}.bullet_stats") %></li>
+</ul>
+
+<p style="margin: 24px 0;">
+  <%= link_to t("#{scope}.cta"), app_url("/"), style: "background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;" %>
+</p>
+
+<p><%= t("#{scope}.closing") %><br>
+<%= t("#{scope}.signature") %></p>
+
+<hr>
+<p style="font-size: 12px; color: #6b7280;">
+  <%= t("#{scope}.footer_reason") %><br>
+  <%= t("#{scope}.footer_support", email: "soporte@okpadel.local") %>
+</p>

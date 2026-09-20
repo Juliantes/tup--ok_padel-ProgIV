@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe User, type: :model do
+  include ActiveJob::TestHelper
   subject { build(:user) }
 
   describe "associations" do
@@ -40,6 +41,10 @@ RSpec.describe User, type: :model do
       user = create(:user)
 
       expect(user.player_stat).to be_present
+    end
+
+    it "enqueues a welcome email after create" do
+      expect { create(:user) }.to have_enqueued_mail(UserMailer, :welcome)
     end
   end
 

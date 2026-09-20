@@ -46,6 +46,7 @@ class User < ApplicationRecord
   validates_image_attachment :avatar
 
   after_create :ensure_player_stat!
+  after_create_commit :send_welcome_email
 
   def has_role?(role)
     user_roles.exists?(role: role.to_s)
@@ -71,5 +72,9 @@ class User < ApplicationRecord
 
   def ensure_player_stat!
     create_player_stat! unless player_stat
+  end
+
+  def send_welcome_email
+    UserMailer.welcome(self).deliver_later
   end
 end

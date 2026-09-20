@@ -1,0 +1,11 @@
+es:
+  devise:
+    mailer:
+      reset_password_instructions:
+        subject: "Instrucciones para restablecer tu contraseña"
+      unlock_instructions:
+        subject: "Instrucciones para desbloquear tu cuenta"
+      email_changed:
+        subject: "Email actualizado"
+      password_change:
+        subject: "Contraseña actualizada"
