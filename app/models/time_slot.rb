@@ -1,9 +1,19 @@
 class TimeSlot < ApplicationRecord
+  DAY_NAMES = %w[Domingo Lunes Martes Miércoles Jueves Viernes Sábado].freeze
+
   belongs_to :court
 
   has_many :matches, dependent: :nullify
 
   validates :day_of_week, inclusion: { in: 0..6 }
+
+  def self.day_name(day_of_week)
+    DAY_NAMES[day_of_week]
+  end
+
+  def day_name
+    self.class.day_name(day_of_week)
+  end
   validate :end_time_after_start_time
 
   private

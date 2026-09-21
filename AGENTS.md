@@ -19,6 +19,17 @@
 7. Documentar en README (sección Emails) el nuevo mail y variables si aplica.
 8. Verificar cola/jobs en producción y no romper contratos `api/v1`.
 
+## Deuda planificada — TimeSlots
+
+1. **Soft-delete:** considerar agregar `deleted_at` + scope `.kept` +
+   `soft_delete!` + `restore!`. Aplica a admin, API de matches
+   (jbuilder `time_slot`), seeds y front-end TP2. Actualmente el delete
+   es hard delete con `dependent: :nullify` (los partidos pierden la
+   referencia al slot pero siguen existiendo con su `date` y `duration`).
+2. **Validación de solapamiento:** evitar dos time_slots de la misma
+   cancha el mismo día con horarios superpuestos. Actualmente el modelo
+   solo valida `end_time > start_time`.
+
 ### Deuda planificada — Sprint 1.5 (API matches avanzada)
 
 1. **`join_policy`:** migración y enum en `Match` (`auto`, `approval_required`, etc.), niveles `auto_confirm_levels`, endpoint de aprobación de solicitudes pendientes; reemplazar `"join_policy": "auto"` hardcodeado en `_match.json.jbuilder`.
@@ -26,8 +37,8 @@
 3. **Transferencia de responsabilidad del creador:** cuando el creador sale con jugadores activos restantes, designar nuevo responsable o bloquear según reglas acordadas.
 
 ## Estado de calidad
-- `bundle exec rspec` → 182 examples, 0 failures ✅
-- `bundle exec rubocop` → 127 files, 0 offenses ✅
+- `bundle exec rspec` → 202 examples, 0 failures ✅
+- `bundle exec rubocop` → 129 files, 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 
 ## Regla operativa

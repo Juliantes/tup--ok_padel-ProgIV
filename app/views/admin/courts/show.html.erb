@@ -25,4 +25,7 @@
   </div>
 </div>
 
-<%= link_to "Back to courts", admin_courts_path, class: "btn btn-link mt-3" %>
+<div class="d-flex gap-2 mt-3">
+  <%= link_to "View time slots", admin_court_time_slots_path(@court), class: "btn btn-outline-primary" %>
+  <%= link_to "Back to courts", admin_courts_path, class: "btn btn-link" %>
+</div>

@@ -482,6 +482,7 @@ Errores: `401` sin auth; `422` validaciones del modelo.
 |---------|-------------|
 | Clubs | CRUD completo |
 | Courts | CRUD completo |
+| Time Slots | CRUD completo (anidado bajo Court) |
 | Users | CRUD completo |
 | Matches | Index, show, edit, update |
 | Match players | Alta/baja en roster (anidado bajo match) |

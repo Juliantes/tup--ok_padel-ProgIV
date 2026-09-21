@@ -1,0 +1,41 @@
+<% content_for :title, "Time Slot - Admin" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Time Slot</h1>
+  <div class="d-flex gap-2">
+    <%= link_to "Edit", edit_admin_time_slot_path(@time_slot), class: "btn btn-primary" %>
+    <%= button_to "Delete", admin_time_slot_path(@time_slot), method: :delete, class: "btn btn-outline-danger", data: { turbo_confirm: "Are you sure?" } %>
+  </div>
+</div>
+
+<% if @time_slot.matches.any? %>
+  <div class="alert alert-warning">
+    ⚠️ This time slot has <%= pluralize(@time_slot.matches.count, "match", "matches") %>.
+    Deleting it will keep the matches but remove the time slot reference.
+  </div>
+<% end %>
+
+<div class="card">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Court</dt>
+      <dd class="col-sm-9"><%= @time_slot.court.name %></dd>
+      <dt class="col-sm-3">Day</dt>
+      <dd class="col-sm-9"><%= @time_slot.day_name %></dd>
+      <dt class="col-sm-3">Start</dt>
+      <dd class="col-sm-9"><%= @time_slot.start_time.strftime("%H:%M") %></dd>
+      <dt class="col-sm-3">End</dt>
+      <dd class="col-sm-9"><%= @time_slot.end_time.strftime("%H:%M") %></dd>
+      <dt class="col-sm-3">Available</dt>
+      <dd class="col-sm-9">
+        <% if @time_slot.is_available? %>
+          <span class="badge text-bg-success">Yes</span>
+        <% else %>
+          <span class="badge text-bg-secondary">No</span>
+        <% end %>
+      </dd>
+    </dl>
+  </div>
+</div>
+
+<%= link_to "Back to time slots", admin_court_time_slots_path(@time_slot.court), class: "btn btn-link mt-3" %>

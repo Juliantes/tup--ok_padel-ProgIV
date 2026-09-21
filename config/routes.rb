@@ -7,7 +7,9 @@ Rails.application.routes.draw do
     root to: "dashboard#index"
 
     resources :clubs
-    resources :courts
+    resources :courts do
+      resources :time_slots, shallow: true
+    end
     resources :users
     resources :matches, only: %i[index show edit update] do
       resources :match_players, only: %i[create destroy]

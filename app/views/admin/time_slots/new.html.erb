@@ -1,0 +1,4 @@
+<% content_for :title, "New time slot - Admin" %>
+
+<h1 class="h3 mb-4">New time slot — <%= @court.name %></h1>
+<%= render "form", court: @court, time_slot: @time_slot %>

@@ -1,0 +1,42 @@
+<% form_model = time_slot.persisted? ? [:admin, time_slot] : [:admin, court, time_slot] %>
+<%= form_with model: form_model, html: { class: "row g-3" } do |f| %>
+  <% if time_slot.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          <% time_slot.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="col-md-6">
+    <%= f.label :day_of_week, "Day", class: "form-label" %>
+    <%= f.select :day_of_week, TimeSlot::DAY_NAMES.each_with_index.map { |name, index| [name, index] }, {}, class: "form-select" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= f.label :start_time, class: "form-label" %>
+    <%= f.time_field :start_time, class: "form-control" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= f.label :end_time, class: "form-label" %>
+    <%= f.time_field :end_time, class: "form-control" %>
+  </div>
+
+  <div class="col-12">
+    <div class="form-check">
+      <%= f.check_box :is_available, class: "form-check-input" %>
+      <%= f.label :is_available, "Available", class: "form-check-label" %>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <%= f.submit class: "btn btn-primary" %>
+    <% cancel_path = time_slot.persisted? ? admin_time_slot_path(time_slot) : admin_court_time_slots_path(court) %>
+    <%= link_to "Cancel", cancel_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>
