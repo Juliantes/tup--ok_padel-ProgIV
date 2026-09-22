@@ -278,6 +278,8 @@ erDiagram
 
 ## API v1
 
+**Postman:** colección y environment local en [docs/postman/](docs/postman/) (importar en Postman Desktop y seleccionar el environment *Ok Padel Local*).
+
 Base URL en desarrollo: `http://localhost:3000`
 
 **Autenticación:** header `Authorization: Bearer <token>` en endpoints protegidos.

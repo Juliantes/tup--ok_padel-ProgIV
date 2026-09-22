@@ -1,0 +1,680 @@
+{
+  "info": {
+    "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "name": "Ok Padel API",
+    "description": "Colección esqueleto para API v1 de Ok Padel. Importar junto con el environment **Ok Padel Local**. Ejecutar **Login** primero; los requests autenticados usan `Bearer {{token}}`. Tras `db:seed`, login de prueba: `player@okpadel.local` / `password123`. Ajustar bodies (p. ej. `court_id`, fechas) según tu base local.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "📁 Auth",
+      "item": [
+        {
+          "name": "POST Login (happy)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response includes token', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "    pm.environment.set('token', json.token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"player@okpadel.local\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/login",
+            "description": "Login con credenciales válidas (usuario demo del seed)."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login (invalid credentials → 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error body present', function () {",
+                  "    pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"player@okpadel.local\",\n  \"password\": \"wrong-password\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/login",
+            "description": "Credenciales incorrectas → 401 `{ \"error\": \"Invalid credentials\" }`."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Profile",
+      "item": [
+        {
+          "name": "GET Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('User object present', function () {",
+                  "    pm.expect(pm.response.json().user).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/profile"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Profile (no token → 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error body present', function () {",
+                  "    pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/profile",
+            "description": "Sin header Authorization."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Updated user returned', function () {",
+                  "    const user = pm.response.json().user;",
+                  "    pm.expect(user.name).to.eql('Jugador Actualizado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jugador Actualizado\",\n  \"bio\": \"Nueva bio desde Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/profile"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Courts",
+      "item": [
+        {
+          "name": "GET Courts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Courts array present', function () {",
+                  "    pm.expect(pm.response.json().courts).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/courts"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Court by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Court object present', function () {",
+                  "    pm.expect(pm.response.json().court).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/courts/1",
+            "description": "Ajustar el id si tu seed no tiene cancha 1."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Court by id (not found → 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error body present', function () {",
+                  "    pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/courts/0"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Matches",
+      "item": [
+        {
+          "name": "GET Matches",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Matches list and meta present', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.matches).to.be.an('array');",
+                  "    pm.expect(json.meta).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Match by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Match object present', function () {",
+                  "    pm.expect(pm.response.json().match).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}",
+            "description": "Requiere `matchId` en el environment (crear partido antes o setear manualmente)."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create match (auto_join: true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Match created and matchId saved', function () {",
+                  "    const match = pm.response.json().match;",
+                  "    pm.expect(match).to.be.an('object');",
+                  "    pm.expect(match.match_players.length).to.be.at.least(1);",
+                  "    pm.environment.set('matchId', String(match.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"court_id\": 1,\n  \"date\": \"2026-12-25T10:00:00-03:00\",\n  \"duration\": 90,\n  \"roster_mode\": \"pairs\",\n  \"level_required\": \"fifth\",\n  \"auto_join\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/matches"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create match (auto_join: false)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Match created without roster and matchId saved', function () {",
+                  "    const match = pm.response.json().match;",
+                  "    pm.expect(match.match_players).to.be.an('array').that.is.empty;",
+                  "    pm.environment.set('matchId', String(match.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"court_id\": 1,\n  \"date\": \"2026-12-26T10:00:00-03:00\",\n  \"duration\": 90,\n  \"roster_mode\": \"pairs\",\n  \"level_required\": \"fifth\",\n  \"auto_join\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/matches",
+            "description": "Útil antes de **Join**: el creador no queda inscripto."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create match (invalid params → 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "",
+                  "pm.test('Error body present', function () {",
+                  "    pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"court_id\": 1,\n  \"date\": \"2026-12-27T10:00:00-03:00\",\n  \"duration\": 0,\n  \"roster_mode\": \"pairs\",\n  \"level_required\": \"fifth\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/matches"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Join match",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Match players updated', function () {",
+                  "    pm.expect(pm.response.json().match.match_players).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"team\": \"team_a\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/join",
+            "description": "Ejecutar tras **Create match (auto_join: false)** o con un partido abierto donde el usuario no esté inscripto."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Leave match",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Match returned', function () {",
+                  "    pm.expect(pm.response.json().match).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/leave",
+            "description": "El usuario debe estar inscripto en el partido (p. ej. después de **Join**)."
+          },
+          "response": []
+        },
+        {
+          "name": "GET My matches",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Matches array present', function () {",
+                  "    pm.expect(pm.response.json().matches).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/me/matches"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
