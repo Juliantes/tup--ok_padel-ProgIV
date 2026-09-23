@@ -77,7 +77,7 @@ class Match < ApplicationRecord
     update!(status: :cancelled)
   end
 
-  def report_result!(reporter:, team_a_score:, team_b_score:, winner_team: nil)
+  def report_result!(reporter:, sets:)
     unless active_match_players.exists?(user_id: reporter.id)
       raise_invalid_result!("Reporter is not an active player")
     end
@@ -88,15 +88,12 @@ class Match < ApplicationRecord
       raise ActiveRecord::RecordInvalid, existing
     end
 
-    # Destroy and create in one transaction so consensus callbacks see the final set of reports.
     transaction do
       existing&.destroy!
-      match_results.create!(
-        reported_by: reporter,
-        team_a_score: team_a_score,
-        team_b_score: team_b_score,
-        winner_team: winner_team
-      )
+      result = match_results.new(reported_by: reporter)
+      build_match_sets!(result, sets)
+      result.save!
+      result
     end
   end
 
@@ -120,23 +117,23 @@ class Match < ApplicationRecord
     end
   end
 
-  # One report is provisional consensus. Otherwise a strict majority (> 50%) of identical scores.
+  # One report is provisional consensus. Otherwise a strict majority (> 50%) of identical set signatures.
   def consensus_result
-    reports = match_results.to_a
+    reports = match_results.includes(:match_sets).to_a
     return if reports.empty?
 
-    grouped = reports.group_by { |result| [ result.team_a_score, result.team_b_score ] }
+    grouped = reports.group_by(&:set_signature)
     total = reports.size
 
     if total == 1
-      scores = grouped.keys.first
-      return { team_a_score: scores[0], team_b_score: scores[1], votes: 1, total: 1 }
+      sig = grouped.keys.first
+      return { sets: reports.first.match_sets, votes: 1, total: 1, signature: sig }
     end
 
-    grouped.each do |scores, results|
+    grouped.each do |sig, results|
       next unless results.size > (total / 2.0)
 
-      return { team_a_score: scores[0], team_b_score: scores[1], votes: results.size, total: total }
+      return { sets: results.first.match_sets, votes: results.size, total: total, signature: sig }
     end
 
     nil
@@ -152,41 +149,31 @@ class Match < ApplicationRecord
     update!(status: :completed)
   end
 
-  def force_result!(admin:, team_a_score:, team_b_score:, winner_team: nil)
+  def force_result!(admin:, sets:)
     transaction do
       existing = match_results.find_by(reported_by_id: admin.id)
       existing&.destroy!
 
-      match_results.create!(
-        reported_by: admin,
-        team_a_score: team_a_score,
-        team_b_score: team_b_score,
-        winner_team: winner_team.presence,
-        forced_by_admin: true
-      )
+      result = match_results.new(reported_by: admin, forced_by_admin: true)
+      build_match_sets!(result, sets)
+      result.save!
 
       update!(status: :completed)
-      apply_stats_from!(team_a_score: team_a_score, team_b_score: team_b_score)
+      apply_stats_from!(winner_team: result.winner_team)
     end
   end
 
-  def apply_stats_from!(team_a_score:, team_b_score:)
+  def apply_stats_from!(winner_team:)
     with_lock do
       return if stats_applied_at.present?
-
-      winner = if team_a_score > team_b_score
-                 "team_a"
-      elsif team_b_score > team_a_score
-                 "team_b"
-      end
 
       active_match_players.includes(user: :player_stat).each do |match_player|
         stat = match_player.user.player_stat
         next unless stat
 
-        if winner.nil?
+        if winner_team.nil?
           stat.current_streak = 0
-        elsif match_player.team == winner
+        elsif match_player.team == winner_team.to_s
           stat.wins += 1
           stat.current_streak += 1
           stat.best_streak = [ stat.best_streak, stat.current_streak ].max
@@ -244,6 +231,25 @@ class Match < ApplicationRecord
     consensus = consensus_result
     return if consensus.blank?
 
-    apply_stats_from!(team_a_score: consensus[:team_a_score], team_b_score: consensus[:team_b_score])
+    winner = calculate_winner_from_sets(consensus[:sets])
+    apply_stats_from!(winner_team: winner)
+  end
+
+  def build_match_sets!(result, sets)
+    sets.each_with_index do |set, idx|
+      result.match_sets.build(
+        order: idx + 1,
+        team_a_games: set[:team_a_games],
+        team_b_games: set[:team_b_games]
+      )
+    end
+  end
+
+  def calculate_winner_from_sets(sets)
+    a_wins = sets.count { |s| s.team_a_games > s.team_b_games }
+    b_wins = sets.count { |s| s.team_b_games > s.team_a_games }
+    return nil if a_wins == b_wins
+
+    a_wins > b_wins ? "team_a" : "team_b"
   end
 end

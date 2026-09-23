@@ -1,27 +1,30 @@
 class MatchResult < ApplicationRecord
   belongs_to :match
   belongs_to :reported_by, class_name: "User"
+  has_many :match_sets, -> { order(:order) }, dependent: :destroy, inverse_of: :match_result, autosave: true
 
-  enum :winner_team, { team_a: 1, team_b: 2 }, prefix: true
-
-  MAX_SCORE = 99
-
-  validates :team_a_score, :team_b_score,
-            numericality: {
-              greater_than_or_equal_to: 0,
-              less_than_or_equal_to: MAX_SCORE,
-              only_integer: true
-            },
-            allow_nil: true
+  accepts_nested_attributes_for :match_sets
 
   validates :reported_by_id, uniqueness: { scope: :match_id }
-
   validate :reported_by_is_active_player, unless: :forced_by_admin?
-  validate :scores_and_winner_consistency
+  validate :sets_consistency
 
   after_create_commit :recalculate_consensus_after_create
   after_update_commit :recalculate_consensus_after_update
   after_destroy_commit :recalculate_consensus_after_destroy
+
+  def set_signature
+    match_sets.sort_by(&:order).map { |s| "#{s.team_a_games}-#{s.team_b_games}" }.join(",")
+  end
+
+  def winner_team
+    a_sets = match_sets.count { |s| s.team_a_games > s.team_b_games }
+    b_sets = match_sets.count { |s| s.team_b_games > s.team_a_games }
+
+    return nil if a_sets == b_sets
+
+    a_sets > b_sets ? :team_a : :team_b
+  end
 
   private
 
@@ -52,19 +55,29 @@ class MatchResult < ApplicationRecord
     errors.add(:reported_by, "must be an active player of the match")
   end
 
-  def scores_and_winner_consistency
-    return if team_a_score.blank? || team_b_score.blank? || winner_team.blank?
+  def sets_consistency
+    return if match.blank?
+    return if forced_by_admin? && match_sets.empty?
+    return if match_sets.empty?
 
-    expected = if team_a_score > team_b_score
-                 "team_a"
-    elsif team_b_score > team_a_score
-                 "team_b"
+    best_of = match.best_of
+    sets_needed = (best_of / 2) + 1
+
+    if match_sets.size > best_of
+      errors.add(:base, "too many sets (max #{best_of})")
     end
 
-    if expected.nil?
-      errors.add(:winner_team, "cannot be set when scores are tied")
-    elsif winner_team != expected
-      errors.add(:winner_team, "does not match scores")
+    if match_sets.size < sets_needed
+      errors.add(:base, "not enough sets (min #{sets_needed})")
+    end
+
+    a_wins = match_sets.count { |s| s.team_a_games > s.team_b_games }
+    b_wins = match_sets.count { |s| s.team_b_games > s.team_a_games }
+
+    if a_wins == b_wins
+      errors.add(:base, "match cannot end in a tie")
+    elsif [ a_wins, b_wins ].max != sets_needed
+      errors.add(:base, "winner must have exactly #{sets_needed} sets")
     end
   end
 end
