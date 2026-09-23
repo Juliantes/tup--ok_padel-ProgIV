@@ -1,0 +1,55 @@
+<% content_for :title, "Edit result - Admin" %>
+
+<h1 class="h3 mb-4">Edit result</h1>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Match</dt>
+      <dd class="col-sm-9"><%= @match.court.name %> — <%= @match.date.strftime("%d/%m/%Y %H:%M") %></dd>
+      <dt class="col-sm-3">Reporter</dt>
+      <dd class="col-sm-9"><%= @match_result.reported_by.name %></dd>
+      <% if @match_result.forced_by_admin? %>
+        <dt class="col-sm-3">Source</dt>
+        <dd class="col-sm-9"><span class="badge text-bg-danger">Forced by admin</span></dd>
+      <% end %>
+    </dl>
+  </div>
+</div>
+
+<%= form_with model: [:admin, @match, @match_result], html: { class: "row g-3" } do |f| %>
+  <% if @match_result.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          <% @match_result.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="col-md-4">
+    <%= f.label :team_a_score, "Team A", class: "form-label" %>
+    <%= f.number_field :team_a_score, min: 0, max: 99, class: "form-control", required: true %>
+  </div>
+
+  <div class="col-md-4">
+    <%= f.label :team_b_score, "Team B", class: "form-label" %>
+    <%= f.number_field :team_b_score, min: 0, max: 99, class: "form-control", required: true %>
+  </div>
+
+  <div class="col-md-4">
+    <%= f.label :winner_team, "Winner", class: "form-label" %>
+    <%= f.select :winner_team,
+                 options_for_select([["Team A", "team_a"], ["Team B", "team_b"]], @match_result.winner_team),
+                 { include_blank: "Tie / auto" },
+                 class: "form-select" %>
+  </div>
+
+  <div class="col-12">
+    <%= f.submit "Save changes", class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_match_path(@match), class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>

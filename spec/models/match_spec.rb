@@ -244,6 +244,36 @@ RSpec.describe Match, type: :model do
     end
   end
 
+  describe "#force_result!" do
+    it "creates a forced report, completes the match, and applies stats ignoring prior dispute" do
+      match, player_a, player_b = roster_match
+      admin = create(:user, :admin)
+      add_report_for(match, player_a, team_a_score: 6, team_b_score: 4)
+      add_report_for(match, player_b, team_a_score: 4, team_b_score: 6)
+      expect(match.reload).to be_reported
+
+      match.force_result!(admin: admin, team_a_score: 7, team_b_score: 5, winner_team: :team_a)
+
+      forced = match.match_results.find_by!(reported_by: admin)
+      expect(forced).to be_forced_by_admin
+      expect(match.reload).to be_completed
+      expect(player_a.player_stat.reload.wins).to eq(2)
+      expect(player_b.player_stat.reload.losses).to eq(2)
+    end
+  end
+
+  describe "#apply_stats_from!" do
+    it "applies player stats from explicit scores" do
+      match, player_a, player_b = roster_match
+
+      match.apply_stats_from!(team_a_score: 6, team_b_score: 4)
+
+      expect(match.reload.stats_applied_at).to be_present
+      expect(player_a.player_stat.reload.wins).to eq(2)
+      expect(player_b.player_stat.reload.losses).to eq(2)
+    end
+  end
+
   describe "#mark_as_played!" do
     it "marks the match completed without a result" do
       match = create(:match, status: :confirmed)

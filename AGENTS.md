@@ -40,11 +40,18 @@
 
 1. **Auto-aprobación por tiempo:** job que cierre el resultado si pasa un plazo sin reportes nuevos.
 2. **Reversión de stats al borrar un reporte:** hoy se aplican una sola vez (`matches.stats_applied_at`) y no se revierten. El primer reporte provisorio puede dejar stats distintas del consenso final.
-3. **Admin fuerza consenso (Sprint 3b):** el back-office puede fijar el marcador sin mayoría.
+3. ~~**Admin fuerza consenso (Sprint 3b):**~~ implementado en admin (`force_result`).
+
+### Deuda planificada — Sprint 3b (admin resultados)
+
+1. **Force result no revierte stats:** si el admin fuerza un marcador, `stats_applied_at` queda fijado; cambiar o borrar el reporte forzado no revierte `player_stats`.
+2. **Delete de reporte en match cerrado:** permitido desde admin; las stats no se revierten.
+3. **Reopen:** no hay flujo de reapertura; si se agrega, no debe asumir reversión de stats.
+4. **`approved_at` en `match_results`:** columna legacy sin uso en el flujo actual.
 
 ## Estado de calidad
-- `bundle exec rspec` → 241 examples, 0 failures ✅
-- `bundle exec rubocop` → 137 files, 0 offenses ✅
+- `bundle exec rspec` → 256 examples, 0 failures ✅
+- `bundle exec rubocop` → 141 files, 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 
 ## Regla operativa

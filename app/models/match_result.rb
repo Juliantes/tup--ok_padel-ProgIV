@@ -16,15 +16,20 @@ class MatchResult < ApplicationRecord
 
   validates :reported_by_id, uniqueness: { scope: :match_id }
 
-  validate :reported_by_is_active_player
+  validate :reported_by_is_active_player, unless: :forced_by_admin?
   validate :scores_and_winner_consistency
 
   after_create_commit :recalculate_consensus_after_create
+  after_update_commit :recalculate_consensus_after_update
   after_destroy_commit :recalculate_consensus_after_destroy
 
   private
 
   def recalculate_consensus_after_create
+    recalculate_match_consensus
+  end
+
+  def recalculate_consensus_after_update
     recalculate_match_consensus
   end
 

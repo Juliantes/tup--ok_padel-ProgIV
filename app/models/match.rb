@@ -103,6 +103,10 @@ class Match < ApplicationRecord
   def recalculate_consensus!
     match_results.reset
 
+    if match_results.where(forced_by_admin: true).exists? && completed?
+      return
+    end
+
     if match_results.empty?
       update!(status: :confirmed) if reported?
       return
@@ -148,6 +152,58 @@ class Match < ApplicationRecord
     update!(status: :completed)
   end
 
+  def force_result!(admin:, team_a_score:, team_b_score:, winner_team: nil)
+    transaction do
+      existing = match_results.find_by(reported_by_id: admin.id)
+      existing&.destroy!
+
+      match_results.create!(
+        reported_by: admin,
+        team_a_score: team_a_score,
+        team_b_score: team_b_score,
+        winner_team: winner_team.presence,
+        forced_by_admin: true
+      )
+
+      update!(status: :completed)
+      apply_stats_from!(team_a_score: team_a_score, team_b_score: team_b_score)
+    end
+  end
+
+  def apply_stats_from!(team_a_score:, team_b_score:)
+    with_lock do
+      return if stats_applied_at.present?
+
+      winner = if team_a_score > team_b_score
+                 "team_a"
+      elsif team_b_score > team_a_score
+                 "team_b"
+      end
+
+      active_match_players.includes(user: :player_stat).each do |match_player|
+        stat = match_player.user.player_stat
+        next unless stat
+
+        if winner.nil?
+          stat.current_streak = 0
+        elsif match_player.team == winner
+          stat.wins += 1
+          stat.current_streak += 1
+          stat.best_streak = [ stat.best_streak, stat.current_streak ].max
+        else
+          stat.losses += 1
+          stat.current_streak = 0
+        end
+
+        total = stat.wins + stat.losses
+        stat.win_rate = total > 0 ? (stat.wins.to_f / total * 100).round(2) : 0
+        stat.save!
+      end
+
+      update_column(:stats_applied_at, Time.current)
+    end
+  end
+
   private
 
   def time_slot_belongs_to_court
@@ -185,43 +241,9 @@ class Match < ApplicationRecord
 
   # Applied once. Later report deletes do not roll stats back (stats_applied_at).
   def apply_player_stats!
-    with_lock do
-      return if stats_applied_at.present?
+    consensus = consensus_result
+    return if consensus.blank?
 
-      consensus = consensus_result
-      return if consensus.blank?
-
-      score_a = consensus[:team_a_score]
-      score_b = consensus[:team_b_score]
-      return if score_a.nil? || score_b.nil?
-
-      winner = if score_a > score_b
-                 "team_a"
-      elsif score_b > score_a
-                 "team_b"
-      end
-
-      active_match_players.includes(user: :player_stat).each do |match_player|
-        stat = match_player.user.player_stat
-        next unless stat
-
-        if winner.nil?
-          stat.current_streak = 0
-        elsif match_player.team == winner
-          stat.wins += 1
-          stat.current_streak += 1
-          stat.best_streak = [ stat.best_streak, stat.current_streak ].max
-        else
-          stat.losses += 1
-          stat.current_streak = 0
-        end
-
-        total = stat.wins + stat.losses
-        stat.win_rate = total > 0 ? (stat.wins.to_f / total * 100).round(2) : 0
-        stat.save!
-      end
-
-      update_column(:stats_applied_at, Time.current)
-    end
+    apply_stats_from!(team_a_score: consensus[:team_a_score], team_b_score: consensus[:team_b_score])
   end
 end

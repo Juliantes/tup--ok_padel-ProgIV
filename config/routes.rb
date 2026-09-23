@@ -13,6 +13,11 @@ Rails.application.routes.draw do
     resources :users
     resources :matches, only: %i[index show edit update] do
       resources :match_players, only: %i[create destroy]
+      resources :match_results, only: %i[edit update destroy]
+      member do
+        post :force_result
+        post :mark_played
+      end
     end
   end
 

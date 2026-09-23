@@ -3,6 +3,14 @@ require "rails_helper"
 RSpec.describe MatchResult, type: :model do
   subject { build(:match_result) }
 
+  describe "forced_by_admin" do
+    it "defaults to false" do
+      result = create(:match_result)
+
+      expect(result.forced_by_admin).to be(false)
+    end
+  end
+
   describe "associations" do
     it { is_expected.to belong_to(:match) }
     it { is_expected.to belong_to(:reported_by).class_name("User") }

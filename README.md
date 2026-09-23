@@ -559,8 +559,16 @@ Errores: `401` sin auth; `422` si quien reporta no es jugador activo (`Reporter 
 | Courts | CRUD completo |
 | Time Slots | CRUD completo (anidado bajo Court) |
 | Users | CRUD completo |
-| Matches | Index, show, edit, update |
+| Matches | Index, show, edit, update; forzar resultado; marcar jugado sin resultado |
 | Match players | Alta/baja en roster (anidado bajo match) |
+| Match results | Editar y borrar reportes (anidado bajo match; listado en show del partido) |
+
+**Match results management** (en el detalle del partido, `/admin/matches/:id`):
+
+- Ver todos los reportes de jugadores, consenso provisional o disputa.
+- Editar o borrar un reporte individual.
+- **Force result:** el admin fija el marcador oficial (`forced_by_admin`), cierra el partido y aplica estadísticas sin esperar consenso.
+- **Mark as played (no result):** completa el partido sin marcador ni stats.
 
 ## Emails
 

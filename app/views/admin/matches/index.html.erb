@@ -18,6 +18,7 @@
           <th>Date</th>
           <th>Duration</th>
           <th>Status</th>
+          <th>Result</th>
           <th></th>
         </tr>
       </thead>
@@ -29,6 +30,19 @@
             <td><%= match.date.strftime("%d/%m/%Y %H:%M") %></td>
             <td><%= match.duration %> min</td>
             <td><span class="badge text-bg-secondary"><%= match.status %></span></td>
+            <td>
+              <% if match.completed? %>
+                <% if (c = match.consensus_result) %>
+                  <span class="badge text-bg-success"><%= c[:team_a_score] %>-<%= c[:team_b_score] %></span>
+                <% else %>
+                  <span class="badge text-bg-secondary">Played</span>
+                <% end %>
+              <% elsif match.reported? %>
+                <span class="badge text-bg-warning">In dispute</span>
+              <% else %>
+                —
+              <% end %>
+            </td>
             <td class="text-end">
               <%= link_to "View", admin_match_path(match), class: "btn btn-sm btn-outline-secondary" %>
               <%= link_to "Edit", edit_admin_match_path(match), class: "btn btn-sm btn-outline-primary" %>

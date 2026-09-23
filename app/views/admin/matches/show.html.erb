@@ -28,4 +28,93 @@
 
 <%= render "roster", return_to: "show" %>
 
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h2 class="h5 mb-0">Results</h2>
+    <% if @match.completed? %>
+      <span class="badge text-bg-success">Completed</span>
+    <% elsif @match.reported? %>
+      <span class="badge text-bg-warning">In dispute</span>
+    <% end %>
+  </div>
+  <div class="card-body">
+    <% if @consensus %>
+      <div class="alert alert-info">
+        <strong>Consensus:</strong>
+        <%= @consensus[:team_a_score] %> - <%= @consensus[:team_b_score] %>
+        (votes: <%= @consensus[:votes] %>/<%= @consensus[:total] %>)
+      </div>
+    <% elsif @match_results.any? %>
+      <div class="alert alert-warning">No consensus yet.</div>
+    <% else %>
+      <p class="text-muted">No results reported.</p>
+    <% end %>
+
+    <% if @match_results.any? %>
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Reporter</th>
+            <th>Score</th>
+            <th>Winner</th>
+            <th>Forced</th>
+            <th>Reported at</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @match_results.each do |result| %>
+            <tr>
+              <td><%= result.reported_by.name %></td>
+              <td><%= result.team_a_score %> - <%= result.team_b_score %></td>
+              <td><%= result.winner_team.presence || "—" %></td>
+              <td>
+                <% if result.forced_by_admin? %>
+                  <span class="badge text-bg-danger">Forced</span>
+                <% end %>
+              </td>
+              <td><%= result.created_at.strftime("%d/%m/%Y %H:%M") %></td>
+              <td class="text-end">
+                <%= link_to "Edit", edit_admin_match_match_result_path(@match, result), class: "btn btn-sm btn-outline-primary" %>
+                <%= button_to "Delete", admin_match_match_result_path(@match, result), method: :delete, class: "btn btn-sm btn-outline-danger", data: { turbo_confirm: "Delete this result?" } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>
+
+<% unless @match.completed? %>
+  <div class="card mb-4">
+    <div class="card-header">
+      <h2 class="h5 mb-0">Force result</h2>
+    </div>
+    <div class="card-body">
+      <%= form_with url: force_result_admin_match_path(@match), method: :post, class: "row g-3" do %>
+        <div class="col-md-3">
+          <%= label_tag "force_result[team_a_score]", "Team A", class: "form-label" %>
+          <%= number_field_tag "force_result[team_a_score]", nil, min: 0, max: 99, class: "form-control", required: true %>
+        </div>
+        <div class="col-md-3">
+          <%= label_tag "force_result[team_b_score]", "Team B", class: "form-label" %>
+          <%= number_field_tag "force_result[team_b_score]", nil, min: 0, max: 99, class: "form-control", required: true %>
+        </div>
+        <div class="col-md-3">
+          <%= label_tag "force_result[winner_team]", "Winner", class: "form-label" %>
+          <%= select_tag "force_result[winner_team]", options_for_select([["Team A", "team_a"], ["Team B", "team_b"], ["Tie", ""]]), include_blank: "Auto", class: "form-select" %>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <%= submit_tag "Force result", class: "btn btn-warning", data: { turbo_confirm: "Force result and close the match?" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%= button_to "Mark as played (no result)", mark_played_admin_match_path(@match), method: :post, class: "btn btn-outline-secondary", data: { turbo_confirm: "Mark as played without result?" } %>
+  </div>
+<% end %>
+
 <%= link_to "Back to matches", admin_matches_path, class: "btn btn-link mt-3" %>
