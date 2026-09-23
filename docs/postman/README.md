@@ -32,6 +32,7 @@ Documentación oficial: [Importing and exporting in Postman](https://learning.po
 | `baseUrl` | `http://localhost:3000` | Host de la API |
 | `token` | vacío | Se completa con el test del request **POST Login (happy)** |
 | `matchId` | vacío | Se completa al crear un partido (`POST` matches con status 201) |
+| `resultId` | vacío | Se completa al reportar un resultado (`POST` match results con status 201) |
 
 Si corrés la API en otro host o puerto, editá solo `baseUrl`.
 
@@ -43,7 +44,16 @@ Si corrés la API en otro host o puerto, editá solo `baseUrl`.
    - Creá un partido con **POST Create match (auto_join: false)** (actualiza `matchId`).
    - **POST Join match** → **DELETE Leave match**.
 
-**GET Match by id** usa `{{matchId}}`; si está vacío, setealo manualmente o creá un partido antes.
+**GET Match by id** usa `{{matchId}}`; si está vacío, setealo manualmente o creá un partido antes. La respuesta de detalle trae `match_results` (array) y `consensus`. Ya no existe la clave `match_result`.
+
+## Resultados
+
+1. Creá un partido con **POST Create match** (el creador queda inscripto si `auto_join` es `true`).
+2. **Match results → POST Report result** — guarda `resultId`. Un segundo reporte del mismo jugador, con el partido ya en consenso, responde `422`.
+3. **DELETE Own result** borra solo ese reporte. El de otro usuario responde `403`.
+4. **POST Mark match as played** conviene probarlo en un partido sin consenso. Si ya hay consenso, responde `422`.
+
+Si la base local tiene reportes duplicados del esquema viejo (`has_one`), corré `bin/rails db:reset` antes de migrar.
 
 ## Tests automáticos
 

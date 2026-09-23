@@ -30,7 +30,9 @@ Rails.application.routes.draw do
         member do
           post :join
           delete :leave
+          post :played
         end
+        resources :match_results, only: %i[index create destroy]
       end
     end
   end

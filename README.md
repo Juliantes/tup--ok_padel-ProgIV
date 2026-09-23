@@ -271,10 +271,10 @@ erDiagram
 - **TimeSlot** — Franja horaria recurrente por día de semana en una cancha.
 - **Match** — Partido en fecha/cancha; nivel requerido y modo de roster.
 - **MatchPlayer** — Inscripción al partido, equipo, estado y aprobaciones.
-- **MatchResult** — Resultado reportado y aprobado (TP2).
+- **MatchResult** — Reporte de resultado de un jugador (varios por partido; consenso por mayoría).
 - **Review** — Reseña post-partido (TP2).
 - **Message** — Mensajería entre jugadores / chat de partido (TP2).
-- **PlayerStat** — Victorias, rachas y win rate (TP2).
+- **PlayerStat** — Victorias, rachas y win rate. Se actualizan una sola vez al alcanzar consenso.
 
 ## API v1
 
@@ -302,6 +302,10 @@ Base URL en desarrollo: `http://localhost:3000`
 | POST | `/api/v1/matches` | Sí | Crear partido (`auto_join` opcional, default `true`) |
 | POST | `/api/v1/matches/:id/join` | Sí | Unirse al partido |
 | DELETE | `/api/v1/matches/:id/leave` | Sí | Salir del partido (soft delete) |
+| POST | `/api/v1/matches/:id/played` | Sí | Marcar el partido como jugado sin resultado (jugador activo) |
+| GET | `/api/v1/matches/:match_id/match_results` | No | Reportes del partido y consenso |
+| POST | `/api/v1/matches/:match_id/match_results` | Sí | Reportar resultado (jugador activo) |
+| DELETE | `/api/v1/matches/:match_id/match_results/:id` | Sí | Borrar el propio reporte |
 | GET | `/api/v1/me/matches` | Sí | Partidos del usuario (inscripto o creador) |
 
 **Paginación (listados de partidos):** query `page` (default 1), `per_page` (default 20, máx. 50). Respuesta incluye `meta` con `current_page`, `per_page`, `total_pages`, `total_count`. La API v1 incluye `Pagy::Method` en `Api::V1::BaseController` (misma API que el back-office: `pagy(:offset, ...)`).
@@ -463,12 +467,81 @@ Respuesta `201`:
     "players_count": 1,
     "max_players": 4,
     "time_slot": null,
-    "match_result": null
+    "match_results": [],
+    "consensus": null
   }
 }
 ```
 
 Errores: `401` sin auth; `422` validaciones del modelo.
+
+El detalle (`show_details`) ya no incluye `match_result` (objeto o `null`). Pasa a `match_results` (array) y `consensus` (`null` si no hay mayoría).
+
+### Sistema de resultados
+
+Cada jugador activo puede cargar un marcador. El partido guarda **varios** `match_results` (único por `match_id` + `reported_by_id`).
+
+**Consenso**
+
+- 1 reporte: consenso **provisorio**. El partido pasa a `completed` y se aplican las stats.
+- 2 o más: hace falta **mayoría estricta** (más del 50% de reportes con el mismo `team_a_score` y `team_b_score`).
+- Sin mayoría: el partido queda en `reported`. Ahí el jugador puede reemplazar su reporte.
+- Con consenso ya cerrado (`completed`): no se puede volver a reportar el mismo marcador.
+- Empate: no suma victoria ni derrota, y pone `current_streak` en 0.
+- Las stats se escriben **una sola vez** (`matches.stats_applied_at`). Borrar un reporte no las revierte. Si el primer reporte provisorio no coincide con el consenso final, las stats quedan las del primero.
+
+**Marcar como jugado:** `POST /api/v1/matches/:id/played` pasa el partido a `completed` sin marcador. Responde `422` si ya está `completed` **y** hay consenso.
+
+Si el índice único de reportes falla por datos viejos duplicados: `bin/rails db:reset`.
+
+#### POST `/api/v1/matches/:id/match_results`
+
+```bash
+TOKEN="<jwt>"
+curl -s -X POST http://localhost:3000/api/v1/matches/1/match_results \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"team_a_score":6,"team_b_score":4,"winner_team":"team_a"}'
+```
+
+Respuesta `201`:
+
+```json
+{
+  "match": {
+    "id": 1,
+    "status": "completed",
+    "match_results": [
+      {
+        "id": 10,
+        "team_a_score": 6,
+        "team_b_score": 4,
+        "winner_team": "team_a",
+        "reported_by": { "id": 3, "name": "Jugador Demo" },
+        "created_at": "2026-09-22T20:00:00-03:00"
+      }
+    ],
+    "consensus": { "team_a_score": 6, "team_b_score": 4, "votes": 1, "total": 1 }
+  },
+  "results": [
+    {
+      "id": 10,
+      "team_a_score": 6,
+      "team_b_score": 4,
+      "winner_team": "team_a",
+      "reported_by": { "id": 3, "name": "Jugador Demo" },
+      "created_at": "2026-09-22T20:00:00-03:00"
+    }
+  ],
+  "consensus": { "team_a_score": 6, "team_b_score": 4, "votes": 1, "total": 1 }
+}
+```
+
+Errores: `401` sin auth; `422` si quien reporta no es jugador activo (`Reporter is not an active player`) o ya reportó sin disputa (`You already reported a result`).
+
+`GET /api/v1/matches/:id/match_results` es público y responde `{ "results", "consensus", "total" }`.
+
+`DELETE` solo borra el reporte propio: `403` si es de otro, `404` si no existe.
 
 ## Back-office
 

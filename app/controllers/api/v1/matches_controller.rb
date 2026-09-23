@@ -54,6 +54,21 @@ module Api
         render :leave
       end
 
+      def played
+        @match = Match.find(params[:id])
+        unless @match.active_match_players.exists?(user_id: current_user.id)
+          return render_error("You are not an active player of this match", status: :unprocessable_entity)
+        end
+
+        if @match.completed? && @match.consensus?
+          return render_error("Match is already completed with a consensus result", status: :unprocessable_entity)
+        end
+
+        @match.mark_as_played!
+        @match = load_match_for_detail.find(@match.id)
+        render :show
+      end
+
       def mine
         enrolled_ids = MatchPlayer.active.where(user_id: current_user.id).select(:match_id)
         scope = Match.where(creator_id: current_user.id).or(Match.where(id: enrolled_ids))
@@ -68,7 +83,7 @@ module Api
       private
 
       def load_match_for_detail
-        Match.includes(:court, :creator, :match_players, :time_slot, :match_result)
+        Match.includes(:court, :creator, :match_players, :time_slot, match_results: :reported_by)
       end
 
       def create_params

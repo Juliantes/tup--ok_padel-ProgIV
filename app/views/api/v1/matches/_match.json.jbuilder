@@ -33,11 +33,8 @@ if local_assigns.fetch(:show_details, false)
     json.time_slot nil
   end
 
-  if match.match_result
-    json.match_result do
-      json.partial! "api/v1/matches/match_result", match_result: match.match_result
-    end
-  else
-    json.match_result nil
+  json.match_results match.match_results.sort_by { |result| [ result.created_at, result.id ] } do |result|
+    json.partial! "api/v1/match_results/match_result", match_result: result
   end
+  json.consensus match.consensus_result
 end

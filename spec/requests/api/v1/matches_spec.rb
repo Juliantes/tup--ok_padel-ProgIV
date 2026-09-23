@@ -71,7 +71,9 @@ RSpec.describe "Api::V1::Matches", type: :request do
       expect(body["match"]["id"]).to eq(open_match.id)
       expect(body["match"]["join_policy"]).to eq("auto")
       expect(body["match"]).to have_key("time_slot")
-      expect(body["match"]).to have_key("match_result")
+      expect(body["match"]).not_to have_key("match_result")
+      expect(body["match"]["match_results"]).to eq([])
+      expect(body["match"]["consensus"]).to be_nil
     end
 
     it "returns 404 for a missing match" do
@@ -264,6 +266,55 @@ RSpec.describe "Api::V1::Matches", type: :request do
       get "/api/v1/me/matches", as: :json
 
       expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  describe "POST /api/v1/matches/:id/played" do
+    let!(:player) { create(:match_player, match: confirmed_match, user: other_player, team: :team_a) }
+
+    it "marks the match as played for an active player" do
+      post "/api/v1/matches/#{confirmed_match.id}/played",
+           headers: auth_headers_for(other_player),
+           as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(confirmed_match.reload).to be_completed
+      body = JSON.parse(response.body)
+      expect(body["match"]["status"]).to eq("completed")
+      expect(body["match"]["consensus"]).to be_nil
+
+      post "/api/v1/matches/#{confirmed_match.id}/played",
+           headers: auth_headers_for(other_player),
+           as: :json
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "returns 401 without a token" do
+      post "/api/v1/matches/#{confirmed_match.id}/played", as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "returns 422 when the user is not an active player" do
+      post "/api/v1/matches/#{confirmed_match.id}/played",
+           headers: auth_headers_for(creator),
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to eq("You are not an active player of this match")
+    end
+
+    it "returns 422 when the match is already completed with consensus" do
+      create(:match_result, match: confirmed_match, reported_by: other_player, team_a_score: 6, team_b_score: 4, winner_team: :team_a)
+      expect(confirmed_match.reload).to be_completed
+
+      post "/api/v1/matches/#{confirmed_match.id}/played",
+           headers: auth_headers_for(other_player),
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to eq("Match is already completed with a consensus result")
     end
   end
 end

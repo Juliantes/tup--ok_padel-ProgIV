@@ -7,11 +7,11 @@ class Match < ApplicationRecord
 
   has_many :match_players, dependent: :destroy
   has_many :players, through: :match_players, source: :user
-  has_one :match_result, dependent: :destroy
+  has_many :match_results, dependent: :destroy
   has_many :reviews, dependent: :destroy
   has_many :messages, dependent: :destroy
 
-  enum :status, { open: 0, full: 1, confirmed: 2, completed: 3, cancelled: 4 }
+  enum :status, { open: 0, full: 1, confirmed: 2, completed: 3, cancelled: 4, reported: 5 }
   enum :roster_mode, { pairs: 0, individual: 1 }, prefix: true
 
   enum :level_required, {
@@ -77,6 +77,77 @@ class Match < ApplicationRecord
     update!(status: :cancelled)
   end
 
+  def report_result!(reporter:, team_a_score:, team_b_score:, winner_team: nil)
+    unless active_match_players.exists?(user_id: reporter.id)
+      raise_invalid_result!("Reporter is not an active player")
+    end
+
+    existing = match_results.find_by(reported_by_id: reporter.id)
+    if existing && !reported?
+      existing.errors.add(:base, "You already reported a result")
+      raise ActiveRecord::RecordInvalid, existing
+    end
+
+    # Destroy and create in one transaction so consensus callbacks see the final set of reports.
+    transaction do
+      existing&.destroy!
+      match_results.create!(
+        reported_by: reporter,
+        team_a_score: team_a_score,
+        team_b_score: team_b_score,
+        winner_team: winner_team
+      )
+    end
+  end
+
+  def recalculate_consensus!
+    match_results.reset
+
+    if match_results.empty?
+      update!(status: :confirmed) if reported?
+      return
+    end
+
+    if consensus_result
+      update!(status: :completed) unless completed?
+      apply_player_stats! unless stats_applied_at.present?
+    else
+      update!(status: :reported) unless reported?
+    end
+  end
+
+  # One report is provisional consensus. Otherwise a strict majority (> 50%) of identical scores.
+  def consensus_result
+    reports = match_results.to_a
+    return if reports.empty?
+
+    grouped = reports.group_by { |result| [ result.team_a_score, result.team_b_score ] }
+    total = reports.size
+
+    if total == 1
+      scores = grouped.keys.first
+      return { team_a_score: scores[0], team_b_score: scores[1], votes: 1, total: 1 }
+    end
+
+    grouped.each do |scores, results|
+      next unless results.size > (total / 2.0)
+
+      return { team_a_score: scores[0], team_b_score: scores[1], votes: results.size, total: total }
+    end
+
+    nil
+  end
+
+  def consensus?
+    consensus_result.present?
+  end
+
+  def mark_as_played!
+    return if completed?
+
+    update!(status: :completed)
+  end
+
   private
 
   def time_slot_belongs_to_court
@@ -103,6 +174,54 @@ class Match < ApplicationRecord
       next if players_for_team(team).count <= MatchPlayer::PLAYERS_PER_TEAM
 
       errors.add(:roster_mode, "cannot switch to pairs: #{team.humanize} has more than #{MatchPlayer::PLAYERS_PER_TEAM} players")
+    end
+  end
+
+  def raise_invalid_result!(message)
+    result = MatchResult.new
+    result.errors.add(:base, message)
+    raise ActiveRecord::RecordInvalid, result
+  end
+
+  # Applied once. Later report deletes do not roll stats back (stats_applied_at).
+  def apply_player_stats!
+    with_lock do
+      return if stats_applied_at.present?
+
+      consensus = consensus_result
+      return if consensus.blank?
+
+      score_a = consensus[:team_a_score]
+      score_b = consensus[:team_b_score]
+      return if score_a.nil? || score_b.nil?
+
+      winner = if score_a > score_b
+                 "team_a"
+      elsif score_b > score_a
+                 "team_b"
+      end
+
+      active_match_players.includes(user: :player_stat).each do |match_player|
+        stat = match_player.user.player_stat
+        next unless stat
+
+        if winner.nil?
+          stat.current_streak = 0
+        elsif match_player.team == winner
+          stat.wins += 1
+          stat.current_streak += 1
+          stat.best_streak = [ stat.best_streak, stat.current_streak ].max
+        else
+          stat.losses += 1
+          stat.current_streak = 0
+        end
+
+        total = stat.wins + stat.losses
+        stat.win_rate = total > 0 ? (stat.wins.to_f / total * 100).round(2) : 0
+        stat.save!
+      end
+
+      update_column(:stats_applied_at, Time.current)
     end
   end
 end

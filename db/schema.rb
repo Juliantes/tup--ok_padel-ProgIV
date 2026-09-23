@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_230000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_22_233202) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -87,17 +87,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_230000) do
 
   create_table "match_results", force: :cascade do |t|
     t.datetime "approved_at"
-    t.bigint "approved_by_id"
     t.datetime "created_at", null: false
     t.bigint "match_id", null: false
     t.bigint "reported_by_id", null: false
-    t.integer "status", default: 0, null: false
     t.integer "team_a_score"
     t.integer "team_b_score"
     t.datetime "updated_at", null: false
     t.integer "winner_team"
-    t.index ["approved_by_id"], name: "index_match_results_on_approved_by_id"
-    t.index ["match_id"], name: "index_match_results_on_match_id", unique: true
+    t.index ["match_id", "reported_by_id"], name: "index_match_results_on_match_and_reporter", unique: true
     t.index ["reported_by_id"], name: "index_match_results_on_reported_by_id"
   end
 
@@ -109,6 +106,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_230000) do
     t.integer "duration", default: 90, null: false
     t.integer "level_required", default: 0, null: false
     t.integer "roster_mode", default: 0, null: false
+    t.datetime "stats_applied_at"
     t.integer "status", default: 0, null: false
     t.bigint "time_slot_id"
     t.datetime "updated_at", null: false
@@ -222,7 +220,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_230000) do
   add_foreign_key "match_players", "users"
   add_foreign_key "match_players", "users", column: "approved_by_id"
   add_foreign_key "match_results", "matches"
-  add_foreign_key "match_results", "users", column: "approved_by_id"
   add_foreign_key "match_results", "users", column: "reported_by_id"
   add_foreign_key "matches", "courts"
   add_foreign_key "matches", "time_slots"

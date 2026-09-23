@@ -36,9 +36,15 @@
 2. **Política de tiempo restante:** reglas de negocio para `leave`, `join` y cancelación según horas/minutos antes del `date` del partido.
 3. **Transferencia de responsabilidad del creador:** cuando el creador sale con jugadores activos restantes, designar nuevo responsable o bloquear según reglas acordadas.
 
+### Deuda planificada — Sprint 3 (resultados)
+
+1. **Auto-aprobación por tiempo:** job que cierre el resultado si pasa un plazo sin reportes nuevos.
+2. **Reversión de stats al borrar un reporte:** hoy se aplican una sola vez (`matches.stats_applied_at`) y no se revierten. El primer reporte provisorio puede dejar stats distintas del consenso final.
+3. **Admin fuerza consenso (Sprint 3b):** el back-office puede fijar el marcador sin mayoría.
+
 ## Estado de calidad
-- `bundle exec rspec` → 202 examples, 0 failures ✅
-- `bundle exec rubocop` → 129 files, 0 offenses ✅
+- `bundle exec rspec` → 241 examples, 0 failures ✅
+- `bundle exec rubocop` → 137 files, 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 
 ## Regla operativa

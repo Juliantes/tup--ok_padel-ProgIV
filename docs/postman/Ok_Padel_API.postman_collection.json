@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "Ok Padel API",
-    "description": "Colección esqueleto para API v1 de Ok Padel. Importar junto con el environment **Ok Padel Local**. Ejecutar **Login** primero; los requests autenticados usan `Bearer {{token}}`. Tras `db:seed`, login de prueba: `player@okpadel.local` / `password123`. Ajustar bodies (p. ej. `court_id`, fechas) según tu base local.",
+    "description": "Colección para API v1 de Ok Padel. Importar junto con el environment **Ok Padel Local**. Ejecutar **Login** primero; los requests autenticados usan `Bearer {{token}}`. Tras `db:seed`, login de prueba: `player@okpadel.local` / `password123`. El detalle de partido expone `match_results` (array) y `consensus`, no `match_result`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -369,7 +369,11 @@
                   "});",
                   "",
                   "pm.test('Match object present', function () {",
-                  "    pm.expect(pm.response.json().match).to.be.an('object');",
+                  "    const match = pm.response.json().match;",
+                  "    pm.expect(match).to.be.an('object');",
+                  "    pm.expect(match.match_results).to.be.an('array');",
+                  "    pm.expect(match).to.have.property('consensus');",
+                  "    pm.expect(match).to.not.have.property('match_result');",
                   "});"
                 ]
               }
@@ -671,6 +675,183 @@
               }
             ],
             "url": "{{baseUrl}}/api/v1/me/matches"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📁 Match results",
+      "item": [
+        {
+          "name": "GET Match results",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Results, consensus and total', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.results).to.be.an('array');",
+                  "    pm.expect(json).to.have.property('consensus');",
+                  "    pm.expect(json.total).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/match_results",
+            "description": "Público. El detalle del partido ya no trae `match_result`; usa `match_results` y `consensus`."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Report result",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Result saved and resultId stored', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.results).to.be.an('array').that.is.not.empty;",
+                  "    pm.expect(json.consensus).to.be.an('object');",
+                  "    pm.environment.set('resultId', String(json.results[0].id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"team_a_score\": 6,\n  \"team_b_score\": 4,\n  \"winner_team\": \"team_a\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/match_results",
+            "description": "El usuario del token tiene que ser jugador activo. Un solo reporte cierra consenso provisorio (`completed`). Un segundo POST del mismo jugador responde 422."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Own result",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Results array present', function () {",
+                  "    pm.expect(pm.response.json().results).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/match_results/{{resultId}}",
+            "description": "Solo el autor del reporte. Borrar el de otro usuario responde 403. `resultId` sale de **POST Report result**."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Mark match as played",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Match is completed', function () {",
+                  "    pm.expect(pm.response.json().match.status).to.eql('completed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/played",
+            "description": "Jugador activo. Si el partido ya está `completed` con consenso, responde 422. Usar un partido distinto del que ya tiene resultado."
           },
           "response": []
         }
