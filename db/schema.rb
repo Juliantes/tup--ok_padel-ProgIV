@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_23_215204) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_23_220002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -91,15 +91,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_215204) do
     t.boolean "forced_by_admin", default: false, null: false
     t.bigint "match_id", null: false
     t.bigint "reported_by_id", null: false
-    t.integer "team_a_score"
-    t.integer "team_b_score"
     t.datetime "updated_at", null: false
-    t.integer "winner_team"
     t.index ["match_id", "reported_by_id"], name: "index_match_results_on_match_and_reporter", unique: true
     t.index ["reported_by_id"], name: "index_match_results_on_reported_by_id"
   end
 
+  create_table "match_sets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "match_result_id", null: false
+    t.integer "order", null: false
+    t.integer "team_a_games", null: false
+    t.integer "team_b_games", null: false
+    t.datetime "updated_at", null: false
+    t.index ["match_result_id", "order"], name: "index_match_sets_on_match_result_id_and_order", unique: true
+    t.index ["match_result_id"], name: "index_match_sets_on_match_result_id"
+  end
+
   create_table "matches", force: :cascade do |t|
+    t.integer "best_of", default: 3, null: false
     t.bigint "court_id", null: false
     t.datetime "created_at", null: false
     t.bigint "creator_id", null: false
@@ -222,6 +231,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_215204) do
   add_foreign_key "match_players", "users", column: "approved_by_id"
   add_foreign_key "match_results", "matches"
   add_foreign_key "match_results", "users", column: "reported_by_id"
+  add_foreign_key "match_sets", "match_results"
   add_foreign_key "matches", "courts"
   add_foreign_key "matches", "time_slots"
   add_foreign_key "matches", "users", column: "creator_id"
