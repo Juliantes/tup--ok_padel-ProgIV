@@ -6,23 +6,29 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
   let(:other_player) { create(:user, :player) }
   let(:match) { create(:match, :individual, court: court, creator: player, status: :confirmed) }
   let!(:enrollment) { create(:match_player, match: match, user: player, team: :team_a) }
+  let(:team_a_wins_2_0) do
+    [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 6, team_b_games: 4 } ]
+  end
 
   describe "GET /api/v1/matches/:match_id/match_results" do
     it "returns reports and consensus without authentication" do
-      create(:match_result, match: match, reported_by: player, team_a_score: 6, team_b_score: 4, winner_team: :team_a)
+      create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
 
       get "/api/v1/matches/#{match.id}/match_results", as: :json
 
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
       expect(body["total"]).to eq(1)
-      expect(body["results"].first).to include(
-        "team_a_score" => 6,
-        "team_b_score" => 4,
-        "winner_team" => "team_a"
+      expect(body["results"].first["sets"]).to eq(
+        [
+          { "order" => 1, "team_a_games" => 6, "team_b_games" => 4 },
+          { "order" => 2, "team_a_games" => 6, "team_b_games" => 4 }
+        ]
       )
+      expect(body["results"].first).to include("winner_team" => "team_a")
       expect(body["results"].first["reported_by"]).to include("id" => player.id, "name" => player.name)
-      expect(body["consensus"]).to include("team_a_score" => 6, "team_b_score" => 4, "votes" => 1, "total" => 1)
+      expect(body["consensus"]).to include("signature" => "6-4,6-4", "votes" => 1, "total" => 1)
+      expect(body["consensus"]["sets"].size).to eq(2)
     end
 
     it "returns 404 for a missing match" do
@@ -33,7 +39,7 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
   end
 
   describe "POST /api/v1/matches/:match_id/match_results" do
-    let(:payload) { { team_a_score: 6, team_b_score: 4, winner_team: "team_a" } }
+    let(:payload) { { sets: team_a_wins_2_0 } }
 
     it "lets an active player report a result" do
       post "/api/v1/matches/#{match.id}/match_results",
@@ -44,6 +50,7 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
       expect(response).to have_http_status(:created)
       body = JSON.parse(response.body)
       expect(body["results"].size).to eq(1)
+      expect(body["results"].first["sets"].size).to eq(2)
       expect(body["consensus"]["votes"]).to eq(1)
       expect(body["match"]["status"]).to eq("completed")
       expect(body["match"]["match_results"].size).to eq(1)
@@ -54,6 +61,16 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
       post "/api/v1/matches/#{match.id}/match_results", params: payload, as: :json
 
       expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "returns 422 when sets are missing" do
+      post "/api/v1/matches/#{match.id}/match_results",
+           params: {},
+           headers: auth_headers_for(player),
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)["error"]).to eq("sets is required")
     end
 
     it "returns 422 when the user is not an active player" do
@@ -73,7 +90,7 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
            as: :json
 
       post "/api/v1/matches/#{match.id}/match_results",
-           params: payload.merge(team_b_score: 2),
+           params: { sets: [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 6, team_b_games: 2 } ] },
            headers: auth_headers_for(player),
            as: :json
 
@@ -85,7 +102,7 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
 
   describe "DELETE /api/v1/matches/:match_id/match_results/:id" do
     let!(:result) do
-      create(:match_result, match: match, reported_by: player, team_a_score: 6, team_b_score: 4, winner_team: :team_a)
+      create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
     end
 
     it "lets the reporter delete their own result" do

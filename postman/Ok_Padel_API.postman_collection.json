@@ -806,7 +806,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"team_a_score\": 6,\n  \"team_b_score\": 4,\n  \"winner_team\": \"team_a\"\n}"
+              "raw": "{\n  \"sets\": [\n    { \"team_a_games\": 6, \"team_b_games\": 4 },\n    { \"team_a_games\": 6, \"team_b_games\": 4 }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/match_results",
             "description": "El usuario del token tiene que ser jugador activo. Un solo reporte cierra consenso provisorio (`completed`). Un segundo POST del mismo jugador responde 422."

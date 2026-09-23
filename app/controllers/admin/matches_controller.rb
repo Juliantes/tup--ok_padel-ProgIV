@@ -10,15 +10,17 @@ module Admin
     end
 
     def show
-      @match_results = @match.match_results.includes(:reported_by).order(:created_at)
+      @match_results = @match.match_results.includes(:reported_by, :match_sets).order(:created_at)
       @consensus = @match.consensus_result
     end
 
     def force_result
-      @match.force_result!(
-        admin: current_user,
-        **force_result_params.to_h.symbolize_keys
-      )
+      sets = force_result_sets
+      if sets.empty?
+        return redirect_to admin_match_path(@match), alert: "At least one set is required."
+      end
+
+      @match.force_result!(admin: current_user, sets: sets)
       redirect_to admin_match_path(@match), notice: "Result was forced and the match was closed."
     rescue ActiveRecord::RecordInvalid => e
       redirect_to admin_match_path(@match), alert: e.record.errors.full_messages.to_sentence
@@ -50,8 +52,13 @@ module Admin
       params.require(:match).permit(:status, :level_required, :roster_mode)
     end
 
-    def force_result_params
-      params.require(:force_result).permit(:team_a_score, :team_b_score, :winner_team)
+    def force_result_sets
+      raw = params.fetch(:force_result, {}).permit(sets: %i[team_a_games team_b_games])[:sets] || []
+      raw.filter_map do |set|
+        next if set[:team_a_games].blank? && set[:team_b_games].blank?
+
+        set.to_h.symbolize_keys
+      end
     end
 
     def load_roster_data

@@ -9,9 +9,10 @@ body:
   type: text
   content: |-
     {
-      "team_a_score": 6,
-      "team_b_score": 4,
-      "winner_team": "team_a"
+      "sets": [
+        { "team_a_games": 6, "team_b_games": 4 },
+        { "team_a_games": 6, "team_b_games": 4 }
+      ]
     }
 auth:
   type: bearer
@@ -39,11 +40,12 @@ scripts:
           pm.environment.set('resultId', String(json.results[0].id));
       });
 
-      pm.test('Result has score fields', function () {
+      pm.test('Result has set fields', function () {
           const result = pm.response.json().results[0];
           pm.expect(result).to.have.property('id');
-          pm.expect(result).to.have.property('team_a_score');
-          pm.expect(result).to.have.property('team_b_score');
+          pm.expect(result.sets).to.be.an('array').that.is.not.empty;
+          pm.expect(result.sets[0]).to.have.property('team_a_games');
+          pm.expect(result.sets[0]).to.have.property('team_b_games');
           pm.expect(result).to.have.property('winner_team');
       });
     language: text/javascript

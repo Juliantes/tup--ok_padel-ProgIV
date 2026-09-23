@@ -31,8 +31,11 @@ scripts:
           if (results.length > 0) {
               results.forEach(function (result) {
                   pm.expect(result).to.have.property('id');
-                  pm.expect(result).to.have.property('team_a_score');
-                  pm.expect(result).to.have.property('team_b_score');
+                  pm.expect(result.sets).to.be.an('array');
+                  if (result.sets.length > 0) {
+                      pm.expect(result.sets[0]).to.have.property('team_a_games');
+                      pm.expect(result.sets[0]).to.have.property('team_b_games');
+                  }
                   pm.expect(result).to.have.property('winner_team');
               });
           }

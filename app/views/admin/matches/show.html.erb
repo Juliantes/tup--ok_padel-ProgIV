@@ -41,7 +41,7 @@
     <% if @consensus %>
       <div class="alert alert-info">
         <strong>Consensus:</strong>
-        <%= @consensus[:team_a_score] %> - <%= @consensus[:team_b_score] %>
+        <%= @consensus[:sets].sort_by(&:order).map { |s| "#{s.team_a_games}-#{s.team_b_games}" }.join(", ") %>
         (votes: <%= @consensus[:votes] %>/<%= @consensus[:total] %>)
       </div>
     <% elsif @match_results.any? %>
@@ -55,7 +55,7 @@
         <thead>
           <tr>
             <th>Reporter</th>
-            <th>Score</th>
+            <th>Sets</th>
             <th>Winner</th>
             <th>Forced</th>
             <th>Reported at</th>
@@ -66,7 +66,9 @@
           <% @match_results.each do |result| %>
             <tr>
               <td><%= result.reported_by.name %></td>
-              <td><%= result.team_a_score %> - <%= result.team_b_score %></td>
+              <td>
+                <%= result.match_sets.sort_by(&:order).map { |s| "#{s.team_a_games}-#{s.team_b_games}" }.join(", ") %>
+              </td>
               <td><%= result.winner_team.presence || "—" %></td>
               <td>
                 <% if result.forced_by_admin? %>
@@ -93,19 +95,20 @@
     </div>
     <div class="card-body">
       <%= form_with url: force_result_admin_match_path(@match), method: :post, class: "row g-3" do %>
-        <div class="col-md-3">
-          <%= label_tag "force_result[team_a_score]", "Team A", class: "form-label" %>
-          <%= number_field_tag "force_result[team_a_score]", nil, min: 0, max: 99, class: "form-control", required: true %>
-        </div>
-        <div class="col-md-3">
-          <%= label_tag "force_result[team_b_score]", "Team B", class: "form-label" %>
-          <%= number_field_tag "force_result[team_b_score]", nil, min: 0, max: 99, class: "form-control", required: true %>
-        </div>
-        <div class="col-md-3">
-          <%= label_tag "force_result[winner_team]", "Winner", class: "form-label" %>
-          <%= select_tag "force_result[winner_team]", options_for_select([["Team A", "team_a"], ["Team B", "team_b"], ["Tie", ""]]), include_blank: "Auto", class: "form-select" %>
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
+        <% (1..5).each do |order| %>
+          <div class="row g-2 mb-2 col-12">
+            <div class="col-md-2">
+              <label class="form-label">Set <%= order %></label>
+            </div>
+            <div class="col-md-4">
+              <%= number_field_tag "force_result[sets][][team_a_games]", nil, placeholder: "Team A", min: 0, max: 99, class: "form-control" %>
+            </div>
+            <div class="col-md-4">
+              <%= number_field_tag "force_result[sets][][team_b_games]", nil, placeholder: "Team B", min: 0, max: 99, class: "form-control" %>
+            </div>
+          </div>
+        <% end %>
+        <div class="col-12">
           <%= submit_tag "Force result", class: "btn btn-warning", data: { turbo_confirm: "Force result and close the match?" } %>
         </div>
       <% end %>

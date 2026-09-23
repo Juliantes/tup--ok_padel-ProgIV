@@ -306,7 +306,12 @@ RSpec.describe "Api::V1::Matches", type: :request do
     end
 
     it "returns 422 when the match is already completed with consensus" do
-      create(:match_result, match: confirmed_match, reported_by: other_player, team_a_score: 6, team_b_score: 4, winner_team: :team_a)
+      create(
+        :match_result,
+        match: confirmed_match,
+        reported_by: other_player,
+        result_sets: [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 6, team_b_games: 4 } ]
+      )
       expect(confirmed_match.reload).to be_completed
 
       post "/api/v1/matches/#{confirmed_match.id}/played",

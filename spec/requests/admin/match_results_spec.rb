@@ -4,9 +4,12 @@ RSpec.describe "Admin::MatchResults", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:match) { create(:match, :individual, status: :confirmed) }
   let(:player) { create(:user, :player) }
+  let(:team_a_wins_2_0) do
+    [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 6, team_b_games: 4 } ]
+  end
   let!(:match_result) do
     create(:match_player, match: match, user: player, team: :team_a, status: :confirmed)
-    create(:match_result, match: match, reported_by: player, team_a_score: 6, team_b_score: 4, winner_team: :team_a)
+    create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
   end
 
   before { sign_in admin }
@@ -17,6 +20,8 @@ RSpec.describe "Admin::MatchResults", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(player.name)
+      expect(response.body).to include("Set 1")
+      expect(response.body).to include("Set 5")
     end
 
     it "redirects guests to sign in" do
@@ -37,13 +42,19 @@ RSpec.describe "Admin::MatchResults", type: :request do
   end
 
   describe "PATCH /admin/matches/:match_id/match_results/:id" do
-    it "updates scores" do
+    it "updates sets" do
+      sets = match_result.match_sets.order(:order)
       patch admin_match_match_result_path(match, match_result), params: {
-        match_result: { team_a_score: 7, team_b_score: 5, winner_team: "team_a" }
+        match_result: {
+          match_sets_attributes: {
+            "0" => { id: sets[0].id, order: 1, team_a_games: 7, team_b_games: 5 },
+            "1" => { id: sets[1].id, order: 2, team_a_games: 6, team_b_games: 4 }
+          }
+        }
       }
 
       expect(response).to redirect_to(admin_match_path(match))
-      expect(match_result.reload).to have_attributes(team_a_score: 7, team_b_score: 5)
+      expect(match_result.reload.match_sets.order(:order).pluck(:team_a_games, :team_b_games)).to eq([ [ 7, 5 ], [ 6, 4 ] ])
     end
   end
 
@@ -51,7 +62,12 @@ RSpec.describe "Admin::MatchResults", type: :request do
     it "deletes the report and recalculates consensus" do
       second = create(:user, :player)
       create(:match_player, match: match, user: second, team: :team_b, status: :confirmed)
-      create(:match_result, match: match, reported_by: second, team_a_score: 4, team_b_score: 6, winner_team: :team_b)
+      create(
+        :match_result,
+        match: match,
+        reported_by: second,
+        result_sets: [ { team_a_games: 4, team_b_games: 6 }, { team_a_games: 4, team_b_games: 6 } ]
+      )
       expect(match.reload).to be_reported
 
       expect {

@@ -3,7 +3,11 @@ class MatchResult < ApplicationRecord
   belongs_to :reported_by, class_name: "User"
   has_many :match_sets, -> { order(:order) }, dependent: :destroy, inverse_of: :match_result, autosave: true
 
-  accepts_nested_attributes_for :match_sets
+  accepts_nested_attributes_for :match_sets,
+                                allow_destroy: true,
+                                reject_if: proc { |attrs|
+                                  attrs["team_a_games"].blank? && attrs["team_b_games"].blank?
+                                }
 
   validates :reported_by_id, uniqueness: { scope: :match_id }
   validate :reported_by_is_active_player, unless: :forced_by_admin?

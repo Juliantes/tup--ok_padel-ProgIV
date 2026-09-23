@@ -36,5 +36,5 @@ if local_assigns.fetch(:show_details, false)
   json.match_results match.match_results.sort_by { |result| [ result.created_at, result.id ] } do |result|
     json.partial! "api/v1/match_results/match_result", match_result: result
   end
-  json.consensus match.consensus_result
+  json.partial! "api/v1/match_results/consensus", consensus: match.consensus_result
 end

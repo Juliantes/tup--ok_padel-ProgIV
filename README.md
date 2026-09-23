@@ -229,11 +229,13 @@ erDiagram
   MatchResult {
     bigint match_id FK
     bigint reported_by_id FK
-    bigint approved_by_id FK
-    int team_a_score
-    int team_b_score
-    int winner_team
-    int status
+    boolean forced_by_admin
+  }
+  MatchSet {
+    bigint match_result_id FK
+    int order
+    int team_a_games
+    int team_b_games
   }
   Review {
     bigint reviewer_id FK
@@ -271,7 +273,8 @@ erDiagram
 - **TimeSlot** — Franja horaria recurrente por día de semana en una cancha.
 - **Match** — Partido en fecha/cancha; nivel requerido y modo de roster.
 - **MatchPlayer** — Inscripción al partido, equipo, estado y aprobaciones.
-- **MatchResult** — Reporte de resultado de un jugador (varios por partido; consenso por mayoría).
+- **MatchResult** — Reporte de resultado de un jugador (varios por partido; consenso por mayoría de firmas de sets).
+- **MatchSet** — Marcador de un set dentro de un reporte (`order`, games por equipo).
 - **Review** — Reseña post-partido (TP2).
 - **Message** — Mensajería entre jugadores / chat de partido (TP2).
 - **PlayerStat** — Victorias, rachas y win rate. Se actualizan una sola vez al alcanzar consenso.
@@ -484,10 +487,10 @@ Cada jugador activo puede cargar un marcador. El partido guarda **varios** `matc
 **Consenso**
 
 - 1 reporte: consenso **provisorio**. El partido pasa a `completed` y se aplican las stats.
-- 2 o más: hace falta **mayoría estricta** (más del 50% de reportes con el mismo `team_a_score` y `team_b_score`).
+- 2 o más: hace falta **mayoría estricta** (más del 50% de reportes con la misma firma de sets, p. ej. `6-4,6-4`).
 - Sin mayoría: el partido queda en `reported`. Ahí el jugador puede reemplazar su reporte.
 - Con consenso ya cerrado (`completed`): no se puede volver a reportar el mismo marcador.
-- Empate: no suma victoria ni derrota, y pone `current_streak` en 0.
+- Un partido válido requiere sets completos según `matches.best_of` (3 o 5); el ganador se calcula de los sets reportados.
 - Las stats se escriben **una sola vez** (`matches.stats_applied_at`). Borrar un reporte no las revierte. Si el primer reporte provisorio no coincide con el consenso final, las stats quedan las del primero.
 
 **Marcar como jugado:** `POST /api/v1/matches/:id/played` pasa el partido a `completed` sin marcador. Responde `422` si ya está `completed` **y** hay consenso.
@@ -501,7 +504,7 @@ TOKEN="<jwt>"
 curl -s -X POST http://localhost:3000/api/v1/matches/1/match_results \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"team_a_score":6,"team_b_score":4,"winner_team":"team_a"}'
+  -d '{"sets":[{"team_a_games":6,"team_b_games":4},{"team_a_games":6,"team_b_games":4}]}'
 ```
 
 Respuesta `201`:
@@ -514,30 +517,50 @@ Respuesta `201`:
     "match_results": [
       {
         "id": 10,
-        "team_a_score": 6,
-        "team_b_score": 4,
+        "sets": [
+          { "order": 1, "team_a_games": 6, "team_b_games": 4 },
+          { "order": 2, "team_a_games": 6, "team_b_games": 4 }
+        ],
         "winner_team": "team_a",
         "reported_by": { "id": 3, "name": "Jugador Demo" },
         "created_at": "2026-09-22T20:00:00-03:00"
       }
     ],
-    "consensus": { "team_a_score": 6, "team_b_score": 4, "votes": 1, "total": 1 }
+    "consensus": {
+      "signature": "6-4,6-4",
+      "votes": 1,
+      "total": 1,
+      "sets": [
+        { "order": 1, "team_a_games": 6, "team_b_games": 4 },
+        { "order": 2, "team_a_games": 6, "team_b_games": 4 }
+      ]
+    }
   },
   "results": [
     {
       "id": 10,
-      "team_a_score": 6,
-      "team_b_score": 4,
+      "sets": [
+        { "order": 1, "team_a_games": 6, "team_b_games": 4 },
+        { "order": 2, "team_a_games": 6, "team_b_games": 4 }
+      ],
       "winner_team": "team_a",
       "reported_by": { "id": 3, "name": "Jugador Demo" },
       "created_at": "2026-09-22T20:00:00-03:00"
     }
   ],
-  "consensus": { "team_a_score": 6, "team_b_score": 4, "votes": 1, "total": 1 }
+  "consensus": {
+    "signature": "6-4,6-4",
+    "votes": 1,
+    "total": 1,
+    "sets": [
+      { "order": 1, "team_a_games": 6, "team_b_games": 4 },
+      { "order": 2, "team_a_games": 6, "team_b_games": 4 }
+    ]
+  }
 }
 ```
 
-Errores: `401` sin auth; `422` si quien reporta no es jugador activo (`Reporter is not an active player`) o ya reportó sin disputa (`You already reported a result`).
+Errores: `401` sin auth; `422` sin `sets` (`sets is required`), si quien reporta no es jugador activo (`Reporter is not an active player`), sets inválidos (validación del modelo) o ya reportó sin disputa (`You already reported a result`).
 
 `GET /api/v1/matches/:id/match_results` es público y responde `{ "results", "consensus", "total" }`.
 

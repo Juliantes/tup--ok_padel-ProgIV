@@ -30,22 +30,30 @@
     </div>
   <% end %>
 
-  <div class="col-md-4">
-    <%= f.label :team_a_score, "Team A", class: "form-label" %>
-    <%= f.number_field :team_a_score, min: 0, max: 99, class: "form-control", required: true %>
-  </div>
-
-  <div class="col-md-4">
-    <%= f.label :team_b_score, "Team B", class: "form-label" %>
-    <%= f.number_field :team_b_score, min: 0, max: 99, class: "form-control", required: true %>
-  </div>
-
-  <div class="col-md-4">
-    <%= f.label :winner_team, "Winner", class: "form-label" %>
-    <%= f.select :winner_team,
-                 options_for_select([["Team A", "team_a"], ["Team B", "team_b"]], @match_result.winner_team),
-                 { include_blank: "Tie / auto" },
-                 class: "form-select" %>
+  <div class="col-12">
+    <%= f.fields_for :match_sets do |set_form| %>
+      <div class="row g-2 align-items-end mb-2">
+        <div class="col-md-2">
+          <%= set_form.label :order, "Set #{set_form.object.order}", class: "form-label" %>
+          <%= set_form.hidden_field :order %>
+          <%= set_form.hidden_field :id if set_form.object.persisted? %>
+        </div>
+        <div class="col-md-4">
+          <%= set_form.label :team_a_games, "Team A", class: "form-label" %>
+          <%= set_form.number_field :team_a_games, min: 0, max: 99, class: "form-control" %>
+        </div>
+        <div class="col-md-4">
+          <%= set_form.label :team_b_games, "Team B", class: "form-label" %>
+          <%= set_form.number_field :team_b_games, min: 0, max: 99, class: "form-control" %>
+        </div>
+        <% if set_form.object.persisted? %>
+          <div class="col-md-2">
+            <%= set_form.check_box :_destroy, class: "form-check-input" %>
+            <%= set_form.label :_destroy, "Remove", class: "form-check-label" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
   <div class="col-12">

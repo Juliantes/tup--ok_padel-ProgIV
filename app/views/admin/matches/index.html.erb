@@ -33,7 +33,7 @@
             <td>
               <% if match.completed? %>
                 <% if (c = match.consensus_result) %>
-                  <span class="badge text-bg-success"><%= c[:team_a_score] %>-<%= c[:team_b_score] %></span>
+                  <span class="badge text-bg-success"><%= c[:signature] %></span>
                 <% else %>
                   <span class="badge text-bg-secondary">Played</span>
                 <% end %>

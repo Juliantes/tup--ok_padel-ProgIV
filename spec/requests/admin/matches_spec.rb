@@ -3,6 +3,15 @@ require "rails_helper"
 RSpec.describe "Admin::Matches", type: :request do
   let(:admin) { create(:user, :admin) }
   let(:match) { create(:match, :individual, status: :confirmed) }
+  let(:team_a_wins_2_0) do
+    [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 6, team_b_games: 4 } ]
+  end
+  let(:team_b_wins_2_0) do
+    [ { team_a_games: 4, team_b_games: 6 }, { team_a_games: 4, team_b_games: 6 } ]
+  end
+  let(:team_a_wins_2_1) do
+    [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 4, team_b_games: 6 }, { team_a_games: 6, team_b_games: 4 } ]
+  end
 
   before { sign_in admin }
 
@@ -10,14 +19,14 @@ RSpec.describe "Admin::Matches", type: :request do
     it "shows reported results and consensus" do
       player = create(:user, :player)
       create(:match_player, match: match, user: player, team: :team_a, status: :confirmed)
-      create(:match_result, match: match, reported_by: player, team_a_score: 6, team_b_score: 4, winner_team: :team_a)
+      create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
 
       get admin_match_path(match)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Results")
       expect(response.body).to include("Consensus:")
-      expect(response.body).to include("6 - 4")
+      expect(response.body).to include("6-4, 6-4")
     end
 
     it "redirects guests to sign in" do
@@ -49,13 +58,13 @@ RSpec.describe "Admin::Matches", type: :request do
     end
 
     it "creates a forced report, completes the match, and applies stats" do
-      create(:match_result, match: match, reported_by: player_a, team_a_score: 6, team_b_score: 4, winner_team: :team_a)
-      create(:match_result, match: match, reported_by: player_b, team_a_score: 4, team_b_score: 6, winner_team: :team_b)
+      create(:match_result, match: match, reported_by: player_a, result_sets: team_a_wins_2_0)
+      create(:match_result, match: match, reported_by: player_b, result_sets: team_b_wins_2_0)
       expect(match.reload).to be_reported
 
       expect {
         post force_result_admin_match_path(match), params: {
-          force_result: { team_a_score: 7, team_b_score: 5, winner_team: "team_a" }
+          force_result: { sets: team_a_wins_2_1 }
         }
       }.to change { match.match_results.where(forced_by_admin: true).count }.by(1)
 
@@ -69,7 +78,7 @@ RSpec.describe "Admin::Matches", type: :request do
       sign_out admin
 
       post force_result_admin_match_path(match), params: {
-        force_result: { team_a_score: 6, team_b_score: 4, winner_team: "team_a" }
+        force_result: { sets: team_a_wins_2_0 }
       }
 
       expect(response).to redirect_to(new_user_session_path)

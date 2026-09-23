@@ -10,12 +10,12 @@ module Api
       end
 
       def create
-        @match.report_result!(
-          reporter: current_user,
-          team_a_score: result_params[:team_a_score],
-          team_b_score: result_params[:team_b_score],
-          winner_team: result_params[:winner_team].presence
-        )
+        sets = sets_params
+        if sets.blank?
+          return render_error("sets is required", status: :unprocessable_entity)
+        end
+
+        @match.report_result!(reporter: current_user, sets: sets)
         load_detail!
         render :create, status: :created
       end
@@ -38,16 +38,23 @@ module Api
       end
 
       def load_detail!
-        @match = Match.includes(:court, :creator, :time_slot, :match_players, match_results: :reported_by).find(@match.id)
+        @match = Match.includes(:court, :creator, :time_slot, :match_players, match_results: [ :reported_by, :match_sets ]).find(@match.id)
         @results = ordered_results
       end
 
       def ordered_results
-        @match.match_results.includes(:reported_by).order(:created_at, :id)
+        @match.match_results.includes(:reported_by, :match_sets).order(:created_at, :id)
       end
 
-      def result_params
-        params.permit(:team_a_score, :team_b_score, :winner_team)
+      def sets_params
+        raw = params.permit(sets: %i[team_a_games team_b_games])[:sets]
+        return [] if raw.blank?
+
+        raw.filter_map do |set|
+          next if set[:team_a_games].blank? && set[:team_b_games].blank?
+
+          set.to_h.symbolize_keys
+        end
       end
     end
   end

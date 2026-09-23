@@ -41,6 +41,7 @@
 1. **Auto-aprobación por tiempo:** job que cierre el resultado si pasa un plazo sin reportes nuevos.
 2. **Reversión de stats al borrar un reporte:** hoy se aplican una sola vez (`matches.stats_applied_at`) y no se revierten. El primer reporte provisorio puede dejar stats distintas del consenso final.
 3. ~~**Admin fuerza consenso (Sprint 3b):**~~ implementado en admin (`force_result`).
+4. **Admin sets UI:** formularios de edición y force con hasta 5 slots fijos (no filas dinámicas); sets vacíos se ignoran vía `reject_if` en nested attributes.
 
 ### Deuda planificada — Sprint 3b (admin resultados)
 
@@ -50,8 +51,8 @@
 4. **`approved_at` en `match_results`:** columna legacy sin uso en el flujo actual.
 
 ## Estado de calidad
-- `bundle exec rspec` → 256 examples, 0 failures ✅
-- `bundle exec rubocop` → 141 files, 0 offenses ✅
+- `bundle exec rspec` → verde tras Parte 2 (sets en API/admin).
+- `bundle exec rubocop` → 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 
 ## Regla operativa
