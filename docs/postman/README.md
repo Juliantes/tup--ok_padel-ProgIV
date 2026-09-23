@@ -1,77 +1,78 @@
 # Postman — API v1 Ok Padel
 
-Colección y environment de ejemplo para probar la API JSON en desarrollo local.
+Colección y environment para probar la API JSON en desarrollo. La fuente principal para **Postman Desktop** son los YAML bajo `postman/` (workspace local en el repo).
 
-## Archivos
+## Postman Desktop — configuración
 
-| Archivo | Descripción |
-|---------|-------------|
-| `Ok_Padel_API.postman_collection.json` | Requests agrupados (Auth, Profile, Courts, Matches) |
-| `Ok_Padel_Local.postman_environment.json` | Variables `baseUrl`, `token`, `matchId` |
+1. Abrí **Postman Desktop** (no la extensión de Cursor).
+2. Conectá el repo como workspace local:
+   - **File → Open** (o *Connect to Git / local folder*, según tu versión).
+   - Elegí la carpeta **`ok_padel`** (raíz del proyecto Rails).
+   - **No** uses `docs/postman` ni `Programacion IV` como raíz.
+3. En el sidebar deberías ver:
+   - **Collections → Ok Padel API**
+   - **Environments → Ok Padel Local**
+4. Arriba a la derecha, activá el environment **Ok Padel Local**.
 
-## Requisitos
+El manifiesto [`.postman/resources.yaml`](../../.postman/resources.yaml) apunta a `postman/collections/Ok Padel API` y al environment YAML. Si no ves la colección, cerrá Postman, volvé a abrir la carpeta `ok_padel` y esperá unos segundos a que indexe.
 
-1. Servidor Rails en marcha: `bin/rails s` (puerto 3000 por defecto).
-2. Base con datos demo: `bin/rails db:seed`.
-3. [Postman Desktop](https://www.postman.com/downloads/) (o compatible con Collection v2.1).
+## Correr todos los requests en Desktop (Collection Runner)
 
-Usuario de prueba del seed: **`player@okpadel.local`** / **`password123`**.
+1. `bin/rails s` y `bin/rails db:seed` (usuario demo: `player@okpadel.local` / `password123`).
+2. En **Collections**, sobre **Ok Padel API** → **Run** (▶ / *Run collection*).
+3. Environment: **Ok Padel Local**.
+4. Dejá el orden por defecto (la colección ya está ordenada para una corrida completa) → **Run Ok Padel API**.
 
-## Importar
+Son **20 requests** con tests en cada uno. Los scripts guardan `token`, `matchId` y `resultId` en el environment durante la corrida.
 
-1. Abrí Postman → **Import**.
-2. Arrastrá o seleccioná ambos JSON de esta carpeta.
-3. En el selector de environment (arriba a la derecha), elegí **Ok Padel Local**.
+### Orden de la corrida (automático)
 
-Documentación oficial: [Importing and exporting in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-and-exporting-overview/).
+| Carpeta | Flujo |
+|---------|--------|
+| Auth | Login OK → login 401 |
+| Profile | GET / PATCH / GET sin token |
+| Courts | listado, detalle, 404 |
+| Matches | listado → create (sin auto_join) → join → leave → create inválido → create (auto_join) → GET by id → mis partidos |
+| Match results | listado → mark played → report → borrar propio reporte |
+
+## Archivos en el repo
+
+| Ruta | Uso |
+|------|-----|
+| [`postman/collections/Ok Padel API/`](../../postman/collections/Ok%20Padel%20API/) | Colección YAML (Postman Desktop, workspace local) |
+| [`postman/environments/Ok Padel Local.environment.yaml`](../../postman/environments/Ok%20Padel%20Local.environment.yaml) | Variables de entorno |
+| [`postman/Ok_Padel_API.postman_collection.json`](../../postman/Ok_Padel_API.postman_collection.json) | Mismo contenido en JSON (import clásico / CI) |
+| [`postman/Ok_Padel_Local.postman_environment.json`](../../postman/Ok_Padel_Local.postman_environment.json) | Environment JSON |
+
+Los JSON se mantienen alineados con la colección YAML para `bin/postman-run` y para importar sin workspace local.
+
+## Alternativa por terminal (CI)
+
+```bash
+bin/postman-run
+```
+
+Usa [Newman](https://github.com/postmanlabs/newman) con los JSON de `postman/`. Requiere Node/npm.
 
 ## Variables de environment
 
 | Variable | Valor inicial | Uso |
 |----------|---------------|-----|
 | `baseUrl` | `http://localhost:3000` | Host de la API |
-| `token` | vacío | Se completa con el test del request **POST Login (happy)** |
-| `matchId` | vacío | Se completa al crear un partido (`POST` matches con status 201) |
-| `resultId` | vacío | Se completa al reportar un resultado (`POST` match results con status 201) |
-
-Si corrés la API en otro host o puerto, editá solo `baseUrl`.
-
-## Orden sugerido
-
-1. **Auth → POST Login (happy)** — guarda el JWT en `token`.
-2. **Profile / Courts / Matches** — el resto de requests autenticados usan `Authorization: Bearer {{token}}`.
-3. Para **Join** y **Leave**:
-   - Creá un partido con **POST Create match (auto_join: false)** (actualiza `matchId`).
-   - **POST Join match** → **DELETE Leave match**.
-
-**GET Match by id** usa `{{matchId}}`; si está vacío, setealo manualmente o creá un partido antes. La respuesta de detalle trae `match_results` (array) y `consensus`. Ya no existe la clave `match_result`.
-
-## Resultados
-
-1. Creá un partido con **POST Create match** (el creador queda inscripto si `auto_join` es `true`).
-2. **Match results → POST Report result** — guarda `resultId`. Un segundo reporte del mismo jugador, con el partido ya en consenso, responde `422`.
-3. **DELETE Own result** borra solo ese reporte. El de otro usuario responde `403`.
-4. **POST Mark match as played** conviene probarlo en un partido sin consenso. Si ya hay consenso, responde `422`.
-
-Si la base local tiene reportes duplicados del esquema viejo (`has_one`), corré `bin/rails db:reset` antes de migrar.
+| `token` | vacío | **POST Login (happy)** |
+| `matchId` | vacío | Creación de partido (201) |
+| `resultId` | vacío | **POST Report result** (201) |
 
 ## Tests automáticos
 
-Cada request incluye tests mínimos (`pm.test`):
-
-- Status HTTP esperado (200, 201, 401, 404, 422, etc.).
-- Login: persiste `token` en el environment activo.
-- Alta de partido (201): persiste `matchId`.
-- Respuestas de error: comprueba que exista `error` en el JSON.
-
-Los tests son un punto de partida: podés ampliarlos, cambiar bodies (`court_id`, fechas) y re-exportar la colección al repo si querés compartir mejoras.
+Cada request incluye tests (`pm.test`): status esperado, JSON, persistencia de variables y validaciones por endpoint.
 
 ## Ajustes habituales
 
 - **`court_id`**: en el seed suele ser `1`; confirmá con **GET Courts**.
-- **Fechas de partidos**: deben ser futuras; si falla validación, actualizá el campo `date` en los POST.
-- **Join tras `auto_join: true`**: el creador ya está en el roster; usar otro usuario o `auto_join: false`.
+- **Fechas de partidos**: deben ser futuras; actualizá `date` en los POST si falla validación.
+- **Join tras `auto_join: true`**: el creador ya está en el roster; la colección usa `auto_join: false` para join/leave.
 
 ## Más detalle de la API
 
-Contratos, ejemplos `curl` y códigos de error: [README principal — API v1](../../README.md#api-v1).
+[README principal — API v1](../../README.md#api-v1)

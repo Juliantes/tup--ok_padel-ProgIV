@@ -1,0 +1,44 @@
+$kind: http-request
+description: Login con credenciales válidas (usuario demo del seed).
+url: "{{baseUrl}}/api/v1/login"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "player@okpadel.local",
+      "password": "password123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response time is acceptable', function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+
+      pm.test('Content-Type is JSON', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('Response includes token', function () {
+          const json = pm.response.json();
+          pm.expect(json.token).to.be.a('string').and.not.empty;
+          pm.environment.set('token', json.token);
+      });
+
+      pm.test('User object present with required fields', function () {
+          const json = pm.response.json();
+          if (json.user) {
+              pm.expect(json.user).to.have.property('id');
+              pm.expect(json.user).to.have.property('email');
+          }
+      });
+    language: text/javascript
+order: 1000

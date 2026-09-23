@@ -357,94 +357,6 @@
           "response": []
         },
         {
-          "name": "GET Match by id",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Match object present', function () {",
-                  "    const match = pm.response.json().match;",
-                  "    pm.expect(match).to.be.an('object');",
-                  "    pm.expect(match.match_results).to.be.an('array');",
-                  "    pm.expect(match).to.have.property('consensus');",
-                  "    pm.expect(match).to.not.have.property('match_result');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}",
-            "description": "Requiere `matchId` en el environment (crear partido antes o setear manualmente)."
-          },
-          "response": []
-        },
-        {
-          "name": "POST Create match (auto_join: true)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 201', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Match created and matchId saved', function () {",
-                  "    const match = pm.response.json().match;",
-                  "    pm.expect(match).to.be.an('object');",
-                  "    pm.expect(match.match_players.length).to.be.at.least(1);",
-                  "    pm.environment.set('matchId', String(match.id));",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"court_id\": 1,\n  \"date\": \"2026-12-25T10:00:00-03:00\",\n  \"duration\": 90,\n  \"roster_mode\": \"pairs\",\n  \"level_required\": \"fifth\",\n  \"auto_join\": true\n}"
-            },
-            "url": "{{baseUrl}}/api/v1/matches"
-          },
-          "response": []
-        },
-        {
           "name": "POST Create match (auto_join: false)",
           "event": [
             {
@@ -493,55 +405,6 @@
             },
             "url": "{{baseUrl}}/api/v1/matches",
             "description": "Útil antes de **Join**: el creador no queda inscripto."
-          },
-          "response": []
-        },
-        {
-          "name": "POST Create match (invalid params → 422)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 422', function () {",
-                  "    pm.response.to.have.status(422);",
-                  "});",
-                  "",
-                  "pm.test('Error body present', function () {",
-                  "    pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"court_id\": 1,\n  \"date\": \"2026-12-27T10:00:00-03:00\",\n  \"duration\": 0,\n  \"roster_mode\": \"pairs\",\n  \"level_required\": \"fifth\"\n}"
-            },
-            "url": "{{baseUrl}}/api/v1/matches"
           },
           "response": []
         },
@@ -638,6 +501,143 @@
           "response": []
         },
         {
+          "name": "POST Create match (invalid params → 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "",
+                  "pm.test('Error body present', function () {",
+                  "    pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"court_id\": 1,\n  \"date\": \"2026-12-27T10:00:00-03:00\",\n  \"duration\": 0,\n  \"roster_mode\": \"pairs\",\n  \"level_required\": \"fifth\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/matches"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create match (auto_join: true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Match created and matchId saved', function () {",
+                  "    const match = pm.response.json().match;",
+                  "    pm.expect(match).to.be.an('object');",
+                  "    pm.expect(match.match_players.length).to.be.at.least(1);",
+                  "    pm.environment.set('matchId', String(match.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"court_id\": 1,\n  \"date\": \"2026-12-25T10:00:00-03:00\",\n  \"duration\": 90,\n  \"roster_mode\": \"pairs\",\n  \"level_required\": \"fifth\",\n  \"auto_join\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/matches"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Match by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Match object present', function () {",
+                  "    const match = pm.response.json().match;",
+                  "    pm.expect(match).to.be.an('object');",
+                  "    pm.expect(match.match_results).to.be.an('array');",
+                  "    pm.expect(match).to.have.property('consensus');",
+                  "    pm.expect(match).to.not.have.property('match_result');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}",
+            "description": "Requiere `matchId` en el environment (crear partido antes o setear manualmente)."
+          },
+          "response": []
+        },
+        {
           "name": "GET My matches",
           "event": [
             {
@@ -715,6 +715,48 @@
             ],
             "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/match_results",
             "description": "Público. El detalle del partido ya no trae `match_result`; usa `match_results` y `consensus`."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Mark match as played",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Match is completed', function () {",
+                  "    pm.expect(pm.response.json().match.status).to.eql('completed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/played",
+            "description": "Jugador activo, partido sin consenso. En esta colección corre antes de **POST Report result**."
           },
           "response": []
         },
@@ -810,48 +852,6 @@
             ],
             "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/match_results/{{resultId}}",
             "description": "Solo el autor del reporte. Borrar el de otro usuario responde 403. `resultId` sale de **POST Report result**."
-          },
-          "response": []
-        },
-        {
-          "name": "POST Mark match as played",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Match is completed', function () {",
-                  "    pm.expect(pm.response.json().match.status).to.eql('completed');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/v1/matches/{{matchId}}/played",
-            "description": "Jugador activo. Si el partido ya está `completed` con consenso, responde 422. Usar un partido distinto del que ya tiene resultado."
           },
           "response": []
         }

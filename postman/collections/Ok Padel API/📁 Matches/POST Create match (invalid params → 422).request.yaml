@@ -1,0 +1,44 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/matches"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+      "court_id": 1,
+      "date": "2026-12-27T10:00:00-03:00",
+      "duration": 0,
+      "roster_mode": "pairs",
+      "level_required": "fifth"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 422', function () {
+          pm.response.to.have.status(422);
+      });
+
+      pm.test('Response time is acceptable', function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+
+      pm.test('Content-Type is JSON', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('Error body present', function () {
+          pm.expect(pm.response.json().error).to.be.a('string').and.not.empty;
+      });
+
+      pm.test('No match object in error response', function () {
+          pm.expect(pm.response.json()).to.not.have.property('match');
+      });
+    language: text/javascript
+order: 5000

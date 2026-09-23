@@ -1,0 +1,9 @@
+# Postman local workspace — open the ok_padel repo root in Postman (not docs/postman).
+workspace:
+  id: 9e210d99-e9c6-4671-90cb-9fdd34fbceef
+
+localResources:
+  collections:
+    - ../postman/collections/Ok Padel API
+  environments:
+    - ../postman/environments/Ok Padel Local.environment.yaml

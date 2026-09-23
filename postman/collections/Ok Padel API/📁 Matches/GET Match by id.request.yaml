@@ -1,0 +1,32 @@
+$kind: http-request
+description: Requiere `matchId` en el environment (crear partido antes o setear manualmente).
+url: "{{baseUrl}}/api/v1/matches/{{matchId}}"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response time is acceptable', function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+
+      pm.test('Content-Type is JSON', function () {
+          pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');
+      });
+
+      pm.test('Match object present with required fields', function () {
+          const match = pm.response.json().match;
+          pm.expect(match).to.be.an('object');
+          pm.expect(match).to.have.property('id');
+          pm.expect(match).to.have.property('status');
+          pm.expect(match.match_results).to.be.an('array');
+          pm.expect(match).to.have.property('consensus');
+          pm.expect(match).to.not.have.property('match_result');
+      });
+    language: text/javascript
+order: 7000

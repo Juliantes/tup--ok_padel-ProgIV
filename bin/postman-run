@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+COLLECTION="postman/Ok_Padel_API.postman_collection.json"
+ENVIRONMENT="postman/Ok_Padel_Local.postman_environment.json"
+
+if [[ ! -f "$COLLECTION" ]]; then
+  echo "Missing $COLLECTION" >&2
+  exit 1
+fi
+
+if [[ ! -f "$ENVIRONMENT" ]]; then
+  echo "Missing $ENVIRONMENT" >&2
+  exit 1
+fi
+
+echo "Running Ok Padel API collection (Newman). Server should be up: bin/rails s"
+echo ""
+
+exec npx --yes newman@6 run "$COLLECTION" -e "$ENVIRONMENT" --color on "$@"

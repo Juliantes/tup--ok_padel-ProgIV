@@ -1,0 +1,10 @@
+name: Ok Padel Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:3000'
+  - key: token
+    value: ''
+  - key: matchId
+    value: ''
+  - key: resultId
+    value: ''

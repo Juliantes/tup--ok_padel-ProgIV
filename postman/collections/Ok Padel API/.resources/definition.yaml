@@ -1,0 +1,2 @@
+$kind: collection
+description: "Colección para API v1 de Ok Padel. Importar junto con el environment **Ok Padel Local**. Ejecutar **Login** primero; los requests autenticados usan `Bearer {{token}}`. Tras `db:seed`, login de prueba: `player@okpadel.local` / `password123`. El detalle de partido expone `match_results` (array) y `consensus`, no `match_result`."

@@ -278,7 +278,7 @@ erDiagram
 
 ## API v1
 
-**Postman:** colección y environment local en [docs/postman/](docs/postman/) (importar en Postman Desktop y seleccionar el environment *Ok Padel Local*).
+**Postman:** colección en [`postman/`](postman/); en Desktop abrí la raíz `ok_padel` y usá **Run collection** (ver [docs/postman/README.md](docs/postman/README.md)).
 
 Base URL en desarrollo: `http://localhost:3000`
 
