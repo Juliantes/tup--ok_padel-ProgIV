@@ -1,6 +1,7 @@
 module Admin
   class UsersController < BaseController
     before_action :set_user, only: %i[show edit update destroy]
+    before_action :prevent_last_admin_destroy, only: :destroy
 
     def index
       @pagy, @users = pagy(:offset, User.includes(:user_roles).order(:name))
@@ -18,12 +19,13 @@ module Admin
       @user.password = params.dig(:user, :password)
       @user.password_confirmation = params.dig(:user, :password_confirmation)
 
-      if @user.save
+      ActiveRecord::Base.transaction do
+        @user.save!
         sync_roles!(default_player: true)
-        redirect_to admin_user_path(@user), notice: "User was successfully created."
-      else
-        render :new, status: :unprocessable_entity
       end
+      redirect_to admin_user_path(@user), notice: "User was successfully created."
+    rescue ActiveRecord::RecordInvalid
+      render :new, status: :unprocessable_entity
     end
 
     def edit
@@ -36,12 +38,14 @@ module Admin
         attributes[:password_confirmation] = params.dig(:user, :password_confirmation)
       end
 
-      if @user.update(attributes)
+      ActiveRecord::Base.transaction do
+        @user.assign_attributes(attributes)
+        @user.save!
         sync_roles!
-        redirect_to admin_user_path(@user), notice: "User was successfully updated."
-      else
-        render :edit, status: :unprocessable_entity
       end
+      redirect_to admin_user_path(@user), notice: "User was successfully updated."
+    rescue ActiveRecord::RecordInvalid
+      render :edit, status: :unprocessable_entity
     end
 
     def destroy
@@ -71,11 +75,30 @@ module Admin
     def sync_roles!(default_player: false)
       roles = selected_roles(default_player: default_player)
 
+      if last_admin_removal_attempted?(roles)
+        @user.errors.add(:base, "Cannot remove the last admin role")
+        raise ActiveRecord::RecordInvalid.new(@user)
+      end
+
       roles.each do |role|
         @user.user_roles.find_or_create_by!(role: role)
       end
 
       @user.user_roles.where.not(role: roles).destroy_all
+    end
+
+    def last_admin_removal_attempted?(roles)
+      @user.persisted? &&
+        @user.admin? &&
+        !roles.include?("admin") &&
+        User.admins.where.not(id: @user.id).none?
+    end
+
+    def prevent_last_admin_destroy
+      return unless @user.admin?
+      return if User.admins.where.not(id: @user.id).exists?
+
+      redirect_to admin_users_path, alert: "Cannot delete the last admin."
     end
   end
 end

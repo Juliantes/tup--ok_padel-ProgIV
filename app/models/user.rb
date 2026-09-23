@@ -48,6 +48,8 @@ class User < ApplicationRecord
   after_create :ensure_player_stat!
   after_create_commit :send_welcome_email
 
+  scope :admins, -> { joins(:user_roles).where(user_roles: { role: "admin" }) }
+
   def has_role?(role)
     user_roles.exists?(role: role.to_s)
   end

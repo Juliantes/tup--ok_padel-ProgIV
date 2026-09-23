@@ -54,10 +54,17 @@
 
   <div class="col-12">
     <p class="form-label mb-2">Roles</p>
+    <% last_admin = user.persisted? && user.admin? && User.admins.where.not(id: user.id).none? %>
     <% User::ROLES.each do |role| %>
       <div class="form-check">
-        <%= check_box_tag "user[role_#{role}]", "1", user.has_role?(role), class: "form-check-input", id: "user_role_#{role}" %>
+        <%= check_box_tag "user[role_#{role}]", "1", user.has_role?(role),
+            class: "form-check-input",
+            id: "user_role_#{role}",
+            disabled: (role == "admin" && last_admin) %>
         <%= label_tag "user_role_#{role}", role.humanize, class: "form-check-label" %>
+        <% if role == "admin" && last_admin %>
+          <small class="text-muted d-block">Cannot remove the last admin role</small>
+        <% end %>
       </div>
     <% end %>
   </div>
