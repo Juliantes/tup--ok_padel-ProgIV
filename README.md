@@ -89,13 +89,13 @@ bin/rails s
 > export DATABASE_URL="postgres://postgres:tu_password@localhost:5432/ok_padel_development"
 > ```
 
-**Jobs en desarrollo:** no hay `Procfile.dev`. Para procesar mails encolados con `deliver_later` (bienvenida, etc.), en **otra terminal**:
+**Jobs en desarrollo:** `development` usa **Solid Queue** (`config.active_job.queue_adapter = :solid_queue`). No hay `Procfile.dev`. Para procesar mails encolados con `deliver_later`, tareas recurrentes (`config/recurring.yml`) y otros jobs, en **otra terminal**:
 
 ```bash
 bin/jobs
 ```
 
-Sin el worker, los jobs quedan en cola hasta que ejecutes `bin/jobs` o uses `deliver_now` en consola.
+Sin el worker, los jobs quedan en cola hasta que ejecutes `bin/jobs` o uses `perform_now` / `deliver_now` en consola.
 
 ### Publicar en GitHub (primera vez)
 
@@ -126,6 +126,29 @@ Remoto configurado: `https://github.com/Juliantes/ok_padel.git`. Si usás otro u
 | `SMTP_*` | production | SMTP real (ver sección Emails) |
 | `KAMAL_REGISTRY_PASSWORD` | deploy | Token/password del registry Docker |
 | `RAILS_MAX_THREADS` | opcional | Pool de conexiones (default 5) |
+| `AUTO_APPROVE_AFTER_HOURS` | opcional | Horas sin reportes nuevos antes de auto-cerrar un partido en disputa (default: `48`) |
+
+## Auto-aprobación de resultados
+
+Si un partido queda en estado **reported** (disputa sin consenso estricto), `AutoApproveResultsJob` puede cerrarlo automáticamente cuando el **último reporte** supera el umbral configurado.
+
+- **Umbral:** `ENV["AUTO_APPROVE_AFTER_HOURS"]` (default `48`).
+- **Ganador:** mayoría simple entre firmas de sets (`set_signature`); empate → grupo con el reporte más antiguo.
+- **Stats:** se aplican una vez vía `apply_stats_from!` (igual que el consenso manual).
+- **Marca:** `matches.auto_approved_at`; en admin aparece el badge **Auto**.
+- **Tras auto-aprobación:** no se admiten reportes nuevos (`Match result is finalized`).
+
+El job está programado en `config/recurring.yml` (**cada hora**, en `development` y `production`). Requiere el worker:
+
+```bash
+bin/jobs
+```
+
+Prueba manual en consola:
+
+```bash
+bin/rails runner "AutoApproveResultsJob.perform_now"
+```
 
 ## Credenciales de acceso (seeds)
 

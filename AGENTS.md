@@ -38,7 +38,7 @@
 
 ### Deuda planificada — Sprint 3 (resultados)
 
-1. **Auto-aprobación por tiempo:** job que cierre el resultado si pasa un plazo sin reportes nuevos.
+1. ~~**Auto-aprobación por tiempo:**~~ `AutoApproveResultsJob` + `matches.auto_approved_at` (ver README).
 2. **Reversión de stats al borrar un reporte:** hoy se aplican una sola vez (`matches.stats_applied_at`) y no se revierten. El primer reporte provisorio puede dejar stats distintas del consenso final.
 3. ~~**Admin fuerza consenso (Sprint 3b):**~~ implementado en admin (`force_result`).
 4. **Admin sets UI:** formularios de edición y force con hasta 5 slots fijos (no filas dinámicas); sets vacíos se ignoran vía `reject_if` en nested attributes.
@@ -56,6 +56,8 @@
 - ~~`:unprocessable_entity`~~ → `:unprocessable_content` (controllers + request specs; handler `unprocessable_entity` en `Api::V1::BaseController` solo por nombre interno).
 - ~~`database.yml`~~ migrado a ENV (sin password hardcodeada, sin bloques duplicados).
 - ~~`ENV.fetch` para `OK_PADEL_DATABASE_PASSWORD`~~ → `ENV[]` (evita `KeyError` al evaluar el ERB del YAML en dev/test).
+- ~~Auto-aprobación por tiempo~~ → `AutoApproveResultsJob`, `config/recurring.yml`, `AUTO_APPROVE_AFTER_HOURS`.
+- **Development:** `config.active_job.queue_adapter = :solid_queue` (misma DB que la app; sin `solid_queue.connects_to`).
 
 ### Variables de entorno requeridas
 
@@ -73,11 +75,10 @@ Detalle completo en README → Variables de entorno.
 ### Deuda pendiente (features / calidad)
 
 - **Reversión de stats** al borrar reporte de match (ver Sprint 3 / 3b arriba).
-- **Auto-aprobación por tiempo** (job en Sprint 3).
 - **`match_player` flaky specs** si vuelven a aparecer en CI.
 
 ## Estado de calidad
-- `bundle exec rspec` → 277 examples, 0 failures (verde).
+- `bundle exec rspec` → 293 examples, 0 failures (verde).
 - `bundle exec rubocop` → 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 

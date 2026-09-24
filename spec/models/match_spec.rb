@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Match, type: :model do
+  include ActiveSupport::Testing::TimeHelpers
   subject { build(:match) }
 
   describe "associations" do
@@ -242,6 +243,19 @@ RSpec.describe Match, type: :model do
       expect(match.reload).to be_completed
       expect(player_a.player_stat.reload.wins).to eq(wins_before)
     end
+
+    it "rejects new reports after auto-approval" do
+      match, player_a, player_b = roster_match
+      add_report_for(match, player_a, sets: team_a_wins_2_0)
+      add_report_for(match, player_b, sets: team_b_wins_2_0)
+      match.auto_approve_result!
+      other = create(:user, :player)
+      create(:match_player, match: match, user: other, team: :team_b, status: :confirmed)
+
+      expect {
+        match.report_result!(reporter: other, sets: team_a_wins_2_0)
+      }.to raise_error(ActiveRecord::RecordInvalid, /finalized/)
+    end
   end
 
   describe "#force_result!" do
@@ -271,6 +285,127 @@ RSpec.describe Match, type: :model do
       expect(match.reload.stats_applied_at).to be_present
       expect(player_a.player_stat.reload.wins).to eq(2)
       expect(player_b.player_stat.reload.losses).to eq(2)
+    end
+  end
+
+  describe ".pending_auto_approval" do
+    it "includes reported matches whose last report is older than the threshold" do
+      match = create(:match, status: :reported)
+      travel_to 3.days.ago do
+        add_report(match, sets: team_a_wins_2_0)
+        add_report(match, sets: team_b_wins_2_0)
+      end
+
+      expect(Match.pending_auto_approval(threshold_hours: 48)).to include(match)
+    end
+
+    it "excludes matches that are not in reported status" do
+      match = create(:match, status: :confirmed)
+      travel_to 3.days.ago { add_report(match, sets: team_a_wins_2_0) }
+
+      expect(Match.pending_auto_approval(threshold_hours: 48)).not_to include(match)
+    end
+
+    it "excludes reported matches with a recent last report" do
+      match = create(:match, status: :reported)
+      add_report(match, sets: team_a_wins_2_0)
+      add_report(match, sets: team_b_wins_2_0)
+
+      expect(Match.pending_auto_approval(threshold_hours: 48)).not_to include(match)
+    end
+  end
+
+  describe "#auto_approve_result!" do
+    it "completes a disputed match with the only report in the winning group" do
+      match, player_a, player_b = roster_match
+      travel_to 3.days.ago do
+        add_report_for(match, player_a, sets: team_a_wins_2_0)
+        add_report_for(match, player_b, sets: team_b_wins_2_0)
+      end
+
+      match.auto_approve_result!
+
+      expect(match.reload).to be_completed
+      expect(match.auto_approved_at).to be_present
+      expect(player_a.player_stat.reload.wins).to eq(2)
+    end
+
+    it "chooses the signature with the most votes" do
+      match = create(:match, :individual, status: :reported)
+      players = create_list(:user, 4, :player)
+      players.each_with_index do |user, idx|
+        team = idx == 3 ? :team_b : :team_a
+        create(:match_player, match: match, user: user, team: team, status: :confirmed)
+      end
+      add_report_for(match, players[0], sets: team_a_wins_2_0)
+      add_report_for(match, players[1], sets: team_a_wins_2_0)
+      add_report_for(match, players[2], sets: team_a_wins_2_0)
+      add_report_for(match, players[3], sets: team_b_wins_2_0)
+      match.update_columns(status: Match.statuses[:reported], stats_applied_at: nil)
+
+      match.auto_approve_result!
+
+      expect(players[0].player_stat.reload.wins).to eq(2)
+      expect(players[3].player_stat.reload.losses).to eq(2)
+    end
+
+    it "breaks vote ties by the oldest report in the winning group" do
+      match = create(:match, :individual, status: :confirmed)
+      players = create_list(:user, 4, :player)
+      teams = [ :team_a, :team_b, :team_b, :team_a ]
+      players.each_with_index do |user, idx|
+        create(:match_player, match: match, user: user, team: teams[idx], status: :confirmed)
+      end
+
+      reports = [
+        [ players[0], team_a_wins_2_0, 5.days.ago ],
+        [ players[1], team_b_wins_2_0, 4.days.ago ],
+        [ players[2], team_b_wins_2_0, 3.days.ago ],
+        [ players[3], team_a_wins_2_0, 3.days.ago ]
+      ]
+
+      MatchResult.skip_callback(:commit, :after, :recalculate_consensus_after_create)
+      begin
+        reports.each do |reporter, sets, reported_at|
+          travel_to reported_at do
+            create(:match_result, match: match, reported_by: reporter, result_sets: sets)
+          end
+        end
+      ensure
+        MatchResult.set_callback(:commit, :after, :recalculate_consensus_after_create)
+      end
+
+      match.update_columns(status: Match.statuses[:reported], stats_applied_at: nil)
+      players.each { |user| user.player_stat.update!(wins: 0, losses: 0, current_streak: 0, best_streak: 0, win_rate: 0) }
+
+      expect(match.reload).to be_reported
+
+      match.auto_approve_result!
+
+      expect(match.reload.auto_approved_at).to be_present
+      expect(players[0].player_stat.reload.wins).to eq(1)
+      expect(players[1].player_stat.reload.losses).to eq(1)
+    end
+
+    it "does nothing when auto_approved_at is already set" do
+      match = create(:match, status: :reported, auto_approved_at: 1.hour.ago)
+      add_report(match, sets: team_a_wins_2_0)
+
+      expect { match.auto_approve_result! }.not_to change { match.reload.status }
+    end
+
+    it "does not apply stats twice" do
+      match, player_a, player_b = roster_match
+      add_report_for(match, player_a, sets: team_a_wins_2_0)
+      add_report_for(match, player_b, sets: team_b_wins_2_0)
+      match.auto_approve_result!
+      applied_at = match.reload.stats_applied_at
+      wins = player_a.player_stat.reload.wins
+
+      match.auto_approve_result!
+
+      expect(match.reload.stats_applied_at).to eq(applied_at)
+      expect(player_a.player_stat.reload.wins).to eq(wins)
     end
   end
 

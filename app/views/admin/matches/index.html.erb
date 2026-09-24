@@ -32,6 +32,11 @@
             <td><span class="badge text-bg-secondary"><%= match.status %></span></td>
             <td>
               <% if match.completed? %>
+                <% if match.auto_approved_at.present? %>
+                  <span class="badge text-bg-warning" title="Auto-approved at <%= match.auto_approved_at.strftime('%d/%m/%Y %H:%M') %>">
+                    Auto
+                  </span>
+                <% end %>
                 <% if (c = match.consensus_result) %>
                   <span class="badge text-bg-success"><%= c[:signature] %></span>
                 <% else %>

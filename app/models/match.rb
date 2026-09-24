@@ -40,6 +40,14 @@ class Match < ApplicationRecord
   validate :date_matches_time_slot_day
   validate :roster_fits_pairs_mode, if: :will_save_change_to_roster_mode?
 
+  scope :pending_auto_approval, ->(threshold_hours: 48) {
+    cutoff = threshold_hours.hours.ago
+    where(status: :reported)
+      .where(
+        id: MatchResult.group(:match_id).having("MAX(created_at) < ?", cutoff).select(:match_id)
+      )
+  }
+
   def active_match_players
     match_players.where.not(status: :cancelled)
   end
@@ -78,6 +86,10 @@ class Match < ApplicationRecord
   end
 
   def report_result!(reporter:, sets:)
+    if auto_approved_at.present?
+      raise_invalid_result!("Match result is finalized")
+    end
+
     unless active_match_players.exists?(user_id: reporter.id)
       raise_invalid_result!("Reporter is not an active player")
     end
@@ -147,6 +159,24 @@ class Match < ApplicationRecord
     return if completed?
 
     update!(status: :completed)
+  end
+
+  def auto_approve_result!
+    return if auto_approved_at.present?
+    return unless reported?
+
+    grouped = match_results.group_by(&:set_signature)
+    return if grouped.empty?
+
+    _signature, results = grouped.max_by do |_sig, rs|
+      [ rs.size, -rs.map(&:created_at).min.to_i ]
+    end
+    winning_result = results.min_by(&:created_at)
+
+    transaction do
+      update!(status: :completed, auto_approved_at: Time.current)
+      apply_stats_from!(winner_team: winning_result.winner_team) unless stats_applied_at.present?
+    end
   end
 
   def force_result!(admin:, sets:)
