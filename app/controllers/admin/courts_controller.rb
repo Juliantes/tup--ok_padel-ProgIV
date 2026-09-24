@@ -3,7 +3,7 @@ module Admin
     before_action :set_court, only: %i[show edit update destroy]
 
     def index
-      @pagy, @courts = pagy(:offset, Court.includes(:club).order(:name))
+      @pagy, @courts = pagy(:offset, Court.includes(:club, :time_slots).order(:name))
     end
 
     def show
@@ -42,7 +42,7 @@ module Admin
     private
 
     def set_court
-      @court = Court.find(params[:id])
+      @court = Court.includes(:club, :time_slots).find(params[:id])
     end
 
     def court_params

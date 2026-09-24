@@ -27,8 +27,13 @@
             <td>$<%= court.price_per_hour %></td>
             <td><span class="badge text-bg-secondary"><%= court.status %></span></td>
             <td class="text-end">
-              <%= link_to "View", admin_court_path(court), class: "btn btn-sm btn-outline-secondary" %>
-              <%= link_to "Edit", edit_admin_court_path(court), class: "btn btn-sm btn-outline-primary" %>
+              <div class="d-flex flex-wrap justify-content-end gap-1">
+                <%= link_to "Time slots (#{court.time_slots.size})",
+                            admin_court_time_slots_path(court),
+                            class: "btn btn-sm btn-primary" %>
+                <%= link_to "View", admin_court_path(court), class: "btn btn-sm btn-outline-secondary" %>
+                <%= link_to "Edit", edit_admin_court_path(court), class: "btn btn-sm btn-outline-primary" %>
+              </div>
             </td>
           </tr>
         <% end %>
