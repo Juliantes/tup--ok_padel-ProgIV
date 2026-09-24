@@ -46,7 +46,9 @@ scripts:
           const match = pm.response.json().match;
           pm.expect(match).to.have.property('id');
           pm.expect(match).to.have.property('status');
-          pm.expect(match).to.have.property('court_id');
+          pm.expect(match).to.have.property('court');
+          pm.expect(match.court).to.have.property('id');
+          pm.expect(match.court).to.have.property('name');
       });
     language: text/javascript
 order: 2000
