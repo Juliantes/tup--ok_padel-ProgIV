@@ -38,7 +38,7 @@ module Admin
       if @match.update(match_params)
         redirect_to admin_match_path(@match), notice: "Match was successfully updated."
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 

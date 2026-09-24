@@ -12,7 +12,7 @@ module Api
       def create
         sets = sets_params
         if sets.blank?
-          return render_error("sets is required", status: :unprocessable_entity)
+          return render_error("sets is required", status: :unprocessable_content)
         end
 
         @match.report_result!(reporter: current_user, sets: sets)

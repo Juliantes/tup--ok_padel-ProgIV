@@ -19,7 +19,7 @@ module Api
       end
 
       def unprocessable_entity(exception)
-        render json: { error: exception.record.errors.full_messages.join(", ") }, status: :unprocessable_entity
+        render json: { error: exception.record.errors.full_messages.join(", ") }, status: :unprocessable_content
       end
 
       def bad_request(exception)

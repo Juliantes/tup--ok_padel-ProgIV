@@ -48,7 +48,7 @@ RSpec.describe "Api::V1::Users", type: :request do
             headers: auth_headers_for(user),
             as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to be_present
     end
   end

@@ -62,10 +62,7 @@ cd ok_padel
 # 2. Dependencias
 bundle install
 
-# 3. Base de datos
-# Ajustá config/database.yml según tu usuario/host de PostgreSQL
-# o exportá DATABASE_URL (recomendado; mismo criterio que en CI):
-# export DATABASE_URL="postgres://postgres:postgres@localhost:5432/ok_padel_development"
+# 3. Base de datos (ver nota debajo sobre variables de entorno)
 
 # 4. Credenciales Rails (si aún no tenés master.key)
 # bin/rails credentials:edit  # requiere config/master.key
@@ -79,6 +76,18 @@ bin/rails db:seed
 # 7. Servidor
 bin/rails s
 ```
+
+> **⚠️ Configuración de base de datos:** `config/database.yml` lee las credenciales desde variables de entorno. Para desarrollo local:
+>
+> ```bash
+> export DATABASE_PASSWORD=tu_password_local
+> ```
+>
+> O usá `DATABASE_URL`:
+>
+> ```bash
+> export DATABASE_URL="postgres://postgres:tu_password@localhost:5432/ok_padel_development"
+> ```
 
 **Jobs en desarrollo:** no hay `Procfile.dev`. Para procesar mails encolados con `deliver_later` (bienvenida, etc.), en **otra terminal**:
 
@@ -103,8 +112,12 @@ Remoto configurado: `https://github.com/Juliantes/ok_padel.git`. Si usás otro u
 
 | Variable | Entorno | Uso |
 |----------|---------|-----|
-| `DATABASE_URL` | dev / test / CI | Conexión PostgreSQL (sobreescribe partes de `database.yml`) |
-| `OK_PADEL_DATABASE_PASSWORD` | production | Password del rol `ok_padel` en `config/database.yml` |
+| `DATABASE_USERNAME` | dev / test | Usuario de PostgreSQL (default: `postgres`) |
+| `DATABASE_PASSWORD` | dev / test | Password de PostgreSQL (default: vacío) |
+| `DATABASE_HOST` | dev / test | Host de PostgreSQL (default: `localhost`) |
+| `DATABASE_PORT` | dev / test | Puerto de PostgreSQL (default: `5432`) |
+| `DATABASE_URL` | alternativa | URL completa (como en CI) |
+| `OK_PADEL_DATABASE_PASSWORD` | production | Password del rol `ok_padel` |
 | `RAILS_MASTER_KEY` | production / Kamal | Descifra `config/credentials.yml.enc` |
 | `APP_HOST` | production | Host público para links en mails (default: `okpadel.example`) |
 | `MAILER_FROM` | todos | Remitente (default: `Ok Padel <no-reply@okpadel.local>`) |
@@ -113,8 +126,6 @@ Remoto configurado: `https://github.com/Juliantes/ok_padel.git`. Si usás otro u
 | `SMTP_*` | production | SMTP real (ver sección Emails) |
 | `KAMAL_REGISTRY_PASSWORD` | deploy | Token/password del registry Docker |
 | `RAILS_MAX_THREADS` | opcional | Pool de conexiones (default 5) |
-
-> **Nota:** en el repo, `config/database.yml` puede tener credenciales locales hardcodeadas. Para clones nuevos, preferí `DATABASE_URL` o editá el archivo sin commitear secretos reales.
 
 ## Credenciales de acceso (seeds)
 

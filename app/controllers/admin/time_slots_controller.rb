@@ -20,7 +20,7 @@ module Admin
       if @time_slot.save
         redirect_to admin_time_slot_path(@time_slot), notice: "Time slot was successfully created."
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
 
@@ -31,7 +31,7 @@ module Admin
       if @time_slot.update(time_slot_params)
         redirect_to admin_time_slot_path(@time_slot), notice: "Time slot was successfully updated."
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 

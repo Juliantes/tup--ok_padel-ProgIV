@@ -17,7 +17,7 @@ module Admin
         redirect_to admin_match_path(@match), notice: "Result updated."
       else
         edit
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 

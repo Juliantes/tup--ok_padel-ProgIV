@@ -170,7 +170,7 @@ RSpec.describe "Admin::TimeSlots", type: :request do
         }
       }.not_to change(TimeSlot, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects day_of_week outside 0..6" do
@@ -180,7 +180,7 @@ RSpec.describe "Admin::TimeSlots", type: :request do
         }
       }.not_to change(TimeSlot, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "rejects invalid day_of_week values" do
@@ -190,7 +190,7 @@ RSpec.describe "Admin::TimeSlots", type: :request do
         }
       }.not_to change(TimeSlot, :count)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -236,7 +236,7 @@ RSpec.describe "Admin::TimeSlots", type: :request do
         }
       }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

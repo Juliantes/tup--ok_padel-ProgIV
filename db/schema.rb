@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_23_220002) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_23_230000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -86,7 +86,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_23_220002) do
   end
 
   create_table "match_results", force: :cascade do |t|
-    t.datetime "approved_at"
     t.datetime "created_at", null: false
     t.boolean "forced_by_admin", default: false, null: false
     t.bigint "match_id", null: false

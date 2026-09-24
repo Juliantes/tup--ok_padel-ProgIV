@@ -45,7 +45,7 @@ module Api
         raise ActiveRecord::RecordNotFound if match_player.nil? || match_player.cancelled?
 
         if @match.creator_id == current_user.id && (@match.confirmed? || @match.completed?)
-          return render_error("Creator cannot leave a confirmed or completed match", status: :unprocessable_entity)
+          return render_error("Creator cannot leave a confirmed or completed match", status: :unprocessable_content)
         end
 
         match_player.update!(status: :cancelled)
@@ -57,11 +57,11 @@ module Api
       def played
         @match = Match.find(params[:id])
         unless @match.active_match_players.exists?(user_id: current_user.id)
-          return render_error("You are not an active player of this match", status: :unprocessable_entity)
+          return render_error("You are not an active player of this match", status: :unprocessable_content)
         end
 
         if @match.completed? && @match.consensus?
-          return render_error("Match is already completed with a consensus result", status: :unprocessable_entity)
+          return render_error("Match is already completed with a consensus result", status: :unprocessable_content)
         end
 
         @match.mark_as_played!
@@ -103,7 +103,7 @@ module Api
 
         if match.roster_mode_pairs?
           if team.blank?
-            render_error("Team is required in pairs mode", status: :unprocessable_entity)
+            render_error("Team is required in pairs mode", status: :unprocessable_content)
             return nil
           end
 

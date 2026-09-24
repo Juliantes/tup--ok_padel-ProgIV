@@ -25,7 +25,7 @@ module Admin
       end
       redirect_to admin_user_path(@user), notice: "User was successfully created."
     rescue ActiveRecord::RecordInvalid
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
 
     def edit
@@ -45,7 +45,7 @@ module Admin
       end
       redirect_to admin_user_path(@user), notice: "User was successfully updated."
     rescue ActiveRecord::RecordInvalid
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
 
     def destroy

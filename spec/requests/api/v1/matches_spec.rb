@@ -138,7 +138,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
            headers: auth_headers_for(creator),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to be_present
     end
   end
@@ -176,7 +176,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
            headers: auth_headers_for(other_player),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to eq("Team is required in pairs mode")
     end
 
@@ -188,7 +188,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
            headers: auth_headers_for(other_player),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -232,7 +232,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
              headers: auth_headers_for(creator),
              as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to eq("Creator cannot leave a confirmed or completed match")
     end
 
@@ -301,7 +301,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
            headers: auth_headers_for(creator),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to eq("You are not an active player of this match")
     end
 
@@ -318,7 +318,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
            headers: auth_headers_for(other_player),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to eq("Match is already completed with a consensus result")
     end
   end

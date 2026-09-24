@@ -41,7 +41,7 @@ RSpec.describe "Admin::Courts", type: :request do
         }
       }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Precio por hora")
       expect(court.reload.price_per_hour).not_to eq(BigDecimal("12341234123412341234"))
     end

@@ -69,7 +69,7 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
            headers: auth_headers_for(player),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to eq("sets is required")
     end
 
@@ -79,7 +79,7 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
            headers: auth_headers_for(other_player),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to eq("Reporter is not an active player")
     end
 
@@ -94,7 +94,7 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
            headers: auth_headers_for(player),
            as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body)["error"]).to eq("You already reported a result")
       expect(match.match_results.count).to eq(1)
     end

@@ -48,10 +48,36 @@
 1. **Force result no revierte stats:** si el admin fuerza un marcador, `stats_applied_at` queda fijado; cambiar o borrar el reporte forzado no revierte `player_stats`.
 2. **Delete de reporte en match cerrado:** permitido desde admin; las stats no se revierten.
 3. **Reopen:** no hay flujo de reapertura; si se agrega, no debe asumir reversión de stats.
-4. **`approved_at` en `match_results`:** columna legacy sin uso en el flujo actual.
+4. ~~**`approved_at` en `match_results`:**~~ eliminada (migración `RemoveApprovedAtFromMatchResults`).
+
+## Deuda técnica resuelta (Sprint de deuda)
+
+- ~~`approved_at`~~ dropped de `match_results`.
+- ~~`:unprocessable_entity`~~ → `:unprocessable_content` (controllers + request specs; handler `unprocessable_entity` en `Api::V1::BaseController` solo por nombre interno).
+- ~~`database.yml`~~ migrado a ENV (sin password hardcodeada, sin bloques duplicados).
+- ~~`ENV.fetch` para `OK_PADEL_DATABASE_PASSWORD`~~ → `ENV[]` (evita `KeyError` al evaluar el ERB del YAML en dev/test).
+
+### Variables de entorno requeridas
+
+**Desarrollo:** `DATABASE_PASSWORD` (o `DATABASE_URL`). Opcionales: `DATABASE_USERNAME`, `DATABASE_HOST`, `DATABASE_PORT`.
+
+**Producción:** `OK_PADEL_DATABASE_PASSWORD`, `RAILS_MASTER_KEY`, `APP_HOST`; opcional `MAILER_*`, `SMTP_*`; deploy Kamal: `KAMAL_REGISTRY_PASSWORD`.
+
+Detalle completo en README → Variables de entorno.
+
+## Configuración y convenciones (repo)
+
+- **Base de datos:** `config/database.yml` sin credenciales en código. Producción usa `ENV["OK_PADEL_DATABASE_PASSWORD"]` (nil en dev si no está seteada; la conexión PG en prod falla si falta).
+- **HTTP 422:** usar `status: :unprocessable_content` en controllers y `have_http_status(:unprocessable_content)` en request specs (Rack 3.2+).
+
+### Deuda pendiente (features / calidad)
+
+- **Reversión de stats** al borrar reporte de match (ver Sprint 3 / 3b arriba).
+- **Auto-aprobación por tiempo** (job en Sprint 3).
+- **`match_player` flaky specs** si vuelven a aparecer en CI.
 
 ## Estado de calidad
-- `bundle exec rspec` → verde tras Parte 2 (sets en API/admin).
+- `bundle exec rspec` → 277 examples, 0 failures (verde).
 - `bundle exec rubocop` → 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 

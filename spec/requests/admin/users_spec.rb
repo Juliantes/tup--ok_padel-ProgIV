@@ -98,7 +98,7 @@ RSpec.describe "Admin::Users", type: :request do
         }.merge(role_params_for(sole_admin, admin: "0"))
       }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(sole_admin.reload.admin?).to be(true)
       expect(response.body).to include("Cannot remove the last admin role")
     end

@@ -19,7 +19,7 @@ module Admin
       if @court.save
         redirect_to admin_court_path(@court), notice: "Court was successfully created."
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
 
@@ -30,7 +30,7 @@ module Admin
       if @court.update(court_params)
         redirect_to admin_court_path(@court), notice: "Court was successfully updated."
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 

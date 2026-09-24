@@ -19,7 +19,7 @@ module Admin
       if @club.save
         redirect_to admin_club_path(@club), notice: "Club was successfully created."
       else
-        render :new, status: :unprocessable_entity
+        render :new, status: :unprocessable_content
       end
     end
 
@@ -30,7 +30,7 @@ module Admin
       if @club.update(club_params)
         redirect_to admin_club_path(@club), notice: "Club was successfully updated."
       else
-        render :edit, status: :unprocessable_entity
+        render :edit, status: :unprocessable_content
       end
     end
 
