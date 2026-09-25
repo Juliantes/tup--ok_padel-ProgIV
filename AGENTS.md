@@ -50,6 +50,11 @@
 3. **Reopen:** no hay flujo de reapertura; si se agrega, no debe asumir reversión de stats.
 4. ~~**`approved_at` en `match_results`:**~~ eliminada (migración `RemoveApprovedAtFromMatchResults`).
 
+### Deuda planificada — Seguridad y producción (TP2)
+
+1. **CORS:** agregar `rack-cors` y configurar `config/initializers/cors.rb` cuando el front-end React/Vue del TP2 consuma la API desde otro dominio. No aplica para TP1 (Postman y Swagger no están sujetos a políticas CORS del navegador).
+2. **Rate limiting:** agregar `rack-attack` para proteger endpoints de autenticación contra brute force. No crítico para TP1 pero recomendado para producción.
+
 ## Deuda técnica resuelta (Sprint de deuda)
 
 - ~~`approved_at`~~ dropped de `match_results`.
@@ -84,6 +89,9 @@ Detalle completo en README → Variables de entorno.
 - Swagger implementado: 15 endpoints `api/v1` en `/api-docs`.
 - `bundle exec rubocop` → 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
+- `bundle exec bundler-audit check` → 0 vulnerabilities ✅
+- `bin/importmap audit` → 0 vulnerabilities ✅
+- **Seguridad:** `force_ssl` habilitado en producción, Devise `password_length` 8+, `paranoid` mode habilitado
 
 ## Regla operativa
 Antes de cerrar cualquier sprint:
