@@ -128,6 +128,52 @@ Remoto configurado: `https://github.com/Juliantes/ok_padel.git`. Si usás otro u
 | `KAMAL_REGISTRY_PASSWORD` | deploy | Token/password del registry Docker |
 | `RAILS_MAX_THREADS` | opcional | Pool de conexiones (default 5) |
 | `AUTO_APPROVE_AFTER_HOURS` | opcional | Horas sin reportes nuevos antes de auto-cerrar un partido en disputa (default: `48`) |
+| `CORS_ORIGINS` | opcional | Orígenes permitidos para CORS (CSV). Default en dev: `http://localhost:3001,http://localhost:5173`. En producción: dominio(s) del front-end, p. ej. `https://okpadel.com,https://www.okpadel.com` |
+
+## CORS y rate limiting
+
+El front-end externo (otro origen) consume la API con **JWT en header** (sin cookies). CORS y límites de abuso están activos en todos los entornos.
+
+### CORS (`rack-cors`)
+
+- Configuración: `config/initializers/cors.rb`.
+- Rutas: `/api/*` (métodos GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD).
+- Orígenes: variable `CORS_ORIGINS` (lista separada por comas). Si no está definida, se usan `http://localhost:3001` y `http://localhost:5173`.
+- Headers expuestos al navegador: `Authorization`, `Retry-After`.
+- No se usa `credentials: true` ni `origins "*"`.
+
+Verificar con curl:
+
+```bash
+curl -i -H "Origin: http://localhost:3001" http://localhost:3000/api/v1/courts
+```
+
+Deberías ver `Access-Control-Allow-Origin: http://localhost:3001` en la respuesta.
+
+### Rate limiting (`rack-attack`)
+
+- Configuración: `config/initializers/rack_attack.rb`.
+- **Backend de contadores:** `Rails.cache` (Solid Cache en producción; `memory_store` en desarrollo). No se requiere Redis.
+- **Safelist:** `GET /up` (health check) y peticiones `OPTIONS` (preflight CORS).
+- **Límites (por minuto):**
+  - `POST /api/v1/login`: 5 por IP.
+  - Escritura autenticada (POST/PATCH/PUT/DELETE con JWT válido): 30 por usuario.
+  - Lectura autenticada (GET con JWT): 100 por usuario.
+  - Lectura anónima (GET sin `Authorization`): 60 por IP.
+- Tras muchos 429, Fail2Ban puede bloquear la IP 1 hora (10 throttles en 10 minutos).
+- Respuesta **429:** JSON `{ "error": "Too many requests. Please retry later." }` y header `Retry-After` (segundos hasta el próximo bucket).
+
+Probar el límite de login:
+
+```bash
+for i in $(seq 1 6); do
+  curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000/api/v1/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"x@y.com","password":"wrong"}'
+done
+```
+
+El sexto código debería ser `429`.
 
 ## Auto-aprobación de resultados
 

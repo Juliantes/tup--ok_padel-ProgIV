@@ -50,10 +50,11 @@
 3. **Reopen:** no hay flujo de reapertura; si se agrega, no debe asumir reversión de stats.
 4. ~~**`approved_at` en `match_results`:**~~ eliminada (migración `RemoveApprovedAtFromMatchResults`).
 
-### Deuda planificada — Seguridad y producción (TP2)
+### Deuda planificada — Migrar cache a Redis
 
-1. **CORS:** agregar `rack-cors` y configurar `config/initializers/cors.rb` cuando el front-end React/Vue del TP2 consuma la API desde otro dominio. No aplica para TP1 (Postman y Swagger no están sujetos a políticas CORS del navegador).
-2. **Rate limiting:** agregar `rack-attack` para proteger endpoints de autenticación contra brute force. No crítico para TP1 pero recomendado para producción.
+- Actualmente usamos **Solid Cache** (`config.cache_store = :solid_cache_store` en producción; `memory_store` en dev; `null_store` en test salvo specs de rate limiting que usan `MemoryStore` dedicado).
+- Migración futura: gemas `redis` + `hiredis`, `config.cache_store = :redis_cache_store`, accessory Redis en Kamal.
+- Razón: si el proyecto escala a múltiples servidores o requiere mayor performance de contadores compartidos (p. ej. Rack::Attack entre instancias).
 
 ## Deuda técnica resuelta (Sprint de deuda)
 
@@ -64,12 +65,14 @@
 - ~~Auto-aprobación por tiempo~~ → `AutoApproveResultsJob`, `config/recurring.yml`, `AUTO_APPROVE_AFTER_HOURS`.
 - ~~**Swagger / OpenAPI (extra TP1):**~~ rswag en `/api-docs`; 15 endpoints documentados; spec `spec/swagger_helper.rb` + `swagger/v1/swagger.yaml`.
 - **Development:** `config.active_job.queue_adapter = :solid_queue` (misma DB que la app; sin `solid_queue.connects_to`).
+- ~~**CORS:**~~ `rack-cors` en `config/initializers/cors.rb`; orígenes vía `CORS_ORIGINS` (CSV); defaults `localhost:3001` y `5173`; sin `credentials`.
+- ~~**Rate limiting:**~~ `rack-attack` en `config/initializers/rack_attack.rb`; backend `Rails.cache` (Solid Cache en prod); límites login/lectura/escritura; `/up` y OPTIONS en safelist.
 
 ### Variables de entorno requeridas
 
 **Desarrollo:** `DATABASE_PASSWORD` (o `DATABASE_URL`). Opcionales: `DATABASE_USERNAME`, `DATABASE_HOST`, `DATABASE_PORT`.
 
-**Producción:** `OK_PADEL_DATABASE_PASSWORD`, `RAILS_MASTER_KEY`, `APP_HOST`; opcional `MAILER_*`, `SMTP_*`; deploy Kamal: `KAMAL_REGISTRY_PASSWORD`.
+**Producción:** `OK_PADEL_DATABASE_PASSWORD`, `RAILS_MASTER_KEY`, `APP_HOST`; opcional `MAILER_*`, `SMTP_*`, `CORS_ORIGINS`; deploy Kamal: `KAMAL_REGISTRY_PASSWORD`.
 
 Detalle completo en README → Variables de entorno.
 
@@ -78,6 +81,7 @@ Detalle completo en README → Variables de entorno.
 - **Base de datos:** `config/database.yml` sin credenciales en código. Producción usa `ENV["OK_PADEL_DATABASE_PASSWORD"]` (nil en dev si no está seteada; la conexión PG en prod falla si falta).
 - **HTTP 422:** usar `status: :unprocessable_content` en controllers y `have_http_status(:unprocessable_content)` en request specs (Rack 3.2+).
 - **Swagger (OpenAPI):** cada nuevo endpoint de `api/v1` debe documentarse en el request spec correspondiente (`spec/requests/api/v1/`) con bloques rswag (`path`, `response`, `run_test!`) y regenerar `swagger/v1/swagger.yaml` con `bundle exec rake rswag:specs:swaggerize`. Schemas reusables en `spec/swagger_helper.rb` deben coincidir con los Jbuilder.
+- **CORS y rate limiting:** los nuevos endpoints bajo `/api/*` heredan CORS (`rack-cors`) y throttles (`rack-attack`) sin configuración adicional.
 
 ### Deuda pendiente (features / calidad)
 
@@ -85,7 +89,7 @@ Detalle completo en README → Variables de entorno.
 - **`match_player` flaky specs** si vuelven a aparecer en CI.
 
 ## Estado de calidad
-- `bundle exec rspec` → 295 examples, 0 failures (verde).
+- `bundle exec rspec` → 303 examples, 0 failures (verde; incluye `spec/requests/cors_spec.rb` y `spec/requests/rate_limiting_spec.rb`).
 - Swagger implementado: 15 endpoints `api/v1` en `/api-docs`.
 - `bundle exec rubocop` → 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
