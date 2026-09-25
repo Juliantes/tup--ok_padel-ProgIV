@@ -1,55 +1,97 @@
-require "rails_helper"
+require "swagger_helper"
 
 RSpec.describe "Api::V1::Users", type: :request do
   let(:user) { create(:user, :player) }
 
-  describe "GET /api/v1/profile" do
-    it "returns the current user profile with a valid token" do
-      get "/api/v1/profile", headers: auth_headers_for(user), as: :json
+  path "/api/v1/profile" do
+    get "Profile" do
+      tags "Profile"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
 
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      expect(body["user"]["id"]).to eq(user.id)
-      expect(body["user"]["email"]).to eq(user.email)
+      response(200, "returns the current user profile with a valid token") do
+        schema "$ref" => "#/components/schemas/UserResponse"
+
+        let(:Authorization) { auth_headers_for(user)["Authorization"] }
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["user"]["id"]).to eq(user.id)
+          expect(body["user"]["email"]).to eq(user.email)
+        end
+      end
+
+      response(401, "returns 401 without a token") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { "" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
+        end
+      end
+
+      response(401, "returns 401 with an invalid token") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { "Bearer invalid" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
+        end
+      end
     end
 
-    it "returns 401 without a token" do
-      get "/api/v1/profile", as: :json
+    patch "Update profile" do
+      tags "Profile"
+      consumes "application/json"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
 
-      expect(response).to have_http_status(:unauthorized)
-      expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
-    end
+      parameter name: :body, in: :body, schema: {
+        type: :object,
+        properties: {
+          name: { type: :string },
+          bio: { type: :string },
+          self_level: { type: :integer }
+        }
+      }
 
-    it "returns 401 with an invalid token" do
-      get "/api/v1/profile", headers: { "Authorization" => "Bearer invalid" }, as: :json
+      response(200, "updates the current user profile") do
+        schema "$ref" => "#/components/schemas/UserResponse"
 
-      expect(response).to have_http_status(:unauthorized)
-      expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
-    end
-  end
+        let(:Authorization) { auth_headers_for(user)["Authorization"] }
+        let(:body) { { name: "Updated Name", bio: "New bio" } }
 
-  describe "PATCH /api/v1/profile" do
-    it "updates the current user profile" do
-      patch "/api/v1/profile",
-            params: { name: "Updated Name", bio: "New bio" },
-            headers: auth_headers_for(user),
-            as: :json
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["user"]["name"]).to eq("Updated Name")
+          expect(body_json["user"]["bio"]).to eq("New bio")
+          expect(user.reload.name).to eq("Updated Name")
+        end
+      end
 
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      expect(body["user"]["name"]).to eq("Updated Name")
-      expect(body["user"]["bio"]).to eq("New bio")
-      expect(user.reload.name).to eq("Updated Name")
-    end
+      response(401, "returns 401 without a token") do
+        schema "$ref" => "#/components/schemas/Error"
 
-    it "returns 422 with invalid data" do
-      patch "/api/v1/profile",
-            params: { self_level: 99 },
-            headers: auth_headers_for(user),
-            as: :json
+        let(:Authorization) { "" }
+        let(:body) { { name: "Updated Name" } }
 
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(JSON.parse(response.body)["error"]).to be_present
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
+        end
+      end
+
+      response(422, "returns 422 with invalid data") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { auth_headers_for(user)["Authorization"] }
+        let(:body) { { self_level: 99 } }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to be_present
+        end
+      end
     end
   end
 end

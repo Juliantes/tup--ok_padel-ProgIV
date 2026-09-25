@@ -1,4 +1,4 @@
-require "rails_helper"
+require "swagger_helper"
 
 RSpec.describe "Api::V1::Matches", type: :request do
   let(:court) { create(:court, status: :active) }
@@ -15,311 +15,459 @@ RSpec.describe "Api::V1::Matches", type: :request do
     create(:match, court: court, creator: creator, status: :confirmed, date: 4.days.from_now.change(hour: 12))
   end
 
-  describe "GET /api/v1/matches" do
-    it "lists only open and full matches without authentication" do
-      get "/api/v1/matches", as: :json
+  let(:valid_create_body) do
+    {
+      court_id: court.id,
+      date: 1.week.from_now.change(hour: 10, min: 0).iso8601,
+      duration: 90,
+      roster_mode: "pairs",
+      level_required: "fifth"
+    }
+  end
 
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      ids = body["matches"].map { |match| match["id"] }
-      expect(ids).to contain_exactly(open_match.id, full_match.id)
-      expect(body["meta"]).to include(
-        "current_page" => 1,
-        "per_page" => 20,
-        "total_pages" => 1,
-        "total_count" => 2
-      )
-    end
+  path "/api/v1/matches" do
+    get "List matches" do
+      tags "Matches"
+      produces "application/json"
+      security []
 
-    it "filters by status, court and date" do
-      get "/api/v1/matches",
-          params: {
-            status: "open",
-            court_id: court.id,
-            date: open_match.date.to_date.iso8601
-          },
-          as: :json
+      parameter name: :status, in: :query, type: :string, required: false,
+                description: "Filter by match status (e.g. open, full)"
+      parameter name: :court_id, in: :query, type: :integer, required: false
+      parameter name: :date, in: :query, type: :string, format: :date, required: false
+      parameter name: :page, in: :query, type: :integer, required: false
+      parameter name: :per_page, in: :query, type: :integer, required: false
 
-      body = JSON.parse(response.body)
-      ids = body["matches"].map { |match| match["id"] }
-      expect(ids).to eq([ open_match.id ])
-    end
+      response(200, "lists only open and full matches without authentication") do
+        schema "$ref" => "#/components/schemas/MatchesResponse"
 
-    it "paginates results" do
-      22.times do |index|
-        create(:match, court: court, creator: creator, status: :open, date: (10 + index).days.from_now)
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          ids = body["matches"].map { |match| match["id"] }
+          expect(ids).to contain_exactly(open_match.id, full_match.id)
+          expect(body["meta"]).to include(
+            "current_page" => 1,
+            "per_page" => 20,
+            "total_pages" => 1,
+            "total_count" => 2
+          )
+        end
       end
 
-      get "/api/v1/matches", params: { page: 2, per_page: 10 }, as: :json
+      response(200, "filters by status, court and date") do
+        schema "$ref" => "#/components/schemas/MatchesResponse"
 
-      body = JSON.parse(response.body)
-      expect(body["matches"].size).to eq(10)
-      expect(body["meta"]["current_page"]).to eq(2)
-      expect(body["meta"]["per_page"]).to eq(10)
-      expect(body["meta"]["total_count"]).to eq(24)
+        let(:status) { "open" }
+        let(:court_id) { court.id }
+        let(:date) { open_match.date.to_date.iso8601 }
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          ids = body["matches"].map { |match| match["id"] }
+          expect(ids).to eq([ open_match.id ])
+        end
+      end
+
+      response(200, "paginates results") do
+        schema "$ref" => "#/components/schemas/MatchesResponse"
+
+        let(:page) { 2 }
+        let(:per_page) { 10 }
+
+        before do
+          22.times do |index|
+            create(:match, court: court, creator: creator, status: :open, date: (10 + index).days.from_now)
+          end
+        end
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["matches"].size).to eq(10)
+          expect(body["meta"]["current_page"]).to eq(2)
+          expect(body["meta"]["per_page"]).to eq(10)
+          expect(body["meta"]["total_count"]).to eq(24)
+        end
+      end
     end
-  end
 
-  describe "GET /api/v1/matches/:id" do
-    it "returns a match with details" do
-      create(:match_player, match: open_match, user: creator, team: :team_a)
+    post "Create match" do
+      tags "Matches"
+      consumes "application/json"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
 
-      get "/api/v1/matches/#{open_match.id}", as: :json
-
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      expect(body["match"]["id"]).to eq(open_match.id)
-      expect(body["match"]["join_policy"]).to eq("auto")
-      expect(body["match"]).to have_key("time_slot")
-      expect(body["match"]).not_to have_key("match_result")
-      expect(body["match"]["match_results"]).to eq([])
-      expect(body["match"]["consensus"]).to be_nil
-    end
-
-    it "returns 404 for a missing match" do
-      get "/api/v1/matches/0", as: :json
-
-      expect(response).to have_http_status(:not_found)
-      expect(JSON.parse(response.body)["error"]).to eq("Not found")
-    end
-  end
-
-  describe "POST /api/v1/matches" do
-    let(:valid_params) do
-      {
-        court_id: court.id,
-        date: 1.week.from_now.change(hour: 10, min: 0).iso8601,
-        duration: 90,
-        roster_mode: "pairs",
-        level_required: "fifth"
+      parameter name: :body, in: :body, schema: {
+        type: :object,
+        properties: {
+          court_id: { type: :integer },
+          date: { type: :string, format: "date-time" },
+          duration: { type: :integer },
+          roster_mode: { type: :string, enum: %w[pairs individual] },
+          level_required: { type: :string },
+          auto_join: { type: :boolean }
+        },
+        required: %w[court_id date duration roster_mode level_required]
       }
-    end
 
-    it "creates a match and enrolls the creator by default" do
-      expect do
-        post "/api/v1/matches",
-             params: valid_params,
-             headers: auth_headers_for(creator),
-             as: :json
-      end.to change(Match, :count).by(1)
-         .and change(MatchPlayer, :count).by(1)
+      response(201, "creates a match and enrolls the creator by default") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
 
-      expect(response).to have_http_status(:created)
-      body = JSON.parse(response.body)
-      expect(body["match"]["creator"]["id"]).to eq(creator.id)
-      expect(body["match"]["match_players"].size).to eq(1)
-      expect(body["match"]["match_players"].first["user_id"]).to eq(creator.id)
-    end
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+        let(:body) { valid_create_body }
 
-    it "creates a match without enrolling the creator when auto_join is false" do
-      expect do
-        post "/api/v1/matches",
-             params: valid_params.merge(auto_join: false),
-             headers: auth_headers_for(creator),
-             as: :json
-      end.to change(Match, :count).by(1)
+        it "creates a match" do |example|
+          expect {
+            submit_request(example.metadata)
+          }.to change(Match, :count).by(1)
+             .and change(MatchPlayer, :count).by(1)
 
-      expect(MatchPlayer.where(match_id: Match.order(:id).last.id)).to be_empty
+          assert_response_matches_metadata(example.metadata)
+          body_json = JSON.parse(response.body)
+          expect(body_json["match"]["creator"]["id"]).to eq(creator.id)
+          expect(body_json["match"]["match_players"].size).to eq(1)
+          expect(body_json["match"]["match_players"].first["user_id"]).to eq(creator.id)
+        end
+      end
 
-      expect(response).to have_http_status(:created)
-      body = JSON.parse(response.body)
-      expect(body["match"]["match_players"]).to be_empty
-    end
+      response(201, "creates a match without enrolling the creator when auto_join is false") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
 
-    it "returns 401 without a token" do
-      post "/api/v1/matches", params: valid_params, as: :json
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+        let(:body) { valid_create_body.merge(auto_join: false) }
 
-      expect(response).to have_http_status(:unauthorized)
-    end
+        it "does not enroll creator" do |example|
+          expect {
+            submit_request(example.metadata)
+          }.to change(Match, :count).by(1)
 
-    it "returns 422 with invalid params" do
-      post "/api/v1/matches",
-           params: valid_params.merge(duration: 0),
-           headers: auth_headers_for(creator),
-           as: :json
+          assert_response_matches_metadata(example.metadata)
+          expect(MatchPlayer.where(match_id: Match.order(:id).last.id)).to be_empty
+          body_json = JSON.parse(response.body)
+          expect(body_json["match"]["match_players"]).to be_empty
+        end
+      end
 
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(JSON.parse(response.body)["error"]).to be_present
-    end
-  end
+      response(401, "returns 401 without a token") do
+        schema "$ref" => "#/components/schemas/Error"
 
-  describe "POST /api/v1/matches/:id/join" do
-    it "joins a match and returns the updated roster" do
-      post "/api/v1/matches/#{open_match.id}/join",
-           params: { team: "team_a" },
-           headers: auth_headers_for(other_player),
-           as: :json
+        let(:Authorization) { "" }
+        let(:body) { valid_create_body }
 
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      user_ids = body["match"]["match_players"].map { |player| player["user_id"] }
-      expect(user_ids).to include(other_player.id)
-    end
+        run_test!
+      end
 
-    it "returns 401 without a token" do
-      post "/api/v1/matches/#{open_match.id}/join", params: { team: "team_a" }, as: :json
+      response(422, "returns 422 with invalid params") do
+        schema "$ref" => "#/components/schemas/Error"
 
-      expect(response).to have_http_status(:unauthorized)
-    end
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+        let(:body) { valid_create_body.merge(duration: 0) }
 
-    it "returns 404 for a missing match" do
-      post "/api/v1/matches/0/join",
-           params: { team: "team_a" },
-           headers: auth_headers_for(other_player),
-           as: :json
-
-      expect(response).to have_http_status(:not_found)
-    end
-
-    it "returns 422 in pairs mode without a team" do
-      post "/api/v1/matches/#{open_match.id}/join",
-           headers: auth_headers_for(other_player),
-           as: :json
-
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(JSON.parse(response.body)["error"]).to eq("Team is required in pairs mode")
-    end
-
-    it "returns 422 when already actively enrolled" do
-      create(:match_player, match: open_match, user: other_player, team: :team_b)
-
-      post "/api/v1/matches/#{open_match.id}/join",
-           params: { team: "team_b" },
-           headers: auth_headers_for(other_player),
-           as: :json
-
-      expect(response).to have_http_status(:unprocessable_content)
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to be_present
+        end
+      end
     end
   end
 
-  describe "DELETE /api/v1/matches/:id/leave" do
-    let!(:creator_player) do
-      create(:match_player, match: open_match, user: creator, team: :team_a)
-    end
+  path "/api/v1/matches/{id}" do
+    parameter name: :id, in: :path, type: :integer, description: "Match ID"
 
-    it "removes the player from the match" do
-      enrolled = create(:match_player, match: open_match, user: other_player, team: :team_b)
+    get "Show match" do
+      tags "Matches"
+      produces "application/json"
+      security []
 
-      delete "/api/v1/matches/#{open_match.id}/leave",
-             headers: auth_headers_for(other_player),
-             as: :json
+      response(200, "returns a match with details") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
 
-      expect(response).to have_http_status(:ok)
-      expect(enrolled.reload.status).to eq("cancelled")
-      body = JSON.parse(response.body)
-      user_ids = body["match"]["match_players"].map { |player| player["user_id"] }
-      expect(user_ids).not_to include(other_player.id)
-    end
+        let(:id) { open_match.id }
 
-    it "returns 401 without a token" do
-      delete "/api/v1/matches/#{open_match.id}/leave", as: :json
+        before { create(:match_player, match: open_match, user: creator, team: :team_a) }
 
-      expect(response).to have_http_status(:unauthorized)
-    end
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["match"]["id"]).to eq(open_match.id)
+          expect(body["match"]["join_policy"]).to eq("auto")
+          expect(body["match"]).to have_key("time_slot")
+          expect(body["match"]).not_to have_key("match_result")
+          expect(body["match"]["match_results"]).to eq([])
+          expect(body["match"]["consensus"]).to be_nil
+        end
+      end
 
-    it "returns 404 when not enrolled" do
-      delete "/api/v1/matches/#{open_match.id}/leave",
-             headers: auth_headers_for(other_player),
-             as: :json
+      response(404, "returns 404 for a missing match") do
+        schema "$ref" => "#/components/schemas/Error"
 
-      expect(response).to have_http_status(:not_found)
-    end
+        let(:id) { 0 }
 
-    it "returns 422 when the creator tries to leave a confirmed match" do
-      create(:match_player, match: confirmed_match, user: creator, team: :team_a)
-
-      delete "/api/v1/matches/#{confirmed_match.id}/leave",
-             headers: auth_headers_for(creator),
-             as: :json
-
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(JSON.parse(response.body)["error"]).to eq("Creator cannot leave a confirmed or completed match")
-    end
-
-    it "cancels the match when the creator leaves and nobody remains" do
-      delete "/api/v1/matches/#{open_match.id}/leave",
-             headers: auth_headers_for(creator),
-             as: :json
-
-      expect(response).to have_http_status(:ok)
-      expect(open_match.reload.status).to eq("cancelled")
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Not found")
+        end
+      end
     end
   end
 
-  describe "GET /api/v1/me/matches" do
-    before do
-      create(:match_player, match: open_match, user: creator, team: :team_a)
-      create(:match_player, match: full_match, user: other_player, team: :team_a)
-    end
+  path "/api/v1/matches/{id}/join" do
+    parameter name: :id, in: :path, type: :integer, description: "Match ID"
 
-    it "returns matches created by or joined by the current user" do
-      get "/api/v1/me/matches", headers: auth_headers_for(creator), as: :json
+    post "Join match" do
+      tags "Matches"
+      consumes "application/json"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
 
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      ids = body["matches"].map { |match| match["id"] }
-      expect(ids).to include(open_match.id, full_match.id, confirmed_match.id)
-      expect(ids).not_to include(create(:match, court: court, creator: other_player).id)
-    end
+      parameter name: :body, in: :body, schema: {
+        type: :object,
+        properties: {
+          team: { type: :string, enum: %w[team_a team_b] }
+        }
+      }
 
-    it "returns 401 without a token" do
-      get "/api/v1/me/matches", as: :json
+      response(200, "joins a match and returns the updated roster") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
 
-      expect(response).to have_http_status(:unauthorized)
+        let(:id) { open_match.id }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+        let(:body) { { team: "team_a" } }
+
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          user_ids = body_json["match"]["match_players"].map { |player| player["user_id"] }
+          expect(user_ids).to include(other_player.id)
+        end
+      end
+
+      response(401, "returns 401 without a token") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { "" }
+        let(:id) { open_match.id }
+        let(:body) { { team: "team_a" } }
+
+        run_test!
+      end
+
+      response(404, "returns 404 for a missing match") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:id) { 0 }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+        let(:body) { { team: "team_a" } }
+
+        run_test!
+      end
+
+      response(422, "returns 422 in pairs mode without a team") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:id) { open_match.id }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+        let(:body) { {} }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Team is required in pairs mode")
+        end
+      end
+
+      response(422, "returns 422 when already actively enrolled") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:id) { open_match.id }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+        let(:body) { { team: "team_b" } }
+
+        before { create(:match_player, match: open_match, user: other_player, team: :team_b) }
+
+        run_test!
+      end
     end
   end
 
-  describe "POST /api/v1/matches/:id/played" do
-    let!(:player) { create(:match_player, match: confirmed_match, user: other_player, team: :team_a) }
+  path "/api/v1/matches/{id}/leave" do
+    parameter name: :id, in: :path, type: :integer, description: "Match ID"
 
-    it "marks the match as played for an active player" do
-      post "/api/v1/matches/#{confirmed_match.id}/played",
-           headers: auth_headers_for(other_player),
-           as: :json
+    delete "Leave match" do
+      tags "Matches"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
 
-      expect(response).to have_http_status(:ok)
-      expect(confirmed_match.reload).to be_completed
-      body = JSON.parse(response.body)
-      expect(body["match"]["status"]).to eq("completed")
-      expect(body["match"]["consensus"]).to be_nil
+      let!(:creator_player) do
+        create(:match_player, match: open_match, user: creator, team: :team_a)
+      end
 
-      post "/api/v1/matches/#{confirmed_match.id}/played",
-           headers: auth_headers_for(other_player),
-           as: :json
+      response(200, "removes the player from the match") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
 
-      expect(response).to have_http_status(:ok)
+        let(:id) { open_match.id }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+        let!(:enrolled) { create(:match_player, match: open_match, user: other_player, team: :team_b) }
+
+        run_test! do |response|
+          expect(enrolled.reload.status).to eq("cancelled")
+          body = JSON.parse(response.body)
+          user_ids = body["match"]["match_players"].map { |player| player["user_id"] }
+          expect(user_ids).not_to include(other_player.id)
+        end
+      end
+
+      response(401, "returns 401 without a token") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { "" }
+        let(:id) { open_match.id }
+
+        run_test!
+      end
+
+      response(404, "returns 404 when not enrolled") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:id) { open_match.id }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+
+        run_test!
+      end
+
+      response(422, "returns 422 when the creator tries to leave a confirmed match") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:id) { confirmed_match.id }
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+
+        before { create(:match_player, match: confirmed_match, user: creator, team: :team_a) }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Creator cannot leave a confirmed or completed match")
+        end
+      end
+
+      response(200, "cancels the match when the creator leaves and nobody remains") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
+
+        let(:id) { open_match.id }
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+
+        run_test! do
+          expect(open_match.reload.status).to eq("cancelled")
+        end
+      end
     end
+  end
 
-    it "returns 401 without a token" do
-      post "/api/v1/matches/#{confirmed_match.id}/played", as: :json
+  path "/api/v1/me/matches" do
+    get "My matches" do
+      tags "Matches"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
 
-      expect(response).to have_http_status(:unauthorized)
+      before do
+        create(:match_player, match: open_match, user: creator, team: :team_a)
+        create(:match_player, match: full_match, user: other_player, team: :team_a)
+      end
+
+      response(200, "returns matches created by or joined by the current user") do
+        schema type: :object,
+               properties: {
+                 matches: {
+                   type: :array,
+                   items: { "$ref" => "#/components/schemas/Match" }
+                 }
+               },
+               required: [ "matches" ]
+
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          ids = body["matches"].map { |match| match["id"] }
+          expect(ids).to include(open_match.id, full_match.id, confirmed_match.id)
+          expect(ids).not_to include(create(:match, court: court, creator: other_player).id)
+        end
+      end
+
+      response(401, "returns 401 without a token") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { "" }
+
+        run_test!
+      end
     end
+  end
 
-    it "returns 422 when the user is not an active player" do
-      post "/api/v1/matches/#{confirmed_match.id}/played",
-           headers: auth_headers_for(creator),
-           as: :json
+  path "/api/v1/matches/{id}/played" do
+    parameter name: :id, in: :path, type: :integer, description: "Match ID"
 
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(JSON.parse(response.body)["error"]).to eq("You are not an active player of this match")
-    end
+    post "Mark match as played" do
+      tags "Matches"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
 
-    it "returns 422 when the match is already completed with consensus" do
-      create(
-        :match_result,
-        match: confirmed_match,
-        reported_by: other_player,
-        result_sets: [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 6, team_b_games: 4 } ]
-      )
-      expect(confirmed_match.reload).to be_completed
+      let!(:player) { create(:match_player, match: confirmed_match, user: other_player, team: :team_a) }
 
-      post "/api/v1/matches/#{confirmed_match.id}/played",
-           headers: auth_headers_for(other_player),
-           as: :json
+      response(200, "marks the match as played for an active player") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
 
-      expect(response).to have_http_status(:unprocessable_content)
-      expect(JSON.parse(response.body)["error"]).to eq("Match is already completed with a consensus result")
+        let(:id) { confirmed_match.id }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+
+        run_test! do |response|
+          expect(confirmed_match.reload).to be_completed
+          body = JSON.parse(response.body)
+          expect(body["match"]["status"]).to eq("completed")
+          expect(body["match"]["consensus"]).to be_nil
+
+          post "/api/v1/matches/#{confirmed_match.id}/played",
+               headers: auth_headers_for(other_player),
+               as: :json
+
+          expect(response).to have_http_status(:ok)
+        end
+      end
+
+      response(401, "returns 401 without a token") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { "" }
+        let(:id) { confirmed_match.id }
+
+        run_test!
+      end
+
+      response(422, "returns 422 when the user is not an active player") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:id) { confirmed_match.id }
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("You are not an active player of this match")
+        end
+      end
+
+      response(422, "returns 422 when the match is already completed with consensus") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:id) { confirmed_match.id }
+        let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
+
+        before do
+          create(
+            :match_result,
+            match: confirmed_match,
+            reported_by: other_player,
+            result_sets: [
+              { team_a_games: 6, team_b_games: 4 },
+              { team_a_games: 6, team_b_games: 4 }
+            ]
+          )
+          expect(confirmed_match.reload).to be_completed
+        end
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Match is already completed with a consensus result")
+        end
+      end
     end
   end
 end

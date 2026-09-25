@@ -1,0 +1,936 @@
+---
+openapi: 3.0.1
+info:
+  title: Ok Padel API
+  version: v1
+  description: API REST JSON para jugadores (TP1 Programación IV).
+paths:
+  "/api/v1/courts":
+    get:
+      summary: List courts
+      tags:
+      - Courts
+      security: []
+      responses:
+        '200':
+          description: lists active courts without authentication
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CourtsResponse"
+  "/api/v1/courts/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Show court
+      tags:
+      - Courts
+      security: []
+      responses:
+        '200':
+          description: returns an active court without authentication
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CourtResponse"
+        '404':
+          description: returns 404 for missing courts
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/matches/{match_id}/match_results":
+    parameters:
+    - name: match_id
+      in: path
+      description: Match ID
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List match results
+      tags:
+      - Match results
+      security: []
+      responses:
+        '200':
+          description: returns reports and consensus without authentication
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResultsIndexResponse"
+        '404':
+          description: returns 404 for a missing match
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    post:
+      summary: Report match result
+      tags:
+      - Match results
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: lets an active player report a result
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResultsMutationResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: returns 422 when the player already reported and the match
+            is not in dispute
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sets:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      team_a_games:
+                        type: integer
+                      team_b_games:
+                        type: integer
+                    required:
+                    - team_a_games
+                    - team_b_games
+              required:
+              - sets
+  "/api/v1/matches/{match_id}/match_results/{id}":
+    parameters:
+    - name: match_id
+      in: path
+      description: Match ID
+      required: true
+      schema:
+        type: integer
+    - name: id
+      in: path
+      description: Match result ID
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: Delete match result
+      tags:
+      - Match results
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: lets the reporter delete their own result
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResultsMutationResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: returns 403 when deleting someone else's result
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: returns 404 when the result does not exist
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/matches":
+    get:
+      summary: List matches
+      tags:
+      - Matches
+      security: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        description: Filter by match status (e.g. open, full)
+        schema:
+          type: string
+      - name: court_id
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: date
+        in: query
+        format: date
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: paginates results
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchesResponse"
+    post:
+      summary: Create match
+      tags:
+      - Matches
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: creates a match without enrolling the creator when auto_join
+            is false
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: returns 422 with invalid params
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                court_id:
+                  type: integer
+                date:
+                  type: string
+                  format: date-time
+                duration:
+                  type: integer
+                roster_mode:
+                  type: string
+                  enum:
+                  - pairs
+                  - individual
+                level_required:
+                  type: string
+                auto_join:
+                  type: boolean
+              required:
+              - court_id
+              - date
+              - duration
+              - roster_mode
+              - level_required
+  "/api/v1/matches/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: Match ID
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Show match
+      tags:
+      - Matches
+      security: []
+      responses:
+        '200':
+          description: returns a match with details
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResponse"
+        '404':
+          description: returns 404 for a missing match
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/matches/{id}/join":
+    parameters:
+    - name: id
+      in: path
+      description: Match ID
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Join match
+      tags:
+      - Matches
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: joins a match and returns the updated roster
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: returns 404 for a missing match
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: returns 422 when already actively enrolled
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                team:
+                  type: string
+                  enum:
+                  - team_a
+                  - team_b
+  "/api/v1/matches/{id}/leave":
+    parameters:
+    - name: id
+      in: path
+      description: Match ID
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: Leave match
+      tags:
+      - Matches
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: cancels the match when the creator leaves and nobody remains
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: returns 404 when not enrolled
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: returns 422 when the creator tries to leave a confirmed match
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/me/matches":
+    get:
+      summary: My matches
+      tags:
+      - Matches
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: returns matches created by or joined by the current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/Match"
+                required:
+                - matches
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/matches/{id}/played":
+    parameters:
+    - name: id
+      in: path
+      description: Match ID
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Mark match as played
+      tags:
+      - Matches
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: marks the match as played for an active player
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MatchResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: returns 422 when the match is already completed with consensus
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/login":
+    post:
+      summary: Login
+      tags:
+      - Authentication
+      security: []
+      parameters: []
+      responses:
+        '200':
+          description: returns a token and user data with valid credentials
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LoginResponse"
+        '401':
+          description: returns 401 when user does not exist
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: player@example.com
+                password:
+                  type: string
+                  format: password
+              required:
+              - email
+              - password
+  "/api/v1/profile":
+    get:
+      summary: Profile
+      tags:
+      - Profile
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: returns the current user profile with a valid token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/UserResponse"
+        '401':
+          description: returns 401 with an invalid token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    patch:
+      summary: Update profile
+      tags:
+      - Profile
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: updates the current user profile
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/UserResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '422':
+          description: returns 422 with invalid data
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                bio:
+                  type: string
+                self_level:
+                  type: integer
+servers:
+- url: http://localhost:3000
+components:
+  securitySchemes:
+    bearer_auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        self_level:
+          type: integer
+        category_label:
+          type: string
+        bio:
+          type: string
+          nullable: true
+        average_level:
+          type: string
+          nullable: true
+        average_stars:
+          type: string
+          nullable: true
+        matches_played:
+          type: integer
+      required:
+      - id
+      - name
+      - email
+      - self_level
+      - category_label
+      - matches_played
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          "$ref": "#/components/schemas/User"
+      required:
+      - token
+      - user
+    UserResponse:
+      type: object
+      properties:
+        user:
+          "$ref": "#/components/schemas/User"
+      required:
+      - user
+    ClubSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+          nullable: true
+      required:
+      - id
+      - name
+    Court:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        court_type:
+          type: string
+          enum:
+          - indoor
+          - outdoor
+        price_per_hour:
+          type: number
+        status:
+          type: string
+          enum:
+          - active
+          - maintenance
+          - inactive
+        club:
+          "$ref": "#/components/schemas/ClubSummary"
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - id
+      - name
+      - court_type
+      - price_per_hour
+      - status
+      - club
+    CourtsResponse:
+      type: object
+      properties:
+        courts:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Court"
+      required:
+      - courts
+    CourtResponse:
+      type: object
+      properties:
+        court:
+          "$ref": "#/components/schemas/Court"
+      required:
+      - court
+    MatchCourtSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        club_id:
+          type: integer
+      required:
+      - id
+      - name
+      - club_id
+    MatchCreatorSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    MatchPlayer:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        team:
+          type: string
+          enum:
+          - team_a
+          - team_b
+        status:
+          type: string
+          enum:
+          - pending
+          - confirmed
+          - cancelled
+        joined_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - id
+      - user_id
+      - team
+      - status
+    TimeSlot:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: integer
+        day_of_week:
+          type: integer
+        start_time:
+          type: string
+          example: '10:00'
+        end_time:
+          type: string
+          example: '11:30'
+        is_available:
+          type: boolean
+      required:
+      - id
+      - day_of_week
+      - start_time
+      - end_time
+      - is_available
+    MatchSet:
+      type: object
+      properties:
+        order:
+          type: integer
+        team_a_games:
+          type: integer
+        team_b_games:
+          type: integer
+      required:
+      - order
+      - team_a_games
+      - team_b_games
+    MatchResultReporter:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    MatchResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        sets:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MatchSet"
+        winner_team:
+          type: string
+          enum:
+          - team_a
+          - team_b
+          nullable: true
+        reported_by:
+          "$ref": "#/components/schemas/MatchResultReporter"
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - sets
+      - reported_by
+      - created_at
+    Consensus:
+      type: object
+      nullable: true
+      properties:
+        votes:
+          type: integer
+        total:
+          type: integer
+        signature:
+          type: string
+        sets:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MatchSet"
+      required:
+      - votes
+      - total
+      - signature
+      - sets
+    Match:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        status:
+          type: string
+          enum:
+          - open
+          - full
+          - confirmed
+          - completed
+          - cancelled
+          - reported
+        roster_mode:
+          type: string
+          enum:
+          - pairs
+          - individual
+        level_required:
+          type: string
+          enum:
+          - open
+          - eighth
+          - seventh
+          - sixth
+          - fifth
+          - fourth
+          - third
+          - second
+          - first
+        join_policy:
+          type: string
+          example: auto
+        court:
+          "$ref": "#/components/schemas/MatchCourtSummary"
+        creator:
+          "$ref": "#/components/schemas/MatchCreatorSummary"
+        match_players:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MatchPlayer"
+        players_count:
+          type: integer
+        max_players:
+          type: integer
+        time_slot:
+          "$ref": "#/components/schemas/TimeSlot"
+        match_results:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MatchResult"
+        consensus:
+          "$ref": "#/components/schemas/Consensus"
+      required:
+      - id
+      - date
+      - duration
+      - status
+      - roster_mode
+      - level_required
+      - join_policy
+      - court
+      - creator
+      - match_players
+      - players_count
+      - max_players
+    MatchResponse:
+      type: object
+      properties:
+        match:
+          "$ref": "#/components/schemas/Match"
+      required:
+      - match
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total_pages:
+          type: integer
+        total_count:
+          type: integer
+      required:
+      - current_page
+      - per_page
+      - total_pages
+      - total_count
+    MatchesResponse:
+      type: object
+      properties:
+        matches:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Match"
+        meta:
+          "$ref": "#/components/schemas/PaginationMeta"
+      required:
+      - matches
+      - meta
+    MatchResultsIndexResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MatchResult"
+        consensus:
+          "$ref": "#/components/schemas/Consensus"
+        total:
+          type: integer
+      required:
+      - results
+      - total
+    MatchResultsMutationResponse:
+      type: object
+      properties:
+        match:
+          "$ref": "#/components/schemas/Match"
+        results:
+          type: array
+          items:
+            "$ref": "#/components/schemas/MatchResult"
+        consensus:
+          "$ref": "#/components/schemas/Consensus"
+      required:
+      - match
+      - results

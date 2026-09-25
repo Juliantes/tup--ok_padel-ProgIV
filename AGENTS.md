@@ -57,6 +57,7 @@
 - ~~`database.yml`~~ migrado a ENV (sin password hardcodeada, sin bloques duplicados).
 - ~~`ENV.fetch` para `OK_PADEL_DATABASE_PASSWORD`~~ → `ENV[]` (evita `KeyError` al evaluar el ERB del YAML en dev/test).
 - ~~Auto-aprobación por tiempo~~ → `AutoApproveResultsJob`, `config/recurring.yml`, `AUTO_APPROVE_AFTER_HOURS`.
+- ~~**Swagger / OpenAPI (extra TP1):**~~ rswag en `/api-docs`; 15 endpoints documentados; spec `spec/swagger_helper.rb` + `swagger/v1/swagger.yaml`.
 - **Development:** `config.active_job.queue_adapter = :solid_queue` (misma DB que la app; sin `solid_queue.connects_to`).
 
 ### Variables de entorno requeridas
@@ -71,6 +72,7 @@ Detalle completo en README → Variables de entorno.
 
 - **Base de datos:** `config/database.yml` sin credenciales en código. Producción usa `ENV["OK_PADEL_DATABASE_PASSWORD"]` (nil en dev si no está seteada; la conexión PG en prod falla si falta).
 - **HTTP 422:** usar `status: :unprocessable_content` en controllers y `have_http_status(:unprocessable_content)` en request specs (Rack 3.2+).
+- **Swagger (OpenAPI):** cada nuevo endpoint de `api/v1` debe documentarse en el request spec correspondiente (`spec/requests/api/v1/`) con bloques rswag (`path`, `response`, `run_test!`) y regenerar `swagger/v1/swagger.yaml` con `bundle exec rake rswag:specs:swaggerize`. Schemas reusables en `spec/swagger_helper.rb` deben coincidir con los Jbuilder.
 
 ### Deuda pendiente (features / calidad)
 
@@ -78,7 +80,8 @@ Detalle completo en README → Variables de entorno.
 - **`match_player` flaky specs** si vuelven a aparecer en CI.
 
 ## Estado de calidad
-- `bundle exec rspec` → 293 examples, 0 failures (verde).
+- `bundle exec rspec` → 295 examples, 0 failures (verde).
+- Swagger implementado: 15 endpoints `api/v1` en `/api-docs`.
 - `bundle exec rubocop` → 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅
 

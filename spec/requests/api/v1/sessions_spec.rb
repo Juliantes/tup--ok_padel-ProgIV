@@ -1,32 +1,57 @@
-require "rails_helper"
+require "swagger_helper"
 
 RSpec.describe "Api::V1::Sessions", type: :request do
-  describe "POST /api/v1/login" do
-    let(:user) { create(:user, :player, email: "player@example.com", password: "password123") }
+  path "/api/v1/login" do
+    post "Login" do
+      tags "Authentication"
+      consumes "application/json"
+      produces "application/json"
+      security []
 
-    it "returns a token and user data with valid credentials" do
-      post "/api/v1/login", params: { email: user.email, password: "password123" }, as: :json
+      parameter name: :body, in: :body, schema: {
+        type: :object,
+        properties: {
+          email: { type: :string, example: "player@example.com" },
+          password: { type: :string, format: :password }
+        },
+        required: %w[email password]
+      }
 
-      expect(response).to have_http_status(:ok)
-      body = JSON.parse(response.body)
-      expect(body["token"]).to be_present
-      expect(body["user"]["id"]).to eq(user.id)
-      expect(body["user"]["email"]).to eq(user.email)
-      expect(body["user"]).not_to have_key("encrypted_password")
-    end
+      let(:user) { create(:user, :player, email: "player@example.com", password: "password123") }
 
-    it "returns 401 with invalid credentials" do
-      post "/api/v1/login", params: { email: user.email, password: "wrong" }, as: :json
+      response(200, "returns a token and user data with valid credentials") do
+        schema "$ref" => "#/components/schemas/LoginResponse"
 
-      expect(response).to have_http_status(:unauthorized)
-      expect(JSON.parse(response.body)["error"]).to eq("Invalid credentials")
-    end
+        let(:body) { { email: user.email, password: "password123" } }
 
-    it "returns 401 when user does not exist" do
-      post "/api/v1/login", params: { email: "missing@example.com", password: "password123" }, as: :json
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["token"]).to be_present
+          expect(body_json["user"]["id"]).to eq(user.id)
+          expect(body_json["user"]["email"]).to eq(user.email)
+          expect(body_json["user"]).not_to have_key("encrypted_password")
+        end
+      end
 
-      expect(response).to have_http_status(:unauthorized)
-      expect(JSON.parse(response.body)["error"]).to eq("Invalid credentials")
+      response(401, "returns 401 with invalid credentials") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:body) { { email: user.email, password: "wrong" } }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Invalid credentials")
+        end
+      end
+
+      response(401, "returns 401 when user does not exist") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:body) { { email: "missing@example.com", password: "password123" } }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("Invalid credentials")
+        end
+      end
     end
   end
 end

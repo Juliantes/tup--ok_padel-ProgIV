@@ -41,6 +41,7 @@ El modelo de datos incluye entidades previstas para **TP2** (mensajes, reseñas,
 | Pagy | — | Paginación en admin |
 | Active Storage | — | Avatares y fotos de canchas |
 | RSpec, FactoryBot, Faker, Shoulda | — | Tests |
+| rswag (rswag-api, rswag-ui, rswag-specs) | — | OpenAPI / Swagger UI (`/api-docs`) |
 | RuboCop (omakase), Brakeman, bundler-audit | — | Calidad y seguridad |
 | Kamal | — | Deploy containerizado (preparado) |
 | letter_opener | — | Preview de mails en desarrollo |
@@ -312,6 +313,20 @@ erDiagram
 - **Review** — Reseña post-partido (TP2).
 - **Message** — Mensajería entre jugadores / chat de partido (TP2).
 - **PlayerStat** — Victorias, rachas y win rate. Se actualizan una sola vez al alcanzar consenso.
+
+## Documentación de la API (Swagger)
+
+**Extra del TP1 (sección 4):** documentación OpenAPI generada con [rswag](https://github.com/rswag/rswag) a partir de los request specs.
+
+- **UI interactiva:** con el servidor en marcha, abrí [http://localhost:3000/api-docs](http://localhost:3000/api-docs).
+- **Especificación:** `swagger/v1/swagger.yaml` (versionada en el repo).
+- **Regenerar** tras cambiar los bloques `path` / `response` en `spec/requests/api/v1/*_spec.rb`:
+
+  ```bash
+  bundle exec rake rswag:specs:swaggerize
+  ```
+
+Los 15 endpoints de `api/v1` están documentados con schemas alineados a los Jbuilder de `app/views/api/v1/`.
 
 ## API v1
 
