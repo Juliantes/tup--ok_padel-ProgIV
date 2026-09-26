@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+# Fly release_command: primary migrations + Solid Cache/Queue/Cable schemas.
+# db:prepare alone does not load *schema.rb files when migrate folders are empty.
+
+cd "$(dirname "$0")/.."
+
+bin/rails db:prepare
+
+load_schema_if_table_missing() {
+  local database_name="$1"
+  local table_name="$2"
+
+  if bin/rails runner "print ActiveRecord::Base.connection.table_exists?(:${table_name})" | grep -qx "true"; then
+    echo "Table ${table_name} present; skipping db:schema:load:${database_name}"
+    return 0
+  fi
+
+  echo "Loading db:schema:load:${database_name} (missing ${table_name})..."
+  DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bin/rails "db:schema:load:${database_name}"
+}
+
+load_schema_if_table_missing cache solid_cache_entries
+load_schema_if_table_missing queue solid_queue_jobs
+load_schema_if_table_missing cable solid_cable_messages

@@ -1,0 +1,32 @@
+app = "ok-padel-tup"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[deploy]
+  release_command = "bin/fly-release"
+
+[env]
+  RAILS_ENV = "production"
+  RAILS_LOG_TO_STDOUT = "true"
+  RAILS_SERVE_STATIC_FILES = "true"
+  # Thruster defaults to :80; non-root containers cannot bind privileged ports on Linux.
+  HTTP_PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["web"]
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[processes]
+  web = "./bin/thrust ./bin/rails server"
+  worker = "bin/jobs"
