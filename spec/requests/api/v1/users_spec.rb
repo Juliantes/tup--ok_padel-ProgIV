@@ -21,23 +21,43 @@ RSpec.describe "Api::V1::Users", type: :request do
         end
       end
 
-      response(401, "returns 401 without a token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_missing without a token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "" }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
+          expect(JSON.parse(response.body)["error"]).to eq("token_missing")
         end
       end
 
-      response(401, "returns 401 with an invalid token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_invalid with a malformed token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "Bearer invalid" }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
+          expect(JSON.parse(response.body)["error"]).to eq("token_invalid")
+        end
+      end
+
+      response(401, "returns 401 token_expired with an expired token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
+
+        let(:Authorization) { "Bearer #{JsonWebToken.encode({ user_id: user.id }, 1.minute.ago)}" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("token_expired")
+        end
+      end
+
+      response(401, "returns 401 token_missing, token_invalid, or token_expired") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
+
+        let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: 0)}" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("token_invalid")
         end
       end
     end
@@ -71,14 +91,14 @@ RSpec.describe "Api::V1::Users", type: :request do
         end
       end
 
-      response(401, "returns 401 without a token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_missing without a token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "" }
         let(:body) { { name: "Updated Name" } }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to eq("Unauthorized")
+          expect(JSON.parse(response.body)["error"]).to eq("token_missing")
         end
       end
 

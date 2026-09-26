@@ -14,10 +14,11 @@ json.creator do
   json.id match.creator.id
   json.name match.creator.name
 end
-json.match_players match.active_match_players do |match_player|
+active_players = match.match_players.reject(&:cancelled?)
+json.match_players active_players do |match_player|
   json.partial! "api/v1/matches/match_player", match_player: match_player
 end
-json.players_count match.active_match_players.size
+json.players_count active_players.size
 json.max_players MatchPlayer::MAX_PLAYERS
 
 if local_assigns.fetch(:show_details, false)

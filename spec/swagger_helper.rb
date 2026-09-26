@@ -33,6 +33,17 @@ RSpec.configure do |config|
             },
             required: [ "error" ]
           },
+          UnauthorizedError: {
+            type: :object,
+            description: "401 de autenticación JWT: token_missing, token_invalid o token_expired.",
+            properties: {
+              error: {
+                type: :string,
+                enum: %w[token_missing token_invalid token_expired]
+              }
+            },
+            required: [ "error" ]
+          },
           User: {
             type: :object,
             properties: {
@@ -128,9 +139,17 @@ RSpec.configure do |config|
               user_id: { type: :integer },
               team: { type: :string, enum: %w[team_a team_b] },
               status: { type: :string, enum: %w[pending confirmed cancelled] },
-              joined_at: { type: :string, format: "date-time", nullable: true }
+              joined_at: { type: :string, format: "date-time", nullable: true },
+              user: {
+                type: :object,
+                properties: {
+                  id: { type: :integer },
+                  name: { type: :string }
+                },
+                required: %w[id name]
+              }
             },
-            required: %w[id user_id team status]
+            required: %w[id user_id team status user]
           },
           TimeSlot: {
             type: :object,

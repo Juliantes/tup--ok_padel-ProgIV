@@ -85,11 +85,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/MatchResultsMutationResponse"
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
         '422':
           description: returns 422 when the player already reported and the match
             is not in dispute
@@ -145,11 +145,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/MatchResultsMutationResponse"
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
         '403':
           description: returns 403 when deleting someone else's result
           content:
@@ -219,11 +219,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/MatchResponse"
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
         '422':
           description: returns 422 with invalid params
           content:
@@ -307,11 +307,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/MatchResponse"
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
         '404':
           description: returns 404 for a missing match
           content:
@@ -357,11 +357,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/MatchResponse"
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
         '404':
           description: returns 404 when not enrolled
           content:
@@ -396,11 +396,11 @@ paths:
                 required:
                 - matches
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
   "/api/v1/matches/{id}/played":
     parameters:
     - name: id
@@ -423,11 +423,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/MatchResponse"
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
         '422':
           description: returns 422 when the match is already completed with consensus
           content:
@@ -484,11 +484,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/UserResponse"
         '401':
-          description: returns 401 with an invalid token
+          description: returns 401 token_missing, token_invalid, or token_expired
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
     patch:
       summary: Update profile
       tags:
@@ -504,11 +504,11 @@ paths:
               schema:
                 "$ref": "#/components/schemas/UserResponse"
         '401':
-          description: returns 401 without a token
+          description: returns 401 token_missing without a token
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/Error"
+                "$ref": "#/components/schemas/UnauthorizedError"
         '422':
           description: returns 422 with invalid data
           content:
@@ -541,6 +541,18 @@ components:
       properties:
         error:
           type: string
+      required:
+      - error
+    UnauthorizedError:
+      type: object
+      description: '401 de autenticación JWT: token_missing, token_invalid o token_expired.'
+      properties:
+        error:
+          type: string
+          enum:
+          - token_missing
+          - token_invalid
+          - token_expired
       required:
       - error
     User:
@@ -705,11 +717,22 @@ components:
           type: string
           format: date-time
           nullable: true
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+          required:
+          - id
+          - name
       required:
       - id
       - user_id
       - team
       - status
+      - user
     TimeSlot:
       type: object
       nullable: true

@@ -156,6 +156,7 @@ Deberías ver `Access-Control-Allow-Origin: http://localhost:3001` en la respues
 - **Límites (por minuto):**
   - `POST /api/v1/login`: 5 por IP.
   - Escritura autenticada (POST/PATCH/PUT/DELETE con JWT válido): 30 por usuario.
+  - Escritura sin token (POST/PATCH/PUT/DELETE sin header `Authorization`): 20 por IP.
   - Lectura autenticada (GET con JWT): 100 por usuario.
   - Lectura anónima (GET sin `Authorization`): 60 por IP.
 - Tras muchos 429, Fail2Ban puede bloquear la IP 1 hora (10 throttles en 10 minutos).
@@ -382,7 +383,7 @@ Base URL en desarrollo: `http://localhost:3000`
 
 **Login:** `POST /api/v1/login` con JSON `{ "email", "password" }` → `{ "token", "user" }`.
 
-**Errores:** cuerpo `{ "error": "<mensaje>" }` con el status HTTP correspondiente. Los mensajes de la API están en **inglés** (`Unauthorized`, `Invalid credentials`, `Not found`, etc.).
+**Errores:** cuerpo `{ "error": "<mensaje>" }` con el status HTTP correspondiente. Los mensajes de la API están en **inglés** (`Invalid credentials`, `Not found`, etc.). Un `401` de autenticación JWT usa un código: `token_missing` (sin header `Authorization: Bearer`), `token_invalid` (no decodifica o el usuario no existe) o `token_expired`.
 
 ### Endpoints
 
@@ -465,7 +466,7 @@ Respuesta `200`:
 }
 ```
 
-Errores: `401` → `{ "error": "Unauthorized" }` (sin token, token inválido o expirado).
+Errores: `401` → `{ "error": "token_missing" }`, `{ "error": "token_invalid" }` o `{ "error": "token_expired" }`.
 
 #### PATCH `/api/v1/profile`
 
@@ -557,7 +558,8 @@ Respuesta `201`:
         "user_id": 3,
         "team": "team_a",
         "status": "confirmed",
-        "joined_at": "2026-09-20T12:00:00.000-03:00"
+        "joined_at": "2026-09-20T12:00:00.000-03:00",
+        "user": { "id": 3, "name": "Jugador Demo" }
       }
     ],
     "players_count": 1,

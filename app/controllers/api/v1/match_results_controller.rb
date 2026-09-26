@@ -38,7 +38,7 @@ module Api
       end
 
       def load_detail!
-        @match = Match.includes(:court, :creator, :time_slot, :match_players, match_results: [ :reported_by, :match_sets ]).find(@match.id)
+        @match = Match.includes(:court, :creator, :time_slot, match_players: :user, match_results: [ :reported_by, :match_sets ]).find(@match.id)
         @results = ordered_results
       end
 

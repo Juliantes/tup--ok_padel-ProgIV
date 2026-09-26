@@ -28,8 +28,15 @@ class Rack::Attack
       token = req.env["HTTP_AUTHORIZATION"]&.split(" ")&.last
       next nil if token.blank?
 
-      payload = JsonWebToken.decode(token)
-      payload[:user_id] if payload
+      user_id_from_token(token)
+    end
+  end
+
+  # Escritura sin token: 20 requests por minuto por IP
+  throttle("write/ip", limit: 20, period: 1.minute) do |req|
+    if (req.post? || req.patch? || req.put? || req.delete?) &&
+       req.env["HTTP_AUTHORIZATION"].blank?
+      req.ip
     end
   end
 
@@ -39,8 +46,7 @@ class Rack::Attack
       token = req.env["HTTP_AUTHORIZATION"]&.split(" ")&.last
       next nil if token.blank?
 
-      payload = JsonWebToken.decode(token)
-      payload[:user_id] if payload
+      user_id_from_token(token)
     end
   end
 
@@ -86,5 +92,11 @@ class Rack::Attack
       { "Content-Type" => "application/json" },
       [ { error: "Forbidden" }.to_json ]
     ]
+  end
+
+  def self.user_id_from_token(token)
+    JsonWebToken.decode(token)[:user_id]
+  rescue JsonWebToken::Error
+    nil
   end
 end

@@ -9,13 +9,15 @@ module JwtAuthenticatable
 
   def authenticate_api_user!
     token = bearer_token
-    return render_error("Unauthorized", status: :unauthorized) if token.blank?
+    return render_error("token_missing", status: :unauthorized) if token.blank?
 
     payload = JsonWebToken.decode(token)
-    return render_error("Unauthorized", status: :unauthorized) if payload.blank?
-
     @current_user = User.find_by(id: payload[:user_id])
-    render_error("Unauthorized", status: :unauthorized) unless @current_user
+    render_error("token_invalid", status: :unauthorized) unless @current_user
+  rescue JsonWebToken::ExpiredSignature
+    render_error("token_expired", status: :unauthorized)
+  rescue JsonWebToken::InvalidToken
+    render_error("token_invalid", status: :unauthorized)
   end
 
   def current_user

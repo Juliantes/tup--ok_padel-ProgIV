@@ -125,7 +125,9 @@ RSpec.describe "Api::V1::Matches", type: :request do
           body_json = JSON.parse(response.body)
           expect(body_json["match"]["creator"]["id"]).to eq(creator.id)
           expect(body_json["match"]["match_players"].size).to eq(1)
-          expect(body_json["match"]["match_players"].first["user_id"]).to eq(creator.id)
+          player = body_json["match"]["match_players"].first
+          expect(player["user_id"]).to eq(creator.id)
+          expect(player["user"]).to eq("id" => creator.id, "name" => creator.name)
         end
       end
 
@@ -147,8 +149,8 @@ RSpec.describe "Api::V1::Matches", type: :request do
         end
       end
 
-      response(401, "returns 401 without a token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_missing without a token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "" }
         let(:body) { valid_create_body }
@@ -237,8 +239,8 @@ RSpec.describe "Api::V1::Matches", type: :request do
         end
       end
 
-      response(401, "returns 401 without a token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_missing without a token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "" }
         let(:id) { open_match.id }
@@ -310,8 +312,8 @@ RSpec.describe "Api::V1::Matches", type: :request do
         end
       end
 
-      response(401, "returns 401 without a token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_missing without a token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "" }
         let(:id) { open_match.id }
@@ -385,8 +387,8 @@ RSpec.describe "Api::V1::Matches", type: :request do
         end
       end
 
-      response(401, "returns 401 without a token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_missing without a token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "" }
 
@@ -425,8 +427,8 @@ RSpec.describe "Api::V1::Matches", type: :request do
         end
       end
 
-      response(401, "returns 401 without a token") do
-        schema "$ref" => "#/components/schemas/Error"
+      response(401, "returns 401 token_missing without a token") do
+        schema "$ref" => "#/components/schemas/UnauthorizedError"
 
         let(:Authorization) { "" }
         let(:id) { confirmed_match.id }

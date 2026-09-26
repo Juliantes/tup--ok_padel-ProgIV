@@ -39,6 +39,28 @@ RSpec.describe "Rate limiting", type: :request do
     end
   end
 
+  describe "POST /api/v1/matches without a token" do
+    it "returns 429 on the 21st request within a minute" do
+      20.times do
+        post "/api/v1/matches", params: {}, as: :json
+        expect(response).not_to have_http_status(:too_many_requests)
+      end
+
+      post "/api/v1/matches", params: {}, as: :json
+      expect(response).to have_http_status(:too_many_requests)
+    end
+
+    it "does not apply write/ip when an Authorization header is present" do
+      21.times do
+        post "/api/v1/matches",
+          params: {},
+          headers: { "Authorization" => "Bearer invalid" },
+          as: :json
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
   describe "GET /up" do
     it "is not throttled" do
       100.times do
