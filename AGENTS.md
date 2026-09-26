@@ -32,7 +32,7 @@
 
 ### Deuda planificada — Sprint 1.5 (API matches avanzada)
 
-1. **`join_policy`:** migración y enum en `Match` (`auto`, `approval_required`, etc.), niveles `auto_confirm_levels`, endpoint de aprobación de solicitudes pendientes; reemplazar `"join_policy": "auto"` hardcodeado en `_match.json.jbuilder`.
+1. **`join_policy`:** ~~migración, enum (`auto`, `manual`, `auto_by_level`), param en create y Jbuilder~~ (Sprint D). Pendiente: hacer cumplir la política en `join` (`manual`, `auto_by_level` / `auto_confirm_levels`), endpoint de aprobación de solicitudes pendientes.
 2. **Política de tiempo restante:** reglas de negocio para `leave`, `join` y cancelación según horas/minutos antes del `date` del partido.
 3. **Transferencia de responsabilidad del creador:** cuando el creador sale con jugadores activos restantes, designar nuevo responsable o bloquear según reglas acordadas.
 
@@ -97,7 +97,7 @@ Detalle completo en README → Variables de entorno y **Deploy**.
 - **`match_player` flaky specs** si vuelven a aparecer en CI.
 
 ## Estado de calidad
-- `bundle exec rspec` → 303 examples, 0 failures (verde; incluye `spec/requests/cors_spec.rb` y `spec/requests/rate_limiting_spec.rb`).
+- `bundle exec rspec` → 330 examples, 0 failures (verde; incluye `spec/requests/cors_spec.rb` y `spec/requests/rate_limiting_spec.rb`).
 - Swagger implementado: 15 endpoints `api/v1` en `/api-docs`.
 - `bundle exec rubocop` → 0 offenses ✅
 - `bundle exec brakeman -q` → 0 warnings ✅

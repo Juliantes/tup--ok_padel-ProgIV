@@ -4,7 +4,7 @@ json.duration match.duration
 json.status match.status
 json.roster_mode match.roster_mode
 json.level_required match.level_required
-json.join_policy "auto"
+json.join_policy match.join_policy
 json.court do
   json.id match.court.id
   json.name match.court.name

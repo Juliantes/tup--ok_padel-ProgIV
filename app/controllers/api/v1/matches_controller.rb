@@ -103,7 +103,8 @@ module Api
       end
 
       def create_params
-        params.permit(:court_id, :time_slot_id, :date, :duration, :roster_mode, :level_required, :auto_join)
+        params.permit(:court_id, :time_slot_id, :date, :duration, :roster_mode,
+                      :level_required, :auto_join, :join_policy)
       end
 
       def auto_join?

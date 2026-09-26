@@ -13,6 +13,7 @@ class Match < ApplicationRecord
 
   enum :status, { open: 0, full: 1, confirmed: 2, completed: 3, cancelled: 4, reported: 5 }
   enum :roster_mode, { pairs: 0, individual: 1 }, prefix: true
+  enum :join_policy, { auto: 0, manual: 1, auto_by_level: 2 }
 
   enum :level_required, {
     open: 0,

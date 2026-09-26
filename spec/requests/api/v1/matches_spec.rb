@@ -168,7 +168,8 @@ RSpec.describe "Api::V1::Matches", type: :request do
           duration: { type: :integer },
           roster_mode: { type: :string, enum: %w[pairs individual] },
           level_required: { type: :string },
-          auto_join: { type: :boolean }
+          auto_join: { type: :boolean },
+          join_policy: { type: :string, enum: %w[auto manual auto_by_level] }
         },
         required: %w[court_id date duration roster_mode level_required]
       }
@@ -188,10 +189,35 @@ RSpec.describe "Api::V1::Matches", type: :request do
           assert_response_matches_metadata(example.metadata)
           body_json = JSON.parse(response.body)
           expect(body_json["match"]["creator"]["id"]).to eq(creator.id)
+          expect(body_json["match"]["join_policy"]).to eq("auto")
           expect(body_json["match"]["match_players"].size).to eq(1)
           player = body_json["match"]["match_players"].first
           expect(player["user_id"]).to eq(creator.id)
           expect(player["user"]).to eq("id" => creator.id, "name" => creator.name)
+        end
+      end
+
+      response(201, "creates a match with join_policy manual") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
+
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+        let(:body) { valid_create_body.merge(join_policy: "manual", auto_join: false) }
+
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["match"]["join_policy"]).to eq("manual")
+        end
+      end
+
+      response(201, "creates a match with join_policy auto_by_level") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
+
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+        let(:body) { valid_create_body.merge(join_policy: "auto_by_level", auto_join: false) }
+
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["match"]["join_policy"]).to eq("auto_by_level")
         end
       end
 

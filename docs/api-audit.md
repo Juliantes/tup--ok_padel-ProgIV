@@ -6,6 +6,13 @@
 
 Este documento archiva la auditoría hecha en el chat sobre el código anterior a `16c00ad`, `7676b1e` y `8e131b5`. Esos commits ya aplicaron parte de las mejoras P1 y P2 de abajo (rate limit, códigos 401, N+1, nombre en el roster, errores 422 estructurados, cortes de tiempo, `request_id`, `public/500.json`, índice `(status, date)`). El hash del header es la revisión en la que se versionó el informe, no el árbol que se leyó.
 
+### Sprint D (2026-09-26) — cerrado en código
+
+| Ítem audit (P3) | Cambio | Notas |
+|-----------------|--------|-------|
+| `join_policy` hardcodeado | Migración `matches.join_policy`, enum `auto` / `manual` / `auto_by_level`, param en `POST /matches`, Jbuilder y OpenAPI | Default `auto`. **Join/leave no aplican la política aún** (deuda Sprint 1.5 en `AGENTS.md`). |
+| CSP admin + Swagger | `config/initializers/content_security_policy.rb` activo, enforcing (`report_only = false`) | `script-src` y `style-src` incluyen `unsafe_inline` para Rswag UI. Reiniciar Puma tras cambiar el initializer. |
+
 ## Resumen ejecutivo
 
 La API v1 es un JSON REST chico y coherente: 15 operaciones, JWT con expiración, strong params acotados, errores en `{ "error": "..." }`, paginación con tope en partidos, OpenAPI generado desde request specs, y una colección Postman que recorre el flujo de jugador. No aparece un fallo de seguridad que Brakeman no haya visto ni un endpoint roto respecto de sus specs. Lo que la separa de una API de producción es la sesión (token opaco de 24 h, sin logout ni revocación), el rate limit que no cubre escrituras sin JWT válido, el N+1 en el listado de partidos, y una DX incompleta para el front (el roster no trae el nombre del jugador, y un 401 no dice si el token venció).
@@ -48,7 +55,7 @@ No hay 204. El único 403 de la API es borrar el resultado de otro. No hay handl
 
 **Matches index y `me/matches`.** Query: `status`, `court_id`, `date` (ISO 8601), `page` (default de Pagy, 1), `per_page` (default 20, mínimo efectivo 1, máximo 50). En el listado público, `status` solo acepta `open` y `full`; otro valor devuelve cero filas.
 
-**Create match.** Body: `court_id`, `time_slot_id`, `date`, `duration` (entero 1–240), `roster_mode` (`pairs` | `individual`), `level_required`, `auto_join` (default `true`). El creador no se manda: lo asigna el controller.
+**Create match.** Body: `court_id`, `time_slot_id`, `date`, `duration` (entero 1–240), `roster_mode` (`pairs` | `individual`), `level_required`, `auto_join` (default `true`), `join_policy` opcional (`auto` | `manual` | `auto_by_level`, default `auto`). El creador no se manda: lo asigna el controller.
 
 **Join.** Body/query: `team` (`team_a` | `team_b`). Obligatorio si `roster_mode` es `pairs`.
 
@@ -81,9 +88,9 @@ Error:
 ### Reglas de negocio que el cliente tiene que conocer
 
 - El listado público solo muestra `open` y `full`. El detalle y los resultados son públicos para cualquier id, incluso `cancelled` o `completed`.
-- `join_policy` sale siempre `"auto"`. No existe el campo en base.
+- `join_policy` se persiste y se devuelve (`auto`, `manual`, `auto_by_level`). **Join sigue sin respetar `manual` ni `auto_by_level`** (mismo flujo que con `auto`).
 - `level_required` se guarda y se devuelve. Join no lo compara con `self_level`.
-- No hay validación de “fecha futura” ni de ventana horaria para join, leave o `played`.
+- Ventana horaria para join, leave y `played` vía `JOIN_CUTOFF_HOURS`, `LEAVE_CUTOFF_HOURS`, `PLAYED_CUTOFF_HOURS` (ver `Match#joinable?` / `#leavable?` / `#playable?`).
 - En `pairs`, join sin `team` → 422 `"Team is required in pairs mode"`.
 - Leave del creador en `confirmed` o `completed` → 422. Si el creador sale y no queda nadie activo, el partido pasa a `cancelled`.
 - `played` lo puede llamar cualquier jugador activo y pone `completed` aunque no haya marcador. Si ya está `completed` y hay consenso → 422.
@@ -100,11 +107,7 @@ Error:
 
 - `login`, `profile`, `me/matches`, `join`, `leave` y `played` son acciones, no recursos. Para este tamaño es razonable. Google las nombraría como custom methods (`:join`). No hace falta reescribirlas.
 - DELETE de leave y de resultado responden **200 con cuerpo**, no 204. El cuerpo es útil (partido actualizado). Hay que documentarlo como contrato, no cambiarlo por estética.
-- `join_policy` está hardcodeado en el Jbuilder:
-
-```7:7:app/views/api/v1/matches/_match.json.jbuilder
-json.join_policy "auto"
-```
+- ~~`join_policy` hardcodeado~~ → resuelto en Sprint D (`match.join_policy` en Jbuilder).
 
 - Un filtro inválido no es un error de cliente. `status` desconocido o `date` mal formada hacen `scope.none` y responden 200 con lista vacía (`matches_controller.rb`, líneas 123–144). El front no puede distinguir “no hay partidos” de “mandé `date=mañana`”.
 - Paginación solo en `GET /matches` y `GET /me/matches`. Canchas y resultados no paginan. Con el volumen de un club es aceptable; el contrato no es uniforme.
@@ -223,7 +226,7 @@ Brakeman en 0 warnings y bundler-audit en 0 vulnerabilidades, según el estado d
 | Logs | `filter_parameters` incluye `:passw`, `:email`, `:token`, `:secret` |
 | TLS | `force_ssl = true` en producción → HSTS. Fly además tiene `force_https = true` |
 | Headers Rails | `config.load_defaults 8.1` deja `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`. No están redefinidos en el repo |
-| CSP | El initializer está comentado |
+| CSP | Activo en `content_security_policy.rb` (enforcing; `unsafe_inline` en scripts/styles para Swagger UI) |
 | JWT | HS256, exp 24 h, secreto = `secret_key_base` |
 
 **Escrituras sin token no entran en ningún throttle.** En `write/user`, si no hay Bearer el bloque devuelve `nil` y Rack::Attack no cuenta el request. `POST /api/v1/matches` sin token (o con token basura) responde 401 y no consume el cupo de 30 ni el de login. Un cliente puede martillar 401. El Fail2Ban del mismo initializer mira `rack.attack.match_type == :throttle` dentro del blocklist; Rack::Attack evalúa blocklists antes que throttles, así que esa condición es muy probable que nunca sea verdadera. No hay spec del blocklist: queda como hallazgo a confirmar con un test, no como bug demostrado.
@@ -333,10 +336,10 @@ No hay un P0 confirmado: nada en el código revisado deja la API abierta a mass 
 | P3 | 🟢 | Índice `(status, date)` en `matches` cuando el listado crezca | Bajo | S | migración |
 | P3 | 🟢 | ETag o cache corto de `GET /courts` | Bajo | S | `courts_controller.rb` |
 | P3 | 🟢 | `request_id` dentro del JSON de error | Bajo | S | `base_controller.rb` |
-| P3 | 🟢 | Sacar el hardcode de `join_policy` cuando exista el enum | Bajo | M | migración, `_match.json.jbuilder` |
-| P3 | 🟢 | CSP para el admin y Swagger UI | Bajo | M | `content_security_policy.rb` |
+| P3 | ~~🟢~~ | ~~Sacar el hardcode de `join_policy`~~ | — | — | **Hecho (Sprint D)**; falta comportamiento en `join` |
+| P3 | ~~🟢~~ | ~~CSP para el admin y Swagger UI~~ | — | — | **Hecho (Sprint D)** |
 
-`join_policy`, la ventana horaria y la reversión de stats ya están escritas como deuda en `AGENTS.md`. Esta auditoría no las redefine: las ubica en P2/P3 porque la API actual funciona con el contrato que documenta (`join_policy: "auto"`, stats que no se revierten).
+La **lógica** de `join_policy` (`manual`, `auto_by_level`) y la reversión de stats siguen en `AGENTS.md` (Sprint 1.5 / Sprint 3).
 
 ---
 
@@ -410,7 +413,7 @@ No hay un P0 confirmado: nada en el código revisado deja la API abierta a mass 
 - 🔴 Críticos: **0** confirmados
 - 🟡 Alto impacto: **7** (rate limit de escrituras anónimas, sesión JWT no revocable, 401 opaco, N+1 del roster, roster sin nombre, CORS de Fly sin origen del front, blobs en disco local)
 - 🟢 Medio impacto: **9** (errores mezclados y sin campo, filtros que mienten con 200, algoritmo JWT implícito, reglas de tiempo y nivel, 500 posiblemente HTML, specs faltantes, swagger incompleto, stats que no se revierten)
-- ⚪ Bajo impacto: **5** (índice compuesto, cache de canchas, `request_id` en el error, `join_policy` hardcodeado, CSP)
+- ⚪ Bajo impacto: **3** pendientes (cache de canchas y otros P3 no cerrados; índice `(status, date)` ya aplicado en commit previo)
 
 Fortalezas principales:
 

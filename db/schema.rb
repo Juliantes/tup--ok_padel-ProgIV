@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_26_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -114,6 +114,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_000000) do
     t.bigint "creator_id", null: false
     t.datetime "date", null: false
     t.integer "duration", default: 90, null: false
+    t.integer "join_policy", default: 0, null: false
     t.integer "level_required", default: 0, null: false
     t.integer "roster_mode", default: 0, null: false
     t.datetime "stats_applied_at"
@@ -123,6 +124,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_000000) do
     t.index ["court_id"], name: "index_matches_on_court_id"
     t.index ["creator_id"], name: "index_matches_on_creator_id"
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
+    t.index ["join_policy"], name: "index_matches_on_join_policy"
     t.index ["roster_mode"], name: "index_matches_on_roster_mode"
     t.index ["status", "date"], name: "index_matches_on_status_and_date"
     t.index ["status"], name: "index_matches_on_status"

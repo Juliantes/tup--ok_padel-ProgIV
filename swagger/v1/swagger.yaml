@@ -261,6 +261,12 @@ paths:
                   type: string
                 auto_join:
                   type: boolean
+                join_policy:
+                  type: string
+                  enum:
+                  - auto
+                  - manual
+                  - auto_by_level
               required:
               - court_id
               - date
@@ -882,6 +888,10 @@ components:
           - first
         join_policy:
           type: string
+          enum:
+          - auto
+          - manual
+          - auto_by_level
           example: auto
         court:
           "$ref": "#/components/schemas/MatchCourtSummary"

@@ -7,6 +7,7 @@ FactoryBot.define do
     status { :open }
     level_required { :fifth }
     roster_mode { :pairs }
+    join_policy { :auto }
 
     trait :individual do
       roster_mode { :individual }

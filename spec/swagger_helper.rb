@@ -233,7 +233,11 @@ RSpec.configure do |config|
                 type: :string,
                 enum: %w[open eighth seventh sixth fifth fourth third second first]
               },
-              join_policy: { type: :string, example: "auto" },
+              join_policy: {
+                type: :string,
+                enum: %w[auto manual auto_by_level],
+                example: "auto"
+              },
               court: { "$ref" => "#/components/schemas/MatchCourtSummary" },
               creator: { "$ref" => "#/components/schemas/MatchCreatorSummary" },
               match_players: {
