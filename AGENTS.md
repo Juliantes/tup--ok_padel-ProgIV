@@ -53,7 +53,7 @@
 ### Deuda planificada — Migrar cache a Redis
 
 - Actualmente usamos **Solid Cache** (`config.cache_store = :solid_cache_store` en producción; `memory_store` en dev; `null_store` en test salvo specs de rate limiting que usan `MemoryStore` dedicado).
-- Migración futura: gemas `redis` + `hiredis`, `config.cache_store = :redis_cache_store`, accessory Redis en Kamal.
+- Migración futura: gemas `redis` + `hiredis`, `config.cache_store = :redis_cache_store`, accessory Redis en el host de deploy.
 - Razón: si el proyecto escala a múltiples servidores o requiere mayor performance de contadores compartidos (p. ej. Rack::Attack entre instancias).
 
 ## Deuda técnica resuelta (Sprint de deuda)
@@ -72,13 +72,20 @@
 
 **Desarrollo:** `DATABASE_PASSWORD` (o `DATABASE_URL`). Opcionales: `DATABASE_USERNAME`, `DATABASE_HOST`, `DATABASE_PORT`.
 
-**Producción:** `OK_PADEL_DATABASE_PASSWORD`, `RAILS_MASTER_KEY`, `APP_HOST`; opcional `MAILER_*`, `SMTP_*`, `CORS_ORIGINS`; deploy Kamal: `KAMAL_REGISTRY_PASSWORD`.
+**Producción (Fly.io):** `DATABASE_URL` (Neon Postgres), `RAILS_MASTER_KEY`, `APP_HOST`, `CORS_ORIGINS`; opcional `MAILER_*`, `SMTP_*`, `AUTO_APPROVE_AFTER_HOURS`.
 
-Detalle completo en README → Variables de entorno.
+Detalle completo en README → Variables de entorno y **Deploy**.
+
+## Deploy
+
+- **Plataforma:** [Fly.io](https://fly.io) (`fly.toml` en la raíz). URL: **https://ok-padel-tup.fly.dev** (región `gru`).
+- **Procesos:** `web` (`bin/thrust` + Puma) y `worker` (`bin/jobs` / Solid Queue). Migraciones en cada deploy: `release_command` → `bin/rails db:prepare`.
+- **Base de datos:** Neon vía `DATABASE_URL`; primary + Solid Cache/Queue/Cable comparten la misma DB (ver `config/database.yml` → `production`).
+- **Kamal:** `config/deploy.yml` queda solo como referencia histórica; no se usa en el deploy actual.
 
 ## Configuración y convenciones (repo)
 
-- **Base de datos:** `config/database.yml` sin credenciales en código. Producción usa `ENV["OK_PADEL_DATABASE_PASSWORD"]` (nil en dev si no está seteada; la conexión PG en prod falla si falta).
+- **Base de datos:** `config/database.yml` sin credenciales en código. Desarrollo/test usan `DATABASE_*` o `DATABASE_URL`. Producción usa `ENV["DATABASE_URL"]` (Neon en Fly).
 - **HTTP 422:** usar `status: :unprocessable_content` en controllers y `have_http_status(:unprocessable_content)` en request specs (Rack 3.2+).
 - **Swagger (OpenAPI):** cada nuevo endpoint de `api/v1` debe documentarse en el request spec correspondiente (`spec/requests/api/v1/`) con bloques rswag (`path`, `response`, `run_test!`) y regenerar `swagger/v1/swagger.yaml` con `bundle exec rake rswag:specs:swaggerize`. Schemas reusables en `spec/swagger_helper.rb` deben coincidir con los Jbuilder.
 - **CORS y rate limiting:** los nuevos endpoints bajo `/api/*` heredan CORS (`rack-cors`) y throttles (`rack-attack`) sin configuración adicional.

@@ -43,7 +43,7 @@ El modelo de datos incluye entidades previstas para **TP2** (mensajes, reseñas,
 | RSpec, FactoryBot, Faker, Shoulda | — | Tests |
 | rswag (rswag-api, rswag-ui, rswag-specs) | — | OpenAPI / Swagger UI (`/api-docs`) |
 | RuboCop (omakase), Brakeman, bundler-audit | — | Calidad y seguridad |
-| Kamal | — | Deploy containerizado (preparado) |
+| Fly.io | — | Deploy en producción (`fly.toml`) |
 | letter_opener | — | Preview de mails en desarrollo |
 
 ## Requisitos previos
@@ -51,7 +51,7 @@ El modelo de datos incluye entidades previstas para **TP2** (mensajes, reseñas,
 - **Ruby 3.4.10** (ver `.ruby-version`)
 - **PostgreSQL 14+** en ejecución
 - **Bundler**
-- **(Opcional)** Docker y acceso a un registry para deploy con Kamal
+- **(Opcional)** [Fly CLI](https://fly.io/docs/flyctl/install/) para deploy a Fly.io
 
 ## Instalación paso a paso
 
@@ -117,15 +117,13 @@ Remoto configurado: `https://github.com/Juliantes/ok_padel.git`. Si usás otro u
 | `DATABASE_PASSWORD` | dev / test | Password de PostgreSQL (default: vacío) |
 | `DATABASE_HOST` | dev / test | Host de PostgreSQL (default: `localhost`) |
 | `DATABASE_PORT` | dev / test | Puerto de PostgreSQL (default: `5432`) |
-| `DATABASE_URL` | alternativa | URL completa (como en CI) |
-| `OK_PADEL_DATABASE_PASSWORD` | production | Password del rol `ok_padel` |
-| `RAILS_MASTER_KEY` | production / Kamal | Descifra `config/credentials.yml.enc` |
+| `DATABASE_URL` | CI / production (Fly) | URL completa de PostgreSQL (Neon en producción) |
+| `RAILS_MASTER_KEY` | production (Fly) | Descifra `config/credentials.yml.enc` |
 | `APP_HOST` | production | Host público para links en mails (default: `okpadel.example`) |
 | `MAILER_FROM` | todos | Remitente (default: `Ok Padel <no-reply@okpadel.local>`) |
 | `MAILER_REPLY_TO` | todos | Reply-To (default: `soporte@okpadel.local`) |
 | `MAILER_LOGO_URL` | todos | URL absoluta del logo en el layout HTML del mail (opcional) |
 | `SMTP_*` | production | SMTP real (ver sección Emails) |
-| `KAMAL_REGISTRY_PASSWORD` | deploy | Token/password del registry Docker |
 | `RAILS_MAX_THREADS` | opcional | Pool de conexiones (default 5) |
 | `AUTO_APPROVE_AFTER_HOURS` | opcional | Horas sin reportes nuevos antes de auto-cerrar un partido en disputa (default: `48`) |
 | `CORS_ORIGINS` | opcional | Orígenes permitidos para CORS (CSV). Default en dev: `http://localhost:3001,http://localhost:5173`. En producción: dominio(s) del front-end, p. ej. `https://okpadel.com,https://www.okpadel.com` |
@@ -772,22 +770,62 @@ bin/importmap audit                # auditoría JS (importmap)
 | `test` | `bin/rails db:test:prepare`, `bundle exec rspec` |
 | `lint` | `bin/rubocop -f github` |
 
-## Deploy con Kamal
+## Deploy
 
-**Estado:** configuración **preparada**, deploy **no realizado** (IP placeholder `192.168.0.1` en `config/deploy.yml`).
+**URL de producción:** https://ok-padel-tup.fly.dev
 
-**TODO antes del primer deploy:**
+La app corre en **Fly.io** (región `gru`) con imagen Docker del `Dockerfile`, proceso **web** (`bin/thrust` en `:8080` → Puma en `:3000`) y **worker** (`bin/jobs` para Solid Queue y jobs recurrentes). En cada deploy, `release_command` ejecuta `bin/rails db:prepare` (migraciones primary + Solid).
 
-1. Reemplazar `192.168.0.1` por IP/host real del servidor.
-2. Configurar `registry` (Docker Hub, GHCR, etc.) y `KAMAL_REGISTRY_PASSWORD`.
-3. Definir secretos: `RAILS_MASTER_KEY`, `OK_PADEL_DATABASE_PASSWORD` (y accesorios DB si aplica).
-4. Revisar `SOLID_QUEUE_IN_PUMA` y workers según carga.
+`config/deploy.yml` (Kamal) queda como referencia histórica; no se usa en el deploy actual.
+
+### Secretos y variables en Fly
+
+Configurar antes del primer deploy (no commitear valores):
+
+| Variable | Uso |
+|----------|-----|
+| `DATABASE_URL` | Connection string de Neon (pooled o directo) |
+| `RAILS_MASTER_KEY` | Contenido de `config/master.key` |
+| `APP_HOST` | Host público para mails y URLs (p. ej. `ok-padel-tup.fly.dev`) |
+| `CORS_ORIGINS` | Orígenes del front-end (CSV) |
+| `AUTO_APPROVE_AFTER_HOURS` | Umbral de auto-aprobación de resultados (opcional; default `48`) |
+
+Opcional: `MAILER_*`, `SMTP_*` (ver sección Emails).
 
 ```bash
-bin/kamal deploy
+fly secrets set DATABASE_URL="..." RAILS_MASTER_KEY="..." APP_HOST="ok-padel-tup.fly.dev" CORS_ORIGINS="..." -a ok-padel-tup
 ```
 
-Documentación: [kamal-deploy.org](https://kamal-deploy.org).
+### Deploy y operación
+
+```bash
+fly deploy -a ok-padel-tup
+```
+
+Tras el primer deploy, escalar web y worker (Solid Queue requiere el proceso `worker`):
+
+```bash
+fly scale count web=1 worker=1 -a ok-padel-tup
+```
+
+Comandos útiles:
+
+```bash
+fly logs -a ok-padel-tup
+fly status -a ok-padel-tup
+fly ssh console -a ok-padel-tup
+fly secrets list -a ok-padel-tup
+```
+
+**Seeds en producción (una vez):**
+
+```bash
+fly ssh console -a ok-padel-tup -C "bin/rails db:seed"
+```
+
+Validar configuración local: `fly config validate`.
+
+Documentación: [fly.io/docs](https://fly.io/docs/).
 
 ## Estructura del proyecto
 
@@ -808,7 +846,8 @@ app/
 config/
   locales/           # es, devise.es, mailers.es
   environments/
-  deploy.yml         # Kamal
+  deploy.yml         # Kamal (referencia histórica)
+fly.toml             # Fly.io (producción)
 db/
   migrate/
   seeds.rb
