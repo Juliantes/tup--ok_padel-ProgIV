@@ -2,10 +2,10 @@
 
 Aplicación web para gestionar clubes, canchas y partidos de pádel. TP1 de Programación IV: back-office administrativo y API JSON para la app de jugadores.
 
-![CI](https://img.shields.io/github/actions/workflow/status/Juliantes/ok_padel/ci.yml?branch=main&label=CI)
+![CI](https://img.shields.io/github/actions/workflow/status/Juliantes/tup--ok_padel-ProgIV/ci.yml?branch=main&label=CI)
 ![Ruby](https://img.shields.io/badge/Ruby-3.4.10-red)
 ![Rails](https://img.shields.io/badge/Rails-8.1.3-red)
-![License](https://img.shields.io/github/license/Juliantes/ok_padel)
+![License](https://img.shields.io/github/license/Juliantes/tup--ok_padel-ProgIV)
 
 ## Descripción del proyecto
 
@@ -57,8 +57,8 @@ El modelo de datos incluye entidades previstas para **TP2** (mensajes, reseñas,
 
 ```bash
 # 1. Clonar
-git clone https://github.com/Juliantes/ok_padel.git
-cd ok_padel
+git clone https://github.com/Juliantes/tup--ok_padel-ProgIV.git
+cd tup--ok_padel-ProgIV
 
 # 2. Dependencias
 bundle install
@@ -107,7 +107,7 @@ gh auth login
 gh repo create ok_padel --public --source=. --remote=origin --push
 ```
 
-Remoto configurado: `https://github.com/Juliantes/ok_padel.git`. Si usás otro usuario u organización, actualizá `git remote set-url origin …` y los badges del encabezado.
+Remoto configurado: `https://github.com/Juliantes/tup--ok_padel-ProgIV.git`. Si usás otro usuario u organización, actualizá `git remote set-url origin …` y los badges del encabezado.
 
 ## Variables de entorno
 
