@@ -88,6 +88,67 @@ RSpec.describe "Api::V1::Matches", type: :request do
           expect(body["meta"]["total_count"]).to eq(24)
         end
       end
+
+      response(200, "caps per_page at 50") do
+        schema "$ref" => "#/components/schemas/MatchesResponse"
+
+        let(:per_page) { 100 }
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["meta"]["per_page"]).to eq(50)
+        end
+      end
+
+      response(400, "invalid status filter") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:status) { "not-a-status" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("invalid status")
+        end
+      end
+
+      response(400, "invalid date filter") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:date) { "31/12/2025" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("invalid date format")
+        end
+      end
+
+      response(400, "invalid court_id filter") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:court_id) { "abc" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("invalid court_id")
+        end
+      end
+
+      response(400, "invalid page filter") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:page) { "abc" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("invalid page")
+        end
+      end
+
+      response(400, "invalid per_page filter") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:per_page) { "abc" }
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("invalid per_page")
+        end
+      end
     end
 
     post "Create match" do
@@ -100,6 +161,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
         type: :object,
         properties: {
           court_id: { type: :integer },
+          time_slot_id: { type: :integer, nullable: true },
           date: { type: :string, format: "date-time" },
           duration: { type: :integer },
           roster_mode: { type: :string, enum: %w[pairs individual] },

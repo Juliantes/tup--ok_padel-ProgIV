@@ -31,4 +31,13 @@ RSpec.describe "CORS", type: :request do
       expect(response.headers["Access-Control-Allow-Origin"]).to be_nil
     end
   end
+
+  describe "disallowed origin" do
+    it "does not include Access-Control-Allow-Origin" do
+      get "/api/v1/courts", headers: { "Origin" => "http://evil.com" }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Access-Control-Allow-Origin"]).to be_nil
+    end
+  end
 end

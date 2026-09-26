@@ -11,7 +11,7 @@ module Api
           @user = current_user
           render :show
         else
-          render json: { error: current_user.errors.full_messages.join(", ") }, status: :unprocessable_content
+          render_error(current_user.errors.full_messages.join(", "), status: :unprocessable_content)
         end
       end
 

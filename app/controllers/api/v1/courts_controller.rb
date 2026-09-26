@@ -5,7 +5,9 @@ module Api
 
       def index
         @courts = Court.includes(:club).active.order(:name)
-        render :index
+        if stale?(etag: @courts, public: true)
+          render :index
+        end
       end
 
       def show

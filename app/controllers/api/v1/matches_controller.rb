@@ -4,6 +4,8 @@ module Api
       skip_before_action :authenticate_api_user!, only: %i[index show]
 
       def index
+        return unless validate_match_list_params!
+
         scope = Match.where(status: %i[open full])
         scope = apply_list_filters(scope)
         scope = scope.includes(:court, :creator, match_players: :user).order(date: :asc)
@@ -70,6 +72,8 @@ module Api
       end
 
       def mine
+        return unless validate_match_list_params!
+
         enrolled_ids = MatchPlayer.active.where(user_id: current_user.id).select(:match_id)
         scope = Match.where(creator_id: current_user.id).or(Match.where(id: enrolled_ids))
         scope = apply_status_filter(scope)
@@ -123,6 +127,7 @@ module Api
       def apply_status_filter(scope, allowed: Match.statuses.keys)
         status = params[:status]
         return scope if status.blank?
+
         return scope.where(status: status) if allowed.include?(status)
 
         scope.none
@@ -139,8 +144,59 @@ module Api
 
         day = Date.iso8601(params[:date])
         scope.where(date: day.all_day)
+      end
+
+      def validate_match_list_params!
+        return false if invalid_status_param?
+        return false if invalid_date_param?
+        return false if invalid_court_id_param?
+        return false if invalid_page_param?
+        return false if invalid_per_page_param?
+
+        true
+      end
+
+      def invalid_status_param?
+        status = params[:status]
+        return false if status.blank?
+        return false if Match.statuses.key?(status)
+
+        render_error("invalid status", status: :bad_request)
+        true
+      end
+
+      def invalid_date_param?
+        return false if params[:date].blank?
+
+        Date.iso8601(params[:date])
+        false
       rescue Date::Error
-        scope.none
+        render_error("invalid date format", status: :bad_request)
+        true
+      end
+
+      def invalid_court_id_param?
+        return false if params[:court_id].blank?
+        return false if params[:court_id].to_s.match?(/\A\d+\z/)
+
+        render_error("invalid court_id", status: :bad_request)
+        true
+      end
+
+      def invalid_page_param?
+        return false if params[:page].blank?
+        return false if params[:page].to_s.match?(/\A\d+\z/)
+
+        render_error("invalid page", status: :bad_request)
+        true
+      end
+
+      def invalid_per_page_param?
+        return false if params[:per_page].blank?
+        return false if params[:per_page].to_s.match?(/\A\d+\z/)
+
+        render_error("invalid per_page", status: :bad_request)
+        true
       end
 
       def api_per_page

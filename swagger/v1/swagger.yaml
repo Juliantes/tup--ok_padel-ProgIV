@@ -13,7 +13,7 @@ paths:
       security: []
       responses:
         '200':
-          description: lists active courts without authentication
+          description: supports conditional GET with ETag
           content:
             application/json:
               schema:
@@ -198,11 +198,17 @@ paths:
           type: integer
       responses:
         '200':
-          description: paginates results
+          description: caps per_page at 50
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/MatchesResponse"
+        '400':
+          description: invalid per_page filter
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
     post:
       summary: Create match
       tags:
@@ -238,6 +244,9 @@ paths:
               properties:
                 court_id:
                   type: integer
+                time_slot_id:
+                  type: integer
+                  nullable: true
                 date:
                   type: string
                   format: date-time
@@ -498,7 +507,7 @@ paths:
       parameters: []
       responses:
         '200':
-          description: updates the current user profile
+          description: ignores mass assignment of email
           content:
             application/json:
               schema:
@@ -523,12 +532,15 @@ paths:
               properties:
                 name:
                   type: string
+                phone:
+                  type: string
                 bio:
                   type: string
                 self_level:
                   type: integer
 servers:
 - url: http://localhost:3000
+- url: https://ok-padel-tup.fly.dev
 components:
   securitySchemes:
     bearer_auth:
@@ -541,6 +553,9 @@ components:
       properties:
         error:
           type: string
+        request_id:
+          type: string
+          nullable: true
       required:
       - error
     UnauthorizedError:

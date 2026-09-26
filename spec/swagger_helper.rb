@@ -15,7 +15,8 @@ RSpec.configure do |config|
       },
       paths: {},
       servers: [
-        { url: "http://localhost:3000" }
+        { url: "http://localhost:3000" },
+        { url: "https://ok-padel-tup.fly.dev" }
       ],
       components: {
         securitySchemes: {
@@ -29,7 +30,8 @@ RSpec.configure do |config|
           Error: {
             type: :object,
             properties: {
-              error: { type: :string }
+              error: { type: :string },
+              request_id: { type: :string, nullable: true }
             },
             required: [ "error" ]
           },

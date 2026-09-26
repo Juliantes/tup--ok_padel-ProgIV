@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_24_223000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -124,6 +124,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_223000) do
     t.index ["creator_id"], name: "index_matches_on_creator_id"
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
     t.index ["roster_mode"], name: "index_matches_on_roster_mode"
+    t.index ["status", "date"], name: "index_matches_on_status_and_date"
     t.index ["status"], name: "index_matches_on_status"
     t.index ["time_slot_id"], name: "index_matches_on_time_slot_id"
     t.check_constraint "duration > 0 AND duration <= 240", name: "matches_duration_range"

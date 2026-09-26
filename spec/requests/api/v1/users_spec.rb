@@ -1,6 +1,7 @@
 require "swagger_helper"
 
 RSpec.describe "Api::V1::Users", type: :request do
+  include ActiveSupport::Testing::TimeHelpers
   let(:user) { create(:user, :player) }
 
   path "/api/v1/profile" do
@@ -72,6 +73,7 @@ RSpec.describe "Api::V1::Users", type: :request do
         type: :object,
         properties: {
           name: { type: :string },
+          phone: { type: :string },
           bio: { type: :string },
           self_level: { type: :integer }
         }
@@ -112,6 +114,33 @@ RSpec.describe "Api::V1::Users", type: :request do
           expect(JSON.parse(response.body)["error"]).to be_present
         end
       end
+
+      response(200, "ignores mass assignment of email") do
+        schema "$ref" => "#/components/schemas/UserResponse"
+
+        let(:Authorization) { auth_headers_for(user)["Authorization"] }
+        let(:body) { { email: "hacker@example.com", name: "Still Me" } }
+
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["user"]["email"]).to eq(user.email)
+          expect(body_json["user"]["name"]).to eq("Still Me")
+          expect(user.reload.email).not_to eq("hacker@example.com")
+        end
+      end
+    end
+  end
+
+  describe "JWT lifetime" do
+    it "returns token_expired after 25 hours" do
+      token = JsonWebToken.encode(user_id: user.id)
+
+      travel 25.hours do
+        get "/api/v1/profile", headers: { "Authorization" => "Bearer #{token}" }, as: :json
+      end
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(JSON.parse(response.body)["error"]).to eq("token_expired")
     end
   end
 end

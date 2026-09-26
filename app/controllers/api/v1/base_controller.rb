@@ -11,7 +11,10 @@ module Api
       private
 
       def render_error(message, status:)
-        render json: { error: message }, status: status
+        render json: {
+          error: message,
+          request_id: request.request_id
+        }, status: status
       end
 
       def not_found
@@ -19,7 +22,7 @@ module Api
       end
 
       def unprocessable_entity(exception)
-        render json: { error: exception.record.errors.full_messages.join(", ") }, status: :unprocessable_content
+        render_error(exception.record.errors.full_messages.join(", "), status: :unprocessable_content)
       end
 
       def bad_request(exception)

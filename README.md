@@ -383,7 +383,7 @@ Base URL en desarrollo: `http://localhost:3000`
 
 **Login:** `POST /api/v1/login` con JSON `{ "email", "password" }` → `{ "token", "user" }`.
 
-**Errores:** cuerpo `{ "error": "<mensaje>" }` con el status HTTP correspondiente. Los mensajes de la API están en **inglés** (`Invalid credentials`, `Not found`, etc.). Un `401` de autenticación JWT usa un código: `token_missing` (sin header `Authorization: Bearer`), `token_invalid` (no decodifica o el usuario no existe) o `token_expired`.
+**Errores:** cuerpo `{ "error": "<mensaje>", "request_id": "<uuid>" }` con el status HTTP correspondiente (`request_id` en respuestas que usan `render_error` del API base). Los mensajes de la API están en **inglés** (`Invalid credentials`, `Not found`, etc.). Un `401` de autenticación JWT usa un código: `token_missing` (sin header `Authorization: Bearer`), `token_invalid` (no decodifica o el usuario no existe) o `token_expired`. Filtros inválidos en `GET /api/v1/matches` → `400` (`invalid status`, `invalid date format`, etc.).
 
 ### Endpoints
 

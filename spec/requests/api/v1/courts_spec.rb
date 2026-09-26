@@ -23,6 +23,27 @@ RSpec.describe "Api::V1::Courts", type: :request do
     end
   end
 
+  describe "GET /api/v1/courts ETag" do
+    around do |example|
+      previous_base = ActionController::Base.perform_caching
+      previous_api = ActionController::API.perform_caching
+      ActionController::Base.perform_caching = true
+      ActionController::API.perform_caching = true
+      example.run
+      ActionController::Base.perform_caching = previous_base
+      ActionController::API.perform_caching = previous_api
+    end
+
+    it "returns 304 when If-None-Match matches" do
+      get "/api/v1/courts", as: :json
+      etag = response.headers["ETag"]
+      expect(etag).to be_present
+
+      get "/api/v1/courts", headers: { "If-None-Match" => etag }, as: :json
+      expect(response).to have_http_status(:not_modified)
+    end
+  end
+
   path "/api/v1/courts/{id}" do
     parameter name: :id, in: :path, type: :integer, description: "Court ID"
 
