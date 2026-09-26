@@ -1,6 +1,8 @@
 require "swagger_helper"
 
 RSpec.describe "Api::V1::Matches", type: :request do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:court) { create(:court, status: :active) }
   let(:creator) { create(:user, :player) }
   let(:other_player) { create(:user, :player) }
@@ -227,7 +229,9 @@ RSpec.describe "Api::V1::Matches", type: :request do
         let(:body) { valid_create_body.merge(duration: 0) }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to be_present
+          body = JSON.parse(response.body)
+          expect(body["error"]).to eq("unprocessable_entity")
+          expect(body["errors"]["duration"]).to be_present
         end
       end
     end
@@ -531,6 +535,82 @@ RSpec.describe "Api::V1::Matches", type: :request do
         run_test! do |response|
           expect(JSON.parse(response.body)["error"]).to eq("Match is already completed with a consensus result")
         end
+      end
+    end
+  end
+
+  describe "time cutoffs" do
+    def timed_match(start_at, **overrides)
+      time_slot = create(
+        :time_slot,
+        court: court,
+        day_of_week: start_at.wday,
+        start_time: start_at,
+        end_time: start_at + 90.minutes
+      )
+      create(
+        :match,
+        court: court,
+        creator: creator,
+        status: :open,
+        roster_mode: :pairs,
+        time_slot: time_slot,
+        date: start_at,
+        **overrides
+      )
+    end
+
+    context "when less than 1 hour before start" do
+      let(:start_at) { 3.hours.from_now.change(sec: 0) }
+      let(:match) { timed_match(start_at) }
+
+      before { create(:match_player, match: match, user: creator, team: :team_a) }
+
+      it "returns 422 on join" do
+        travel_to start_at - 30.minutes do
+          post "/api/v1/matches/#{match.id}/join",
+               params: { team: "team_b" },
+               headers: auth_headers_for(other_player),
+               as: :json
+        end
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(JSON.parse(response.body)["error"]).to eq("too late to join")
+      end
+    end
+
+    context "when less than 2 hours before start" do
+      let(:start_at) { 4.hours.from_now.change(sec: 0) }
+      let(:match) { timed_match(start_at) }
+      let!(:enrolled) { create(:match_player, match: match, user: other_player, team: :team_b) }
+
+      before { create(:match_player, match: match, user: creator, team: :team_a) }
+
+      it "returns 422 on leave" do
+        travel_to start_at - 90.minutes do
+          delete "/api/v1/matches/#{match.id}/leave",
+                 headers: auth_headers_for(other_player),
+                 as: :json
+        end
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(JSON.parse(response.body)["error"]).to eq("too late to leave")
+      end
+    end
+
+    context "when more than 24 hours before start" do
+      let(:start_at) { 2.days.from_now.change(sec: 0) }
+      let(:match) { timed_match(start_at, status: :confirmed) }
+
+      before { create(:match_player, match: match, user: other_player, team: :team_a) }
+
+      it "returns 422 on played" do
+        post "/api/v1/matches/#{match.id}/played",
+             headers: auth_headers_for(other_player),
+             as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(JSON.parse(response.body)["error"]).to eq("too early to mark as played")
       end
     end
   end

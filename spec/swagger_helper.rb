@@ -31,7 +31,15 @@ RSpec.configure do |config|
             type: :object,
             properties: {
               error: { type: :string },
-              request_id: { type: :string, nullable: true }
+              request_id: { type: :string, nullable: true },
+              errors: {
+                type: :object,
+                additionalProperties: {
+                  type: :array,
+                  items: { type: :string }
+                },
+                nullable: true
+              }
             },
             required: [ "error" ]
           },

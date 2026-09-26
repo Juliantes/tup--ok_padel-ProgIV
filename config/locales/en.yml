@@ -29,3 +29,12 @@
 
 en:
   hello: "Hello world"
+  errors:
+    messages:
+      blank: "can't be blank"
+      invalid: "is invalid"
+      taken: "has already been taken"
+      not_a_number: "is not a number"
+      greater_than: "must be greater than %{count}"
+      less_than_or_equal_to: "must be less than or equal to %{count}"
+      inclusion: "is not included in the list"

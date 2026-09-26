@@ -11,7 +11,7 @@ module Api
           @user = current_user
           render :show
         else
-          render_error(current_user.errors.full_messages.join(", "), status: :unprocessable_content)
+          render_record_errors(current_user)
         end
       end
 

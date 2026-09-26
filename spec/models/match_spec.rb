@@ -104,6 +104,65 @@ RSpec.describe Match, type: :model do
     end
   end
 
+  describe "time cutoffs" do
+    let(:court) { create(:court) }
+    let(:start_at) { 3.hours.from_now.change(sec: 0) }
+    let(:time_slot) do
+      create(
+        :time_slot,
+        court: court,
+        day_of_week: start_at.wday,
+        start_time: start_at,
+        end_time: start_at + 90.minutes
+      )
+    end
+    let(:match) do
+      create(:match, court: court, date: start_at, time_slot: time_slot)
+    end
+
+    it "allows join and leave outside cutoffs" do
+      travel_to start_at - 3.hours do
+        expect(match.joinable?).to be(true)
+        expect(match.leavable?).to be(true)
+      end
+    end
+
+    it "blocks join within 1 hour of start" do
+      travel_to start_at - 30.minutes do
+        expect(match.joinable?).to be(false)
+      end
+    end
+
+    it "blocks leave within 2 hours of start" do
+      travel_to start_at - 90.minutes do
+        expect(match.leavable?).to be(false)
+      end
+    end
+
+    it "blocks played when start is more than 24 hours away" do
+      future_start = 2.days.from_now.change(sec: 0)
+      future_slot = create(
+        :time_slot,
+        court: court,
+        day_of_week: future_start.wday,
+        start_time: future_start,
+        end_time: future_start + 90.minutes
+      )
+      future_match = create(:match, court: court, date: future_start, time_slot: future_slot)
+
+      expect(future_match.playable?).to be(false)
+    end
+
+    it "skips cutoffs without a time slot" do
+      bare = create(:match, time_slot: nil)
+
+      expect(bare.starts_at).to be_nil
+      expect(bare.joinable?).to be(true)
+      expect(bare.leavable?).to be(true)
+      expect(bare.playable?).to be(true)
+    end
+  end
+
   describe "#consensus_result" do
     let(:match) { create(:match, :individual, status: :confirmed) }
 

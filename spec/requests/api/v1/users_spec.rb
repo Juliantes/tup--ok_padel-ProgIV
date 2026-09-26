@@ -111,7 +111,9 @@ RSpec.describe "Api::V1::Users", type: :request do
         let(:body) { { self_level: 99 } }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to be_present
+          body = JSON.parse(response.body)
+          expect(body["error"]).to eq("unprocessable_entity")
+          expect(body["errors"]["self_level"]).to be_present
         end
       end
 

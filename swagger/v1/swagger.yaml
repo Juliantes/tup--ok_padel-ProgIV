@@ -13,7 +13,7 @@ paths:
       security: []
       responses:
         '200':
-          description: supports conditional GET with ETag
+          description: lists active courts without authentication
           content:
             application/json:
               schema:
@@ -555,6 +555,13 @@ components:
           type: string
         request_id:
           type: string
+          nullable: true
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
           nullable: true
       required:
       - error

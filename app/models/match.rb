@@ -52,6 +52,30 @@ class Match < ApplicationRecord
     match_players.where.not(status: :cancelled)
   end
 
+  def starts_at
+    return nil if time_slot.blank? || date.blank?
+
+    Time.zone.parse("#{date.to_date} #{time_slot.start_time.strftime('%H:%M')}")
+  end
+
+  def joinable?
+    return true if starts_at.nil?
+
+    starts_at > join_cutoff_hours.hours.from_now
+  end
+
+  def leavable?
+    return true if starts_at.nil?
+
+    starts_at > leave_cutoff_hours.hours.from_now
+  end
+
+  def playable?
+    return true if starts_at.nil?
+
+    starts_at < played_cutoff_hours.hours.from_now
+  end
+
   def players_for_team(team)
     active_match_players.where(team: team)
   end
@@ -222,6 +246,18 @@ class Match < ApplicationRecord
   end
 
   private
+
+  def join_cutoff_hours
+    ENV.fetch("JOIN_CUTOFF_HOURS", "1").to_i
+  end
+
+  def leave_cutoff_hours
+    ENV.fetch("LEAVE_CUTOFF_HOURS", "2").to_i
+  end
+
+  def played_cutoff_hours
+    ENV.fetch("PLAYED_CUTOFF_HOURS", "24").to_i
+  end
 
   def time_slot_belongs_to_court
     return if time_slot.blank? || time_slot.court_id == court_id

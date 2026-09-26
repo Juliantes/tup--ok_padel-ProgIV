@@ -126,6 +126,9 @@ Remoto configurado: `https://github.com/Juliantes/ok_padel.git`. Si usás otro u
 | `SMTP_*` | production | SMTP real (ver sección Emails) |
 | `RAILS_MAX_THREADS` | opcional | Pool de conexiones (default 5) |
 | `AUTO_APPROVE_AFTER_HOURS` | opcional | Horas sin reportes nuevos antes de auto-cerrar un partido en disputa (default: `48`) |
+| `JOIN_CUTOFF_HOURS` | opcional | Mínimo de horas antes del inicio para unirse a un partido con `time_slot` (default: `1`) |
+| `LEAVE_CUTOFF_HOURS` | opcional | Mínimo de horas antes del inicio para salir de un partido con `time_slot` (default: `2`) |
+| `PLAYED_CUTOFF_HOURS` | opcional | Máximo de horas antes del inicio para marcar `played` con `time_slot` (default: `24`) |
 | `CORS_ORIGINS` | opcional | Orígenes permitidos para CORS (CSV). Default en dev: `http://localhost:3001,http://localhost:5173`. En producción: dominio(s) del front-end, p. ej. `https://okpadel.com,https://www.okpadel.com` |
 
 ## CORS y rate limiting
@@ -385,6 +388,8 @@ Base URL en desarrollo: `http://localhost:3000`
 
 **Errores:** cuerpo `{ "error": "<mensaje>", "request_id": "<uuid>" }` con el status HTTP correspondiente (`request_id` en respuestas que usan `render_error` del API base). Los mensajes de la API están en **inglés** (`Invalid credentials`, `Not found`, etc.). Un `401` de autenticación JWT usa un código: `token_missing` (sin header `Authorization: Bearer`), `token_invalid` (no decodifica o el usuario no existe) o `token_expired`. Filtros inválidos en `GET /api/v1/matches` → `400` (`invalid status`, `invalid date format`, etc.).
 
+**Validaciones (`422`):** cuando falla `ActiveRecord` (crear partido, join con cupo lleno, `PATCH /profile`, etc.) el cuerpo es `{ "error": "unprocessable_entity", "errors": { "<campo>": ["mensaje", ...] }, "request_id": "..." }`. Los mensajes en `errors` van en inglés. Errores de negocio puntuales (p. ej. `too late to join`) siguen usando solo `error` con un string.
+
 ### Endpoints
 
 | Método | Path | Auth | Descripción |
@@ -479,7 +484,7 @@ curl -s -X PATCH http://localhost:3000/api/v1/profile \
 
 Respuesta `200`: mismo shape que GET profile.
 
-Errores: `422` → `{ "error": "..." }` (validaciones); `401` sin auth.
+Errores: `422` → `{ "error": "unprocessable_entity", "errors": { "self_level": ["is not included in the list"] }, "request_id": "..." }`; `401` sin auth.
 
 #### GET `/api/v1/courts`
 
@@ -571,7 +576,9 @@ Respuesta `201`:
 }
 ```
 
-Errores: `401` sin auth; `422` validaciones del modelo.
+Errores: `401` sin auth; `422` validaciones del modelo (`error` + `errors` por campo).
+
+**Ventanas de tiempo** (solo si el partido tiene `time_slot`; sin slot no aplican): no se puede `join` con menos de **1 h** al inicio (`too late to join`); no se puede `leave` con menos de **2 h** (`too late to leave`); no se puede `played` con más de **24 h** de anticipación (`too early to mark as played`). Opcional: `JOIN_CUTOFF_HOURS`, `LEAVE_CUTOFF_HOURS`, `PLAYED_CUTOFF_HOURS`.
 
 El detalle (`show_details`) ya no incluye `match_result` (objeto o `null`). Pasa a `match_results` (array) y `consensus` (`null` si no hay mayoría).
 

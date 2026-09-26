@@ -124,7 +124,9 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
         let(:body) { report_body }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to eq("Reporter is not an active player")
+          body = JSON.parse(response.body)
+          expect(body["error"]).to eq("unprocessable_entity")
+          expect(body["errors"]["base"]).to include("Reporter is not an active player")
         end
       end
 
@@ -145,7 +147,9 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
         end
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to eq("You already reported a result")
+          body = JSON.parse(response.body)
+          expect(body["error"]).to eq("unprocessable_entity")
+          expect(body["errors"]["base"]).to include("You already reported a result")
           expect(match.match_results.count).to eq(1)
         end
       end

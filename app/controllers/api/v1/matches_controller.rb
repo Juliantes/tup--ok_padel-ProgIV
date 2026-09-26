@@ -33,6 +33,10 @@ module Api
 
       def join
         @match = Match.find(params[:id])
+        unless @match.joinable?
+          return render_error("too late to join", status: :unprocessable_content)
+        end
+
         team_attrs = join_team_attributes(@match)
         return if performed?
 
@@ -50,6 +54,10 @@ module Api
           return render_error("Creator cannot leave a confirmed or completed match", status: :unprocessable_content)
         end
 
+        unless @match.leavable?
+          return render_error("too late to leave", status: :unprocessable_content)
+        end
+
         match_player.update!(status: :cancelled)
         @match.cancel_if_creator_left_empty_roster!(current_user)
         @match = load_match_for_detail.find(@match.id)
@@ -64,6 +72,10 @@ module Api
 
         if @match.completed? && @match.consensus?
           return render_error("Match is already completed with a consensus result", status: :unprocessable_content)
+        end
+
+        unless @match.playable?
+          return render_error("too early to mark as played", status: :unprocessable_content)
         end
 
         @match.mark_as_played!
