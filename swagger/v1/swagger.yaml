@@ -139,11 +139,18 @@ paths:
       - bearer_auth: []
       responses:
         '200':
-          description: lets the reporter delete their own result
+          description: lets the reporter delete their own result while the match is
+            in dispute
           content:
             application/json:
               schema:
                 "$ref": "#/components/schemas/MatchResultsMutationResponse"
+        '422':
+          description: returns 422 when the reporter deletes from a completed match
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
         '401':
           description: returns 401 token_missing without a token
           content:

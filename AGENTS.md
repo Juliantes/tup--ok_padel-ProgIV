@@ -39,14 +39,14 @@
 ### Deuda planificada — Sprint 3 (resultados)
 
 1. ~~**Auto-aprobación por tiempo:**~~ `AutoApproveResultsJob` + `matches.auto_approved_at` (ver README).
-2. **Reversión de stats al borrar un reporte:** hoy se aplican una sola vez (`matches.stats_applied_at`) y no se revierten. El primer reporte provisorio puede dejar stats distintas del consenso final.
+2. ~~**Reversión de stats al borrar un reporte:**~~ Fix 15b — `PlayerStat.recalculate_for` en `after_destroy_commit` de `MatchResult`. El primer reporte único que cierra el partido sigue aplicando stats incrementales hasta consenso (comportamiento previo).
 3. ~~**Admin fuerza consenso (Sprint 3b):**~~ implementado en admin (`force_result`).
 4. **Admin sets UI:** formularios de edición y force con hasta 5 slots fijos (no filas dinámicas); sets vacíos se ignoran vía `reject_if` en nested attributes.
 
 ### Deuda planificada — Sprint 3b (admin resultados)
 
-1. **Force result no revierte stats:** si el admin fuerza un marcador, `stats_applied_at` queda fijado; cambiar o borrar el reporte forzado no revierte `player_stats`.
-2. **Delete de reporte en match cerrado:** permitido desde admin; las stats no se revierten.
+1. **Force result no revierte stats:** si el admin fuerza un marcador, `stats_applied_at` queda fijado; cambiar o borrar el reporte forzado recalcula vía Fix 15b pero el flag no se limpia (edge case menor).
+2. ~~**Delete de reporte en match cerrado:**~~ Fix 15a — API bloquea al reporter en `completed`; admin sin restricción. Stats: Fix 15b.
 3. **Reopen:** no hay flujo de reapertura; si se agrega, no debe asumir reversión de stats.
 4. ~~**`approved_at` en `match_results`:**~~ eliminada (migración `RemoveApprovedAtFromMatchResults`).
 
@@ -67,6 +67,7 @@
 - **Development:** `config.active_job.queue_adapter = :solid_queue` (misma DB que la app; sin `solid_queue.connects_to`).
 - ~~**CORS:**~~ `rack-cors` en `config/initializers/cors.rb`; orígenes vía `CORS_ORIGINS` (CSV); defaults `localhost:3001` y `5173`; sin `credentials`.
 - ~~**Rate limiting:**~~ `rack-attack` en `config/initializers/rack_attack.rb`; backend `Rails.cache` (Solid Cache en prod); límites login/lectura/escritura; `/up` y OPTIONS en safelist.
+- ~~**Fix 15 — borrado simétrico + stats:**~~ API DELETE solo en `reported` (reporter); admin siempre; `PlayerStat.recalculate_for` al borrar reporte. Ver `docs/api-audit.md`.
 
 ### Variables de entorno requeridas
 
@@ -93,7 +94,7 @@ Detalle completo en README → Variables de entorno y **Deploy**.
 
 ### Deuda pendiente (features / calidad)
 
-- **Reversión de stats** al borrar reporte de match (ver Sprint 3 / 3b arriba).
+- **`PlayerStat.recalculate_for` a escala:** recálculo síncrono O(n) por jugador; mover a job si el volumen crece.
 - **`match_player` flaky specs** si vuelven a aparecer en CI.
 
 ## Estado de calidad

@@ -293,7 +293,7 @@ class Match < ApplicationRecord
     raise ActiveRecord::RecordInvalid, result
   end
 
-  # Applied once. Later report deletes do not roll stats back (stats_applied_at).
+  # Applied once on first consensus (stats_applied_at). Deletes trigger PlayerStat.recalculate_for.
   def apply_player_stats!
     consensus = consensus_result
     return if consensus.blank?

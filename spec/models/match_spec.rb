@@ -300,7 +300,9 @@ RSpec.describe Match, type: :model do
 
       expect(match.match_results.where(reported_by: player_a).count).to eq(1)
       expect(match.reload).to be_completed
-      expect(player_a.player_stat.reload.wins).to eq(wins_before)
+      stat = player_a.player_stat.reload
+      expect(stat.wins).to eq(0)
+      expect(stat.losses).to eq(1)
     end
 
     it "rejects new reports after auto-approval" do

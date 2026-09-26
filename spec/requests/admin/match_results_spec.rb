@@ -59,6 +59,17 @@ RSpec.describe "Admin::MatchResults", type: :request do
   end
 
   describe "DELETE /admin/matches/:match_id/match_results/:id" do
+    it "deletes a result from a completed match" do
+      expect(match.reload).to be_completed
+
+      expect {
+        delete admin_match_match_result_path(match, match_result)
+      }.to change(MatchResult, :count).by(-1)
+
+      expect(response).to redirect_to(admin_match_path(match))
+      expect(MatchResult.exists?(match_result.id)).to be(false)
+    end
+
     it "deletes the report and recalculates consensus" do
       second = create(:user, :player)
       create(:match_player, match: match, user: second, team: :team_b, status: :confirmed)

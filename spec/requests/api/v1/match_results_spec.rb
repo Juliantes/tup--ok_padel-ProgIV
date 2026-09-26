@@ -165,22 +165,49 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
       produces "application/json"
       security [ { bearer_auth: [] } ]
 
-      let!(:result) do
-        create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
-      end
-
-      response(200, "lets the reporter delete their own result") do
+      response(200, "lets the reporter delete their own result while the match is in dispute") do
         schema "$ref" => "#/components/schemas/MatchResultsMutationResponse"
 
         let(:match_id) { match.id }
-        let(:id) { result.id }
         let(:Authorization) { auth_headers_for(player)["Authorization"] }
+        let!(:result) do
+          create(:match_player, match: match, user: other_player, team: :team_b)
+          create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
+          create(
+            :match_result,
+            match: match,
+            reported_by: other_player,
+            result_sets: [ { team_a_games: 4, team_b_games: 6 }, { team_a_games: 4, team_b_games: 6 } ]
+          )
+          match.reload
+          expect(match).to be_reported
+          match.match_results.find_by!(reported_by_id: player.id)
+        end
+        let(:id) { result.id }
 
         run_test! do |response|
           expect(MatchResult.exists?(result.id)).to be(false)
           body = JSON.parse(response.body)
-          expect(body["results"]).to eq([])
-          expect(body["match"]).to include("id" => match.id)
+          expect(body["results"].size).to eq(1)
+          expect(body["match"]).to include("id" => match.id, "status" => "completed")
+        end
+      end
+
+      response(422, "returns 422 when the reporter deletes from a completed match") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:match_id) { match.id }
+        let(:id) { result.id }
+        let(:Authorization) { auth_headers_for(player)["Authorization"] }
+        let!(:result) do
+          create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0).tap do
+            expect(match.reload).to be_completed
+          end
+        end
+
+        run_test! do |response|
+          expect(JSON.parse(response.body)["error"]).to eq("cannot delete result of a closed match")
+          expect(MatchResult.exists?(result.id)).to be(true)
         end
       end
 
@@ -189,6 +216,9 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
 
         let(:Authorization) { "" }
         let(:match_id) { match.id }
+        let!(:result) do
+          create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
+        end
         let(:id) { result.id }
 
         run_test!
@@ -198,10 +228,12 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
         schema "$ref" => "#/components/schemas/Error"
 
         let(:match_id) { match.id }
-        let(:id) { result.id }
         let(:Authorization) { auth_headers_for(other_player)["Authorization"] }
-
-        before { create(:match_player, match: match, user: other_player, team: :team_b) }
+        let!(:result) do
+          create(:match_player, match: match, user: other_player, team: :team_b)
+          create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
+        end
+        let(:id) { result.id }
 
         run_test! do |response|
           expect(JSON.parse(response.body)["error"]).to eq("You can only delete your own result")
@@ -215,6 +247,9 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
         let(:match_id) { match.id }
         let(:id) { 0 }
         let(:Authorization) { auth_headers_for(player)["Authorization"] }
+        let!(:result) do
+          create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0)
+        end
 
         run_test! do |response|
           expect(JSON.parse(response.body)["error"]).to eq("Not found")

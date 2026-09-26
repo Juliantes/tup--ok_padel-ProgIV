@@ -15,7 +15,8 @@ class MatchResult < ApplicationRecord
 
   after_create_commit :recalculate_consensus_after_create
   after_update_commit :recalculate_consensus_after_update
-  after_destroy_commit :recalculate_consensus_after_destroy
+  after_destroy_commit :recalculate_consensus_after_destroy,
+                     :recalculate_player_stats_after_destroy
 
   def set_signature
     match_sets.sort_by(&:order).map { |s| "#{s.team_a_games}-#{s.team_b_games}" }.join(",")
@@ -42,6 +43,16 @@ class MatchResult < ApplicationRecord
 
   def recalculate_consensus_after_destroy
     recalculate_match_consensus
+  end
+
+  def recalculate_player_stats_after_destroy
+    target = match if match&.persisted?
+    target ||= Match.find_by(id: match_id)
+    return if target.nil?
+
+    target.active_match_players.includes(:user).each do |mp|
+      PlayerStat.recalculate_for(mp.user)
+    end
   end
 
   def recalculate_match_consensus

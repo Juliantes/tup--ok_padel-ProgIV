@@ -22,8 +22,13 @@ module Api
 
       def destroy
         result = @match.match_results.find(params[:id])
-        if result.reported_by_id != current_user.id
+
+        unless current_user.admin? || result.reported_by_id == current_user.id
           return render_error("You can only delete your own result", status: :forbidden)
+        end
+
+        unless current_user.admin? || @match.reported?
+          return render_error("cannot delete result of a closed match", status: :unprocessable_content)
         end
 
         result.destroy!

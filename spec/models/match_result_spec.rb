@@ -76,6 +76,25 @@ RSpec.describe MatchResult, type: :model do
 
       expect { result.match.destroy! }.not_to raise_error
     end
+
+    it "recalculates player stats for each active player after destroy" do
+      match = create(:match, :individual, status: :confirmed)
+      first = create(:user, :player)
+      second = create(:user, :player)
+      create(:match_player, match: match, user: first, team: :team_a)
+      create(:match_player, match: match, user: second, team: :team_b)
+      result = create(
+        :match_result,
+        match: match,
+        reported_by: first,
+        result_sets: [ { team_a_games: 6, team_b_games: 4 }, { team_a_games: 6, team_b_games: 4 } ]
+      )
+
+      expect(PlayerStat).to receive(:recalculate_for).with(first).and_call_original
+      expect(PlayerStat).to receive(:recalculate_for).with(second).and_call_original
+
+      result.destroy!
+    end
   end
 
   describe "sets consistency" do

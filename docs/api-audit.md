@@ -13,6 +13,13 @@ Este documento archiva la auditoría hecha en el chat sobre el código anterior 
 | `join_policy` hardcodeado | Migración `matches.join_policy`, enum `auto` / `manual` / `auto_by_level`, param en `POST /matches`, Jbuilder y OpenAPI | Default `auto`. **Join/leave no aplican la política aún** (deuda Sprint 1.5 en `AGENTS.md`). |
 | CSP admin + Swagger | `config/initializers/content_security_policy.rb` activo, enforcing (`report_only = false`) | `script-src` y `style-src` incluyen `unsafe_inline` para Rswag UI. Reiniciar Puma tras cambiar el initializer. |
 
+### Fix 15 (2026-09-26) — borrado simétrico + stats
+
+| Ítem | Cambio | Notas |
+|------|--------|-------|
+| 15a — DELETE resultado (API) | Reporter solo si `match.status == reported`; admin sin restricción; 422 `"cannot delete result of a closed match"` | Simétrico con `report_result!` en partidos en disputa. |
+| 15b — Stats | `PlayerStat.recalculate_for` tras `MatchResult` destroy (síncrono, desde consenso en partidos `completed`) | No usa `stats_applied_at` para el recálculo. Volumen alto → candidato a job (deuda). |
+
 ## Resumen ejecutivo
 
 La API v1 es un JSON REST chico y coherente: 15 operaciones, JWT con expiración, strong params acotados, errores en `{ "error": "..." }`, paginación con tope en partidos, OpenAPI generado desde request specs, y una colección Postman que recorre el flujo de jugador. No aparece un fallo de seguridad que Brakeman no haya visto ni un endpoint roto respecto de sus specs. Lo que la separa de una API de producción es la sesión (token opaco de 24 h, sin logout ni revocación), el rate limit que no cubre escrituras sin JWT válido, el N+1 en el listado de partidos, y una DX incompleta para el front (el roster no trae el nombre del jugador, y un 401 no dice si el token venció).
@@ -40,7 +47,7 @@ Definidos en `config/routes.rb` (líneas 26–44). Auth = header `Authorization:
 | 11 | POST | `/api/v1/matches/:id/played` | Sí | Marca `completed` sin marcador | 200 | 401, 422 |
 | 12 | GET | `/api/v1/matches/:match_id/match_results` | No | Reportes + consenso | 200 | 404 |
 | 13 | POST | `/api/v1/matches/:match_id/match_results` | Sí | Reporta sets (jugador activo) | 201 | 401, 422 |
-| 14 | DELETE | `/api/v1/matches/:match_id/match_results/:id` | Sí | Borra el propio reporte | 200 | 401, 403, 404 |
+| 14 | DELETE | `/api/v1/matches/:match_id/match_results/:id` | Sí | Borra el propio reporte (solo en `reported`; admin sin límite) | 200 | 401, 403, 404, 422 partido cerrado |
 | 15 | GET | `/api/v1/me/matches` | Sí | Creados o con inscripción activa, cualquier status | 200 + `meta` | 401 |
 
 No hay 204. El único 403 de la API es borrar el resultado de otro. No hay handler propio de 500.
@@ -95,7 +102,7 @@ Error:
 - Leave del creador en `confirmed` o `completed` → 422. Si el creador sale y no queda nadie activo, el partido pasa a `cancelled`.
 - `played` lo puede llamar cualquier jugador activo y pone `completed` aunque no haya marcador. Si ya está `completed` y hay consenso → 422.
 - Un jugador activo reporta una vez. Si el partido no está `reported`, el segundo reporte → 422. Un solo reporte ya es consenso provisional.
-- Borrar un reporte no revierte `player_stats` (deuda ya documentada en el proyecto).
+- Borrar un reporte recalcula `player_stats` vía `PlayerStat.recalculate_for` (Fix 15b). Admin puede borrar en partidos `completed`; el reporter no (Fix 15a).
 
 ---
 
@@ -332,14 +339,14 @@ No hay un P0 confirmado: nada en el código revisado deja la API abierta a mass 
 | P2 | 🟡 | `public/500.json` (y 404/422 JSON) para que un error no capturado no caiga en HTML | Medio | S | `public/`, `config/application.rb` |
 | P2 | 🟡 | Specs que faltan: token vencido, `per_page` > 50, origen CORS rechazado, mass assignment de `email` | Medio | S | `spec/requests/api/v1/`, `spec/requests/cors_spec.rb` |
 | P2 | 🟢 | Swagger: server de Fly, `phone`, `time_slot_id` | Medio | S | specs rswag → `swagger/v1/swagger.yaml` |
-| P2 | 🟡 | Reversión de stats al borrar un reporte (deuda ya anotada) | Medio | L | `match.rb`, admin y API de results |
+| P2 | ✅ | Reversión de stats al borrar un reporte | Medio | L | Fix 15b: `PlayerStat.recalculate_for` |
 | P3 | 🟢 | Índice `(status, date)` en `matches` cuando el listado crezca | Bajo | S | migración |
 | P3 | 🟢 | ETag o cache corto de `GET /courts` | Bajo | S | `courts_controller.rb` |
 | P3 | 🟢 | `request_id` dentro del JSON de error | Bajo | S | `base_controller.rb` |
 | P3 | ~~🟢~~ | ~~Sacar el hardcode de `join_policy`~~ | — | — | **Hecho (Sprint D)**; falta comportamiento en `join` |
 | P3 | ~~🟢~~ | ~~CSP para el admin y Swagger UI~~ | — | — | **Hecho (Sprint D)** |
 
-La **lógica** de `join_policy` (`manual`, `auto_by_level`) y la reversión de stats siguen en `AGENTS.md` (Sprint 1.5 / Sprint 3).
+La **lógica** de `join_policy` (`manual`, `auto_by_level`) sigue en `AGENTS.md` (Sprint 1.5). Reversión de stats al borrar reporte: resuelta en Fix 15b; deuda residual en force result / `stats_applied_at` (Sprint 3b).
 
 ---
 
@@ -412,7 +419,7 @@ La **lógica** de `join_policy` (`manual`, `auto_by_level`) y la reversión de s
 
 - 🔴 Críticos: **0** confirmados
 - 🟡 Alto impacto: **7** (rate limit de escrituras anónimas, sesión JWT no revocable, 401 opaco, N+1 del roster, roster sin nombre, CORS de Fly sin origen del front, blobs en disco local)
-- 🟢 Medio impacto: **9** (errores mezclados y sin campo, filtros que mienten con 200, algoritmo JWT implícito, reglas de tiempo y nivel, 500 posiblemente HTML, specs faltantes, swagger incompleto, stats que no se revierten)
+- 🟢 Medio impacto: **8** (errores mezclados y sin campo, filtros que mienten con 200, algoritmo JWT implícito, reglas de tiempo y nivel, 500 posiblemente HTML, specs faltantes, swagger incompleto; ~~stats que no se revierten~~ Fix 15)
 - ⚪ Bajo impacto: **3** pendientes (cache de canchas y otros P3 no cerrados; índice `(status, date)` ya aplicado en commit previo)
 
 Fortalezas principales:
