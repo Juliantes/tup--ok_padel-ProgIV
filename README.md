@@ -14,13 +14,13 @@ Aplicación web para gestionar clubes, canchas y partidos de pádel. TP1 de Prog
 **Alcance del TP1 (esta entrega):**
 
 - **Back-office** (`/admin`): CRUD de clubes, canchas y usuarios; consulta/edición de partidos y gestión de jugadores en el roster (sin alta/baja de partidos desde admin).
-- **API REST JSON** (`/api/v1`): login con JWT, perfil del jugador, canchas activas y partidos (listado, detalle, alta, join/leave, mis partidos).
+- **API REST JSON** (`/api/v1`): login con JWT, perfil, canchas activas, partidos (listado, detalle, alta, join/leave, mis partidos, marcar jugado) y **resultados** (listar reportes, reportar, borrar el propio).
 - **Web pública:** home, registro e inicio de sesión con Devise.
 - **Emails:** mail de bienvenida al registrarse (`UserMailer#welcome`).
 
 Wireframes y flujos de pantalla: [docs/wireframe/](docs/wireframe/) (HTML interactivo y PNGs).
 
-El modelo de datos incluye entidades previstas para **TP2** (mensajes, reseñas, resultados, etc.); en TP1 están migradas, seedeadas donde aplica, pero **sin endpoints API ni pantallas** para la mayoría de ellas.
+El modelo incluye entidades para **TP2** (mensajes, reseñas, etc.): migradas y seedeadas donde aplica, pero **sin API ni pantallas** en esta entrega. Los **resultados de partido** y **stats** sí forman parte del TP1 (API + admin).
 
 ## Stack tecnológico
 
@@ -378,7 +378,7 @@ Los 15 endpoints de `api/v1` están documentados con schemas alineados a los Jbu
 
 ## API v1
 
-**Postman:** colección en [`postman/`](postman/); en Desktop abrí la raíz `ok_padel` y usá **Run collection** (ver [docs/postman/README.md](docs/postman/README.md)).
+**Postman:** colección en [`postman/`](postman/) (20 requests con tests; 15 operaciones en OpenAPI). En Desktop, abrí la **raíz del repo** clonado (p. ej. `tup--ok_padel-ProgIV`) y usá **Run collection**; por terminal: `bin/postman-run` (Newman). Guía: [docs/postman/README.md](docs/postman/README.md).
 
 Base URL en desarrollo: `http://localhost:3000`
 
@@ -528,6 +528,8 @@ Errores: `404` → `{ "error": "Not found" }` (id inexistente o cancha no activa
 
 #### POST `/api/v1/matches`
 
+Usá una `date` **futura** (el ejemplo asume que corrés el curl antes de diciembre de 2026).
+
 ```bash
 TOKEN="<jwt>"
 curl -s -X POST http://localhost:3000/api/v1/matches \
@@ -535,7 +537,7 @@ curl -s -X POST http://localhost:3000/api/v1/matches \
   -H "Content-Type: application/json" \
   -d '{
     "court_id": 1,
-    "date": "2026-09-25T10:00:00-03:00",
+    "date": "2026-12-15T10:00:00-03:00",
     "duration": 90,
     "roster_mode": "pairs",
     "level_required": "fifth",
@@ -549,7 +551,7 @@ Respuesta `201`:
 {
   "match": {
     "id": 1,
-    "date": "2026-09-25T10:00:00.000-03:00",
+    "date": "2026-12-15T10:00:00.000-03:00",
     "duration": 90,
     "status": "open",
     "roster_mode": "pairs",
@@ -593,7 +595,7 @@ Cada jugador activo puede cargar un marcador. El partido guarda **varios** `matc
 - Sin mayoría: el partido queda en `reported`. Ahí el jugador puede reemplazar su reporte.
 - Con consenso ya cerrado (`completed`): no se puede volver a reportar el mismo marcador.
 - Un partido válido requiere sets completos según `matches.best_of` (3 o 5); el ganador se calcula de los sets reportados.
-- Las stats se escriben **una sola vez** (`matches.stats_applied_at`). Borrar un reporte no las revierte. Si el primer reporte provisorio no coincide con el consenso final, las stats quedan las del primero.
+- Al cerrar consenso se aplican stats de forma incremental (`matches.stats_applied_at`). Si un jugador **borra** su reporte (`DELETE` propio, según reglas de estado), se ejecuta `PlayerStat.recalculate_for` para los jugadores del partido: wins, losses y rachas se **recalculan** desde el historial de partidos `completed`, no con un simple deshacer del último incremento.
 
 **Marcar como jugado:** `POST /api/v1/matches/:id/played` pasa el partido a `completed` sin marcador. Responde `422` si ya está `completed` **y** hay consenso.
 
@@ -755,8 +757,8 @@ ActionMailer::Base.perform_deliveries = true
 bundle exec rspec
 ```
 
-- **161 examples, 0 failures**
-- Cobertura: modelos, requests (API, admin, Devise), mailers
+- **344 examples, 0 failures** (misma suite que CI)
+- Cobertura: modelos, requests (API, admin, Devise, CORS, rate limiting), mailers, jobs
 - CI: GitHub Actions en cada push/PR a `main` (job `test` con PostgreSQL 16 y `DATABASE_URL`)
 
 ## Calidad y seguridad
@@ -871,11 +873,14 @@ spec/
   models/, requests/, mailers/
 docs/
   wireframe/
+  postman/           # guía Postman Desktop / Newman
+postman/             # colección YAML + JSON y environment
 ```
 
 ## Documentación adicional
 
 - [AGENTS.md](AGENTS.md) — contexto para agentes de IA y deuda técnica (p. ej. MatchMailer TP2)
+- [docs/postman/README.md](docs/postman/README.md) — Postman Desktop, Collection Runner y `bin/postman-run`
 - [docs/wireframe/](docs/wireframe/) — wireframes (`ok-padel-wireframe.html`, PNGs de flujos)
 - [`docs/auditoria-api-v1.md`](docs/auditoria-api-v1.md) — Auditoría completa de la API v1
 
