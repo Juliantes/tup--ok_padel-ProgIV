@@ -95,7 +95,7 @@ Fix 15b dejó stats **consistentes** al borrar un reporte. La implementación ac
 - **Development:** `config.active_job.queue_adapter = :solid_queue` (misma DB que la app; sin `solid_queue.connects_to`).
 - ~~**CORS:**~~ `rack-cors` en `config/initializers/cors.rb`; orígenes vía `CORS_ORIGINS` (CSV); defaults `localhost:3001` y `5173`; sin `credentials`.
 - ~~**Rate limiting:**~~ `rack-attack` en `config/initializers/rack_attack.rb`; backend `Rails.cache` (Solid Cache en prod); límites login/lectura/escritura; `/up` y OPTIONS en safelist.
-- ~~**Fix 15 — borrado simétrico + stats:**~~ API DELETE solo en `reported` (reporter); admin siempre; `PlayerStat.recalculate_for` al borrar reporte. Ver `docs/api-audit.md`.
+- ~~**Fix 15 — borrado simétrico + stats:**~~ API DELETE solo en `reported` (reporter); admin siempre; `PlayerStat.recalculate_for` al borrar reporte. Ver `docs/auditoria-api-v1.md`.
 
 ### Variables de entorno requeridas
 

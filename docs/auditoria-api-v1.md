@@ -5,7 +5,7 @@
 **Alcance:** 15 operaciones de `api/v1`. No se modificó código de la app.
 **Host público:** `https://ok-padel-tup.fly.dev` (consultado el mismo día; ver sección 6 y el apartado de deploy).
 
-`docs/api-audit.md` archiva una revisión anterior, de antes de `16c00ad`. Este informe describe el código actual. Donde el host de Fly no coincide con ese código, se marca aparte.
+Este es el informe canónico de auditoría de la API v1 (sustituye una revisión anterior pre-`16c00ad` que ya no se mantiene en el repo). Describe el código en `main`. Donde el host de Fly no coincide con ese código, se marca aparte.
 
 No se reejecutó `rspec`, Brakeman, Bullet ni `EXPLAIN` en la auditoría original. Tras los fixes P1/P2 de abajo, la suite local quedó en **343 examples, 0 failures** (2026-09-26).
 
@@ -458,7 +458,6 @@ No hay un P0 de seguridad en el código de `main`: no queda abierta la API a mas
 - [Stripe API errors](https://docs.stripe.com/api/errors)
 - [GitHub API versions](https://docs.github.com/en/rest/about-the-rest-api/api-versions)
 - Contrato local: `README.md` sección API v1, `swagger/v1/swagger.yaml`, `docs/postman/README.md`
-- Auditoría anterior (árbol previo a `16c00ad`): `docs/api-audit.md`
 
 ### Qué se verificó y qué no
 

@@ -18,7 +18,7 @@ El manifiesto [`.postman/resources.yaml`](../../.postman/resources.yaml) apunta 
 
 ## Correr todos los requests en Desktop (Collection Runner)
 
-1. `bin/rails s` y `bin/rails db:seed` (usuario demo: `player@okpadel.local` / `password123`).
+1. `bin/rails s` y `bin/rails db:seed` (credenciales del seed de **desarrollo**; ver [README — desarrollo](../../README.md)).
 2. En **Collections**, sobre **Ok Padel API** → **Run** (▶ / *Run collection*).
 3. Environment: **Ok Padel Local**.
 4. Dejá el orden por defecto (la colección ya está ordenada para una corrida completa) → **Run Ok Padel API**.
@@ -75,4 +75,7 @@ Cada request incluye tests (`pm.test`): status esperado, JSON, persistencia de v
 
 ## Más detalle de la API
 
-[README principal — API v1](../../README.md#api-v1)
+- [README principal — API v1](../../README.md#api-v1)
+- [Auditoría de API v1](../auditoria-api-v1.md) — inventario, seguridad, contrato y deuda pendiente
+
+La colección apunta solo a `http://localhost:3000` (`baseUrl`); no incluye tokens ni secretos de producción. El `token` del environment se rellena en runtime tras el login de la corrida.
