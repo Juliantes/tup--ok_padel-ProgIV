@@ -877,6 +877,7 @@ docs/
 
 - [AGENTS.md](AGENTS.md) — contexto para agentes de IA y deuda técnica (p. ej. MatchMailer TP2)
 - [docs/wireframe/](docs/wireframe/) — wireframes (`ok-padel-wireframe.html`, PNGs de flujos)
+- [`docs/api-audit.md`](docs/api-audit.md) — Auditoría completa de la API v1
 
 ## Licencia
 
