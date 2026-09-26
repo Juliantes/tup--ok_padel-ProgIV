@@ -50,14 +50,48 @@ RSpec.describe "Rate limiting", type: :request do
       expect(response).to have_http_status(:too_many_requests)
     end
 
-    it "does not apply write/ip when an Authorization header is present" do
-      21.times do
+    it "throttles invalid Bearer tokens by IP" do
+      20.times do
         post "/api/v1/matches",
-          params: {},
-          headers: { "Authorization" => "Bearer invalid" },
-          as: :json
+             params: {},
+             headers: { "Authorization" => "Bearer invalid" },
+             as: :json
         expect(response).to have_http_status(:unauthorized)
       end
+
+      post "/api/v1/matches",
+           params: {},
+           headers: { "Authorization" => "Bearer invalid" },
+           as: :json
+
+      expect(response).to have_http_status(:too_many_requests)
+    end
+  end
+
+  describe "GET /api/v1/courts with invalid Bearer" do
+    it "throttles GET with invalid Bearer by IP" do
+      60.times do
+        get "/api/v1/courts", headers: { "Authorization" => "Bearer invalid" }, as: :json
+        expect(response).to have_http_status(:ok)
+      end
+
+      get "/api/v1/courts", headers: { "Authorization" => "Bearer invalid" }, as: :json
+      expect(response).to have_http_status(:too_many_requests)
+    end
+  end
+
+  describe "Fail2Ban" do
+    let(:login_params) { { email: "missing@example.com", password: "wrong" } }
+
+    it "bans an IP after 10 throttles in 10 minutes" do
+      # login/ip limit is 5/min → 429 from the 6th request; 11 throttles need 16 POSTs
+      16.times do
+        post "/api/v1/login", params: login_params, as: :json
+      end
+      expect(response).to have_http_status(:too_many_requests)
+
+      post "/api/v1/login", params: login_params, as: :json
+      expect(response).to have_http_status(:forbidden)
     end
   end
 

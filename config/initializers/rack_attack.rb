@@ -32,10 +32,14 @@ class Rack::Attack
     end
   end
 
-  # Escritura sin token: 20 requests por minuto por IP
+  # Escritura sin token o con Bearer inválido: 20 requests por minuto por IP
   throttle("write/ip", limit: 20, period: 1.minute) do |req|
-    if (req.post? || req.patch? || req.put? || req.delete?) &&
-       req.env["HTTP_AUTHORIZATION"].blank?
+    next unless req.post? || req.patch? || req.put? || req.delete?
+
+    token = req.env["HTTP_AUTHORIZATION"]&.split(" ")&.last
+    if token.blank?
+      req.ip
+    elsif user_id_from_token(token).nil?
       req.ip
     end
   end
@@ -50,28 +54,27 @@ class Rack::Attack
     end
   end
 
-  # Lectura anónima: 60 requests por minuto por IP
+  # Lectura sin token o con Bearer inválido: 60 requests por minuto por IP
   throttle("read/ip", limit: 60, period: 1.minute) do |req|
-    if req.get? && req.env["HTTP_AUTHORIZATION"].blank?
+    next unless req.get?
+
+    if req.env["HTTP_AUTHORIZATION"].blank?
       req.ip
+    else
+      token = req.env["HTTP_AUTHORIZATION"]&.split(" ")&.last
+      req.ip if user_id_from_token(token).nil?
     end
   end
 
   ### Blocklist (Fail2Ban) ###
-  # Bloquear IPs que reciben muchos 429 en poco tiempo
-  blocklist("block abusive IPs") do |req|
-    Rack::Attack::Fail2Ban.filter(
-      "abusers-#{req.ip}",
-      maxretry: 10,
-      findtime: 10.minutes,
-      bantime: 1.hour
-    ) do
-      req.env["rack.attack.match_type"] == :throttle
-    end
+  blocklist("block banned IPs") do |req|
+    fail2ban_banned?(req.ip)
   end
 
   ### Responses ###
   self.throttled_responder = lambda do |req|
+    record_fail2ban_throttle!(req.ip)
+
     match_data = req.env["rack.attack.match_data"]
     now = match_data[:epoch_time]
     retry_after = match_data[:period] - (now % match_data[:period])
@@ -94,9 +97,26 @@ class Rack::Attack
     ]
   end
 
+  FAIL2BAN_MAX_THROTTLES = 10
+  FAIL2BAN_WINDOW = 10.minutes
+  FAIL2BAN_BAN_TIME = 1.hour
+
   def self.user_id_from_token(token)
     JsonWebToken.decode(token)[:user_id]
   rescue JsonWebToken::Error
     nil
+  end
+
+  def self.record_fail2ban_throttle!(ip)
+    store = cache.store
+    count_key = "#{cache.prefix}:fail2ban:throttle:#{ip}"
+    count = store.increment(count_key, 1, expires_in: FAIL2BAN_WINDOW)
+    count = 1 if count.nil?
+
+    cache.write("fail2ban:ban:#{ip}", true, FAIL2BAN_BAN_TIME) if count > FAIL2BAN_MAX_THROTTLES
+  end
+
+  def self.fail2ban_banned?(ip)
+    cache.read("fail2ban:ban:#{ip}").present?
   end
 end

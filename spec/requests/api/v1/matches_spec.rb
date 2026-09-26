@@ -261,6 +261,36 @@ RSpec.describe "Api::V1::Matches", type: :request do
         end
       end
     end
+
+    it "returns 422 for invalid join_policy" do
+      post "/api/v1/matches",
+           params: valid_create_body.merge(join_policy: "nope"),
+           headers: auth_headers_for(creator),
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body)["errors"]["join_policy"]).to be_present
+    end
+
+    it "returns 422 for invalid roster_mode" do
+      post "/api/v1/matches",
+           params: valid_create_body.merge(roster_mode: "nope"),
+           headers: auth_headers_for(creator),
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body)["errors"]["roster_mode"]).to be_present
+    end
+
+    it "returns 422 for invalid level_required" do
+      post "/api/v1/matches",
+           params: valid_create_body.merge(level_required: "nope"),
+           headers: auth_headers_for(creator),
+           as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body)["errors"]["level_required"]).to be_present
+    end
   end
 
   path "/api/v1/matches/{id}" do

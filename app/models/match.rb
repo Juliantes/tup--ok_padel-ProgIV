@@ -11,9 +11,9 @@ class Match < ApplicationRecord
   has_many :reviews, dependent: :destroy
   has_many :messages, dependent: :destroy
 
-  enum :status, { open: 0, full: 1, confirmed: 2, completed: 3, cancelled: 4, reported: 5 }
-  enum :roster_mode, { pairs: 0, individual: 1 }, prefix: true
-  enum :join_policy, { auto: 0, manual: 1, auto_by_level: 2 }
+  enum :status, { open: 0, full: 1, confirmed: 2, completed: 3, cancelled: 4, reported: 5 }, validate: true
+  enum :roster_mode, { pairs: 0, individual: 1 }, prefix: true, validate: true
+  enum :join_policy, { auto: 0, manual: 1, auto_by_level: 2 }, validate: true
 
   enum :level_required, {
     open: 0,
@@ -25,7 +25,7 @@ class Match < ApplicationRecord
     third: 3,
     second: 2,
     first: 1
-  }, prefix: true
+  }, prefix: true, validate: true
 
   validates :date, :duration, presence: true
   MAX_DURATION = 240

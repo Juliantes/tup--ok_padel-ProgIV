@@ -6,8 +6,8 @@ class MatchPlayer < ApplicationRecord
   belongs_to :user
   belongs_to :approved_by, class_name: "User", optional: true
 
-  enum :status, { pending: 0, confirmed: 1, cancelled: 2 }
-  enum :team, { team_a: 1, team_b: 2 }, prefix: true
+  enum :status, { pending: 0, confirmed: 1, cancelled: 2 }, validate: true
+  enum :team, { team_a: 1, team_b: 2 }, prefix: true, validate: { allow_nil: true }
 
   scope :active, -> { where.not(status: :cancelled) }
 

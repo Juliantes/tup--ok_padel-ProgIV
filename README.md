@@ -158,10 +158,10 @@ Deberías ver `Access-Control-Allow-Origin: http://localhost:3001` en la respues
 - **Safelist:** `GET /up` (health check) y peticiones `OPTIONS` (preflight CORS).
 - **Límites (por minuto):**
   - `POST /api/v1/login`: 5 por IP.
-  - Escritura autenticada (POST/PATCH/PUT/DELETE con JWT válido): 30 por usuario.
-  - Escritura sin token (POST/PATCH/PUT/DELETE sin header `Authorization`): 20 por IP.
-  - Lectura autenticada (GET con JWT): 100 por usuario.
-  - Lectura anónima (GET sin `Authorization`): 60 por IP.
+  - Escritura sin token o con Bearer inválido (POST/PATCH/PUT/DELETE): 20 por IP.
+  - Escritura autenticada (JWT válido): 30 por usuario.
+  - Lectura sin token o con Bearer inválido (GET): 60 por IP.
+  - Lectura autenticada (GET con JWT válido): 100 por usuario.
 - Tras muchos 429, Fail2Ban puede bloquear la IP 1 hora (10 throttles en 10 minutos).
 - Respuesta **429:** JSON `{ "error": "Too many requests. Please retry later." }` y header `Retry-After` (segundos hasta el próximo bucket).
 

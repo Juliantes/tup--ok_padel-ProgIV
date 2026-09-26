@@ -10,8 +10,8 @@ class Court < ApplicationRecord
 
   has_one_attached :image
 
-  enum :court_type, { indoor: 0, outdoor: 1 }
-  enum :status, { active: 0, maintenance: 1, inactive: 2 }
+  enum :court_type, { indoor: 0, outdoor: 1 }, validate: true
+  enum :status, { active: 0, maintenance: 1, inactive: 2 }, validate: true
 
   validates :name, :price_per_hour, presence: true
   validates :name, uniqueness: { scope: :club_id }, length: { maximum: 255 }
