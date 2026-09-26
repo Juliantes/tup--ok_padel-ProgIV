@@ -50,7 +50,35 @@
 3. **Reopen:** no hay flujo de reapertura; si se agrega, no debe asumir reversión de stats.
 4. ~~**`approved_at` en `match_results`:**~~ eliminada (migración `RemoveApprovedAtFromMatchResults`).
 
-### Deuda planificada — Migrar cache a Redis
+### Deuda planificada — `PlayerStat.recalculate_for` (post Fix 15b)
+
+Fix 15b dejó stats **consistentes** al borrar un reporte. La implementación actual es **deliberada** para TP1; no hace falta cambiarla salvo volumen o requisitos nuevos.
+
+**Comportamiento hoy**
+
+- Tras `MatchResult` destroy, `PlayerStat.recalculate_for(user)` recorre **todos** los partidos `completed` del usuario con `consensus_result`, en orden de `date`, y reescribe wins/losses/rachas/`win_rate`.
+- No usa `matches.stats_applied_at`; convive con el camino incremental `Match#apply_stats_from!` al cerrar consenso.
+- Disparo síncrono en `after_destroy_commit` (después de recalcular consenso del partido).
+
+**Por qué full history y no “solo el partido tocado”**
+
+- Borrar o disputar un reporte puede cambiar si el partido cuenta, quién ganó o el status (`completed` ↔ `reported`).
+- Revertir solo el último incremento (`apply_stats`) no cubre esos casos.
+- **`current_streak` / `best_streak`** requieren orden cronológico; un undo de un solo partido falla si no es el último o si admin toca un partido viejo (raro).
+
+**Rendimiento**
+
+- Con borrados poco frecuentes y pocos jugadores por partido, el coste O(partidos del user) es **aceptable**; no motivó el diseño.
+- Si crece el historial o la latencia del DELETE importa, ver optimizaciones abajo (job), no sustituir la semántica sin specs de rachas.
+
+**Mejoras futuras (opcionales, no planificadas en TP1)**
+
+1. **Recalc parcial:** mismos criterios pero solo partidos con `date >=` el partido afectado (misma corrección de rachas, menos iteraciones cuando admin edita partidos antiguos).
+2. **`unapply_stats_from!` simétrico:** revertir W/L de un partido concreto; rachas siguen necesitando recalc parcial o full.
+3. **`RecalculatePlayerStatJob`:** mismo algoritmo en Solid Queue; coalescing por `user_id` si un destroy toca 4 jugadores.
+4. **Un solo camino:** siempre recalc (o siempre incremental + recalc al cerrar) y deprecar doble fuente con `stats_applied_at` (refactor grande; ver deuda 3b del flag).
+
+**Referencia:** `app/models/player_stat.rb` (`recalculate_for`), `app/models/match_result.rb` (`recalculate_player_stats_after_destroy`).
 
 - Actualmente usamos **Solid Cache** (`config.cache_store = :solid_cache_store` en producción; `memory_store` en dev; `null_store` en test salvo specs de rate limiting que usan `MemoryStore` dedicado).
 - Migración futura: gemas `redis` + `hiredis`, `config.cache_store = :redis_cache_store`, accessory Redis en el host de deploy.
@@ -94,7 +122,7 @@ Detalle completo en README → Variables de entorno y **Deploy**.
 
 ### Deuda pendiente (features / calidad)
 
-- **`PlayerStat.recalculate_for` a escala:** recálculo síncrono O(n) por jugador; mover a job si el volumen crece.
+- **`PlayerStat.recalculate_for`:** ver sección *Deuda planificada — PlayerStat (post Fix 15b)* arriba (full history, síncrono; optimización diferida).
 - **`match_player` flaky specs** si vuelven a aparecer en CI.
 
 ## Estado de calidad

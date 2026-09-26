@@ -18,7 +18,7 @@ Este documento archiva la auditoría hecha en el chat sobre el código anterior 
 | Ítem | Cambio | Notas |
 |------|--------|-------|
 | 15a — DELETE resultado (API) | Reporter solo si `match.status == reported`; admin sin restricción; 422 `"cannot delete result of a closed match"` | Simétrico con `report_result!` en partidos en disputa. |
-| 15b — Stats | `PlayerStat.recalculate_for` tras `MatchResult` destroy (síncrono, desde consenso en partidos `completed`) | No usa `stats_applied_at` para el recálculo. Volumen alto → candidato a job (deuda). |
+| 15b — Stats | `PlayerStat.recalculate_for` tras `MatchResult` destroy (síncrono; **todo** el historial `completed`+consenso del user) | Correcto y simple para TP1. Deuda: recalc parcial / job / unapply — ver `AGENTS.md` → *PlayerStat (post Fix 15b)*. |
 
 ## Resumen ejecutivo
 
@@ -346,7 +346,7 @@ No hay un P0 confirmado: nada en el código revisado deja la API abierta a mass 
 | P3 | ~~🟢~~ | ~~Sacar el hardcode de `join_policy`~~ | — | — | **Hecho (Sprint D)**; falta comportamiento en `join` |
 | P3 | ~~🟢~~ | ~~CSP para el admin y Swagger UI~~ | — | — | **Hecho (Sprint D)** |
 
-La **lógica** de `join_policy` (`manual`, `auto_by_level`) sigue en `AGENTS.md` (Sprint 1.5). Reversión de stats al borrar reporte: resuelta en Fix 15b; deuda residual en force result / `stats_applied_at` (Sprint 3b).
+La **lógica** de `join_policy` (`manual`, `auto_by_level`) sigue en `AGENTS.md` (Sprint 1.5). Reversión de stats al borrar reporte: resuelta en Fix 15b; deuda de **modelo de recálculo** (full history vs parcial/job) y residual `stats_applied_at` en force admin (Sprint 3b).
 
 ---
 
