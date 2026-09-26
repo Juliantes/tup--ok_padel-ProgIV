@@ -78,10 +78,11 @@ Detalle completo en README → Variables de entorno y **Deploy**.
 
 ## Deploy
 
-- **Plataforma:** [Fly.io](https://fly.io) (`fly.toml` en la raíz). URL: **https://ok-padel-tup.fly.dev** (región `gru`).
+- **Plataforma:** [Fly.io](https://fly.io) (`fly.toml` en la raíz). URL: **https://ok-padel-tup.fly.dev** (región `gru`). El deploy en Fly es **temporal**: plan trial sin tarjeta (límites ~2h VM o 7 días); la URL puede dejar de responder al agotarse el trial. `CORS_ORIGINS` en Fly puede no actualizarse sin tarjeta en la cuenta.
 - **Procesos:** `web` (`bin/thrust` + Puma) y `worker` (`bin/jobs` / Solid Queue). Migraciones en cada deploy: `release_command` → `bin/rails db:prepare`.
 - **Base de datos:** Neon vía `DATABASE_URL`; primary + Solid Cache/Queue/Cable comparten la misma DB (ver `config/database.yml` → `production`).
 - **Kamal:** `config/deploy.yml` queda solo como referencia histórica; no se usa en el deploy actual.
+- **Si Fly deja de servir:** redeploy con cuenta con crédito, migrar a **Render** o **Railway** (free tier con sleep), o demo local + ngrok. Detalle en README → Deploy.
 
 ## Configuración y convenciones (repo)
 

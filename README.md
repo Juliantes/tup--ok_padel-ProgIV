@@ -774,6 +774,13 @@ bin/importmap audit                # auditoría JS (importmap)
 
 **URL de producción:** https://ok-padel-tup.fly.dev
 
+> ⚠️ **Nota:** el deploy actual está en el plan **trial** de Fly.io (sin tarjeta de crédito). La URL puede dejar de responder cuando el trial se agote (2h de VM o 7 días, lo que pase primero).
+>
+> **Alternativas si la URL deja de responder:**
+> - Redeployar en Fly: `fly deploy -a ok-padel-tup` (requiere cuenta con crédito).
+> - Migrar a Render (free tier real, se duerme pero no cobra).
+> - Local + ngrok.
+
 La app corre en **Fly.io** (región `gru`) con imagen Docker del `Dockerfile`, proceso **web** (`bin/thrust` en `:8080` → Puma en `:3000`) y **worker** (`bin/jobs` para Solid Queue y jobs recurrentes). En cada deploy, `release_command` ejecuta `bin/rails db:prepare` (migraciones primary + Solid).
 
 `config/deploy.yml` (Kamal) queda como referencia histórica; no se usa en el deploy actual.
