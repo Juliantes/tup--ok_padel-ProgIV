@@ -2,6 +2,8 @@
 
 Colección y environment para probar la API JSON en desarrollo. La fuente principal para **Postman Desktop** son los YAML bajo `postman/` (workspace local en el repo).
 
+La colección tiene **20 requests** (flujo de jugador + casos de error 401/404/422). La API documentada en OpenAPI tiene **15 operaciones**; los requests extra no son endpoints distintos, sino variantes y validaciones negativas del mismo contrato.
+
 ## Postman Desktop — configuración
 
 1. Abrí **Postman Desktop** (no la extensión de Cursor).
@@ -18,12 +20,13 @@ El manifiesto [`.postman/resources.yaml`](../../.postman/resources.yaml) apunta 
 
 ## Correr todos los requests en Desktop (Collection Runner)
 
-1. `bin/rails s` y `bin/rails db:seed` (credenciales del seed de **desarrollo**; ver [README — desarrollo](../../README.md)).
-2. En **Collections**, sobre **Ok Padel API** → **Run** (▶ / *Run collection*).
-3. Environment: **Ok Padel Local**.
-4. Dejá el orden por defecto (la colección ya está ordenada para una corrida completa) → **Run Ok Padel API**.
+1. App lista en local: seguí [README — instalación](../../README.md#instalación-paso-a-paso) (`bin/rails db:prepare`, `bin/rails db:seed`, `bin/rails s`).
+2. Usuario demo del seed (también en **POST Login (happy)**): `player@okpadel.local` / `password123`.
+3. En **Collections**, sobre **Ok Padel API** → **Run** (▶ / *Run collection*).
+4. Environment: **Ok Padel Local**.
+5. Dejá el orden por defecto (la colección ya está ordenada para una corrida completa) → **Run Ok Padel API**.
 
-Son **20 requests** con tests en cada uno. Los scripts guardan `token`, `matchId` y `resultId` en el environment durante la corrida.
+**Éxito esperado:** **20/20** requests en verde y **0** tests fallidos en el resumen del Collection Runner. Los scripts guardan `token`, `matchId` y `resultId` en el environment durante la corrida.
 
 ### Orden de la corrida (automático)
 
@@ -52,7 +55,7 @@ Los JSON se mantienen alineados con la colección YAML para `bin/postman-run` y 
 bin/postman-run
 ```
 
-Usa [Newman](https://github.com/postmanlabs/newman) con los JSON de `postman/`. Requiere Node/npm.
+Usa [Newman](https://github.com/postmanlabs/newman) con los JSON de `postman/`. Requiere Node/npm. Con el servidor en `localhost:3000`, Newman debería terminar con **0 failed** en assertions.
 
 ## Variables de environment
 
@@ -76,6 +79,7 @@ Cada request incluye tests (`pm.test`): status esperado, JSON, persistencia de v
 ## Más detalle de la API
 
 - [README principal — API v1](../../README.md#api-v1)
+- [OpenAPI / Swagger UI](../../README.md#documentación-de-la-api-swagger) — spec en [`swagger/v1/swagger.yaml`](../../swagger/v1/swagger.yaml); UI en `http://localhost:3000/api-docs` con el server levantado
 - [Auditoría de API v1](../auditoria-api-v1.md) — inventario, seguridad, contrato y deuda pendiente
 
 La colección apunta solo a `http://localhost:3000` (`baseUrl`); no incluye tokens ni secretos de producción. El `token` del environment se rellena en runtime tras el login de la corrida.
