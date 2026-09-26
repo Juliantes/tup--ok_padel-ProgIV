@@ -9,6 +9,10 @@ FactoryBot.define do
     roster_mode { :pairs }
     join_policy { :auto }
 
+    trait :pairs do
+      roster_mode { :pairs }
+    end
+
     trait :individual do
       roster_mode { :individual }
     end

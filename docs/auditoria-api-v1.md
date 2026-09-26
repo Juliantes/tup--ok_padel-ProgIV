@@ -501,3 +501,39 @@ Fortalezas principales:
 - La URL pública no está alineada con `main`. Hasta un redeploy, la auditoría del repo y la demo de Fly son dos APIs.
 - La sesión no se cierra en el server.
 - El contrato promete `join_policy` y `level_required`, y el `join` los ignora (valores de enum mal escritos ya devuelven 422 en create).
+
+---
+
+## Sprint de fixes cerrados
+
+| Ítem | Estado |
+|------|--------|
+| write/ip con Bearer inválido | ✅ |
+| read/ip con Bearer inválido | ✅ |
+| Fail2Ban | ✅ |
+| enums con validate: true | ✅ |
+| Specs de rate limiting + enums | ✅ |
+| Spec de team inválido en join | ✅ |
+
+## Pendiente post-entrega
+
+### P1
+
+- JWT revocable (refresh, logout, denylist).
+- `join_policy` aplicado en `join` (admisión manual/por nivel).
+- Reset password JSON.
+- CORS en Fly (requiere tarjeta).
+
+### P2
+
+- Unificar formato de 422.
+- `status=cancelled` en listado → 400.
+- `RecordNotUnique` en join → 422.
+- Precargas (match_sets, imágenes).
+- Active Storage fuera de disco local.
+- Creador que sale sin transferir.
+- `recalculate_for` async.
+
+### P3
+
+- request_id en 429, phone en logs, ETag en show, config.hosts, paginación.

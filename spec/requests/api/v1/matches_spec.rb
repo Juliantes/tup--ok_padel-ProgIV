@@ -407,6 +407,20 @@ RSpec.describe "Api::V1::Matches", type: :request do
     end
   end
 
+  it "returns 422 for invalid team value" do
+    match = create(:match, :pairs, court: court, creator: creator, status: :confirmed)
+    player = create(:user, :player)
+    create(:match_player, match: match, user: creator, team: :team_a)
+
+    post "/api/v1/matches/#{match.id}/join",
+         params: { team: "nope" },
+         headers: auth_headers_for(player),
+         as: :json
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(JSON.parse(response.body)["errors"]["team"]).to be_present
+  end
+
   path "/api/v1/matches/{id}/leave" do
     parameter name: :id, in: :path, type: :integer, description: "Match ID"
 
