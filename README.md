@@ -2,10 +2,10 @@
 
 Aplicación web para gestionar clubes, canchas y partidos de pádel. TP1 de Programación IV: back-office administrativo y API JSON para la app de jugadores.
 
-![CI](https://img.shields.io/github/actions/workflow/status/Juliantes/tup--ok_padel-ProgIV/ci.yml?branch=main&label=CI)
+[![CI](https://github.com/Juliantes/tup--ok_padel-ProgIV/actions/workflows/ci.yml/badge.svg)](https://github.com/Juliantes/tup--ok_padel-ProgIV/actions/workflows/ci.yml)
 ![Ruby](https://img.shields.io/badge/Ruby-3.4.10-red)
 ![Rails](https://img.shields.io/badge/Rails-8.1.3-red)
-![License](https://img.shields.io/github/license/Juliantes/tup--ok_padel-ProgIV)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## Descripción del proyecto
 
