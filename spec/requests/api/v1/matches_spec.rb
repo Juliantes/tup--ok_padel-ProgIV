@@ -610,6 +610,12 @@ RSpec.describe "Api::V1::Matches", type: :request do
   end
 
   describe "time cutoffs" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 6, 15, 12, 0, 0))
+      example.run
+      travel_back
+    end
+
     def timed_match(start_at, **overrides)
       time_slot = create(
         :time_slot,

@@ -105,6 +105,12 @@ RSpec.describe Match, type: :model do
   end
 
   describe "time cutoffs" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 6, 15, 12, 0, 0))
+      example.run
+      travel_back
+    end
+
     let(:court) { create(:court) }
     let(:start_at) { 3.hours.from_now.change(sec: 0) }
     let(:time_slot) do
