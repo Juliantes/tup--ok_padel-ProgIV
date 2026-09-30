@@ -192,6 +192,25 @@ RSpec.describe "Admin::TimeSlots", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "rejects overlapping time slots on the same court and day" do
+      create(
+        :time_slot,
+        court: court,
+        day_of_week: 3,
+        start_time: Time.zone.parse("10:00"),
+        end_time: Time.zone.parse("11:30")
+      )
+
+      expect {
+        post admin_court_time_slots_path(court), params: valid_params
+      }.not_to change(TimeSlot, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include(
+        I18n.t("activerecord.errors.models.time_slot.attributes.base.overlapping")
+      )
+    end
   end
 
   describe "GET /admin/time_slots/:id/edit" do

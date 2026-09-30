@@ -15,8 +15,22 @@ class TimeSlot < ApplicationRecord
     self.class.day_name(day_of_week)
   end
   validate :end_time_after_start_time
+  validate :no_overlapping_slot_on_court
 
   private
+
+  def no_overlapping_slot_on_court
+    return if court_id.blank? || day_of_week.nil? || start_time.blank? || end_time.blank?
+
+    overlapping = court.time_slots
+                       .where(day_of_week: day_of_week)
+                       .where.not(id: id)
+                       .where("start_time < ? AND end_time > ?", end_time, start_time)
+
+    return unless overlapping.exists?
+
+    errors.add(:base, :overlapping)
+  end
 
   def end_time_after_start_time
     return if start_time.blank? || end_time.blank?

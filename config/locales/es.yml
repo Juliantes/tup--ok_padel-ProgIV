@@ -65,6 +65,10 @@ es:
           attributes:
             phone:
               invalid: "no es un teléfono válido"
+        time_slot:
+          attributes:
+            base:
+              overlapping: "no puede superponerse con otro horario de esta cancha el mismo día"
     enums:
       match:
         level_required:
