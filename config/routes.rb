@@ -26,6 +26,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       post "login", to: "sessions#create"
+      post "oauth/google", to: "google_sessions#create"
       get "profile", to: "users#show"
       patch "profile", to: "users#update"
 

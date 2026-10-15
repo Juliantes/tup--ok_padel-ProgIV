@@ -22,6 +22,10 @@ class Rack::Attack
     req.ip if req.path == "/api/v1/login" && req.post?
   end
 
+  throttle("oauth_google/ip", limit: 5, period: 1.minute) do |req|
+    req.ip if req.path == "/api/v1/oauth/google" && req.post?
+  end
+
   # Escritura autenticada: 30 requests por minuto por usuario
   throttle("write/user", limit: 30, period: 1.minute) do |req|
     if req.post? || req.patch? || req.put? || req.delete?

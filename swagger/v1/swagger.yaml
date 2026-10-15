@@ -456,6 +456,36 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Error"
+  "/api/v1/oauth/google":
+    post:
+      summary: Exchange Firebase ID token for API JWT
+      tags:
+      - Authentication
+      security: []
+      parameters: []
+      responses:
+        '200':
+          description: returns a token and user data with a valid Firebase ID token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LoginResponse"
+        '401':
+          description: returns 401 when the Firebase token is invalid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_token:
+                  type: string
+              required:
+              - id_token
   "/api/v1/login":
     post:
       summary: Login
@@ -619,6 +649,14 @@ components:
           nullable: true
         matches_played:
           type: integer
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+            - admin
+            - player
+            - club_owner
       required:
       - id
       - name
@@ -626,6 +664,7 @@ components:
       - self_level
       - category_label
       - matches_played
+      - roles
     LoginResponse:
       type: object
       properties:

@@ -8,3 +8,4 @@ json.bio user.bio
 json.average_level user.average_level
 json.average_stars user.average_stars
 json.matches_played user.matches_played
+json.roles user.user_roles.pluck(:role)

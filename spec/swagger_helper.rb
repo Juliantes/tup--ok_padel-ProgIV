@@ -66,9 +66,13 @@ RSpec.configure do |config|
               bio: { type: :string, nullable: true },
               average_level: { type: :string, nullable: true },
               average_stars: { type: :string, nullable: true },
-              matches_played: { type: :integer }
+              matches_played: { type: :integer },
+              roles: {
+                type: :array,
+                items: { type: :string, enum: %w[admin player club_owner] }
+              }
             },
-            required: %w[id name email self_level category_label matches_played]
+            required: %w[id name email self_level category_label matches_played roles]
           },
           LoginResponse: {
             type: :object,
