@@ -761,6 +761,19 @@ components:
           "$ref": "#/components/schemas/Court"
       required:
       - court
+    MatchClubSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+      required:
+      - id
+      - name
+      - address
     MatchCourtSummary:
       type: object
       properties:
@@ -770,10 +783,19 @@ components:
           type: string
         club_id:
           type: integer
+        description:
+          type: string
+          nullable: true
+        price_per_hour:
+          type: number
+        club:
+          "$ref": "#/components/schemas/MatchClubSummary"
       required:
       - id
       - name
       - club_id
+      - price_per_hour
+      - club
     MatchCreatorSummary:
       type: object
       properties:
@@ -956,6 +978,9 @@ components:
           - third
           - second
           - first
+        level_required_label:
+          type: string
+          example: 5ta
         join_policy:
           type: string
           enum:

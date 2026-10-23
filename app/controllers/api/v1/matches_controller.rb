@@ -8,7 +8,7 @@ module Api
 
         scope = Match.where(status: %i[open full])
         scope = apply_list_filters(scope)
-        scope = scope.includes(:court, :creator, match_players: :user).order(date: :asc)
+        scope = scope.includes(:creator, court: :club, match_players: :user).order(date: :asc)
         @pagy, @matches = pagy(:offset, scope, limit: api_per_page)
         render :index
       end
@@ -91,7 +91,7 @@ module Api
         scope = apply_status_filter(scope)
         scope = apply_court_filter(scope)
         scope = apply_date_filter(scope)
-        scope = scope.includes(:court, :creator, match_players: :user).order(date: :asc)
+        scope = scope.includes(:creator, court: :club, match_players: :user).order(date: :asc)
         @pagy, @matches = pagy(:offset, scope, limit: api_per_page)
         render :index
       end
@@ -99,7 +99,7 @@ module Api
       private
 
       def load_match_for_detail
-        Match.includes(:court, :creator, :time_slot, match_players: :user, match_results: :reported_by)
+        Match.includes(:creator, :time_slot, court: :club, match_players: :user, match_results: :reported_by)
       end
 
       def create_params

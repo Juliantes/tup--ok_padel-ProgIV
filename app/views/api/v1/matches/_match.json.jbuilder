@@ -4,11 +4,19 @@ json.duration match.duration
 json.status match.status
 json.roster_mode match.roster_mode
 json.level_required match.level_required
+json.level_required_label match.level_required_open? ? "Libre" : Match.category_label(Match.level_requireds[match.level_required])
 json.join_policy match.join_policy
 json.court do
   json.id match.court.id
   json.name match.court.name
   json.club_id match.court.club_id
+  json.description match.court.description
+  json.price_per_hour match.court.price_per_hour.to_f
+  json.club do
+    json.id match.court.club.id
+    json.name match.court.club.name
+    json.address match.court.club.address
+  end
 end
 json.creator do
   json.id match.creator.id

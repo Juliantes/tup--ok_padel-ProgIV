@@ -312,6 +312,13 @@ RSpec.describe "Api::V1::Matches", type: :request do
           body = JSON.parse(response.body)
           expect(body["match"]["id"]).to eq(open_match.id)
           expect(body["match"]["join_policy"]).to eq("auto")
+          expect(body["match"]["level_required_label"]).to eq("5ta")
+          expect(body["match"]["court"]["price_per_hour"]).to eq(court.price_per_hour.to_f)
+          expect(body["match"]["court"]["club"]).to include(
+            "id" => court.club.id,
+            "name" => court.club.name,
+            "address" => court.club.address
+          )
           expect(body["match"]).to have_key("time_slot")
           expect(body["match"]).not_to have_key("match_result")
           expect(body["match"]["match_results"]).to eq([])

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -353,6 +353,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
     t.decimal "average_level", precision: 3, scale: 1, default: "0.0"
     t.decimal "average_stars", precision: 3, scale: 2, default: "0.0"
     t.text "bio"
+    t.integer "court_side"
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -364,7 +365,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
-    t.integer "court_side"
     t.integer "self_level", null: false
     t.integer "total_reviews", default: 0, null: false
     t.datetime "updated_at", null: false
