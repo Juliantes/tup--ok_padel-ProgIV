@@ -6,4 +6,6 @@ json.joined_at match_player.joined_at&.iso8601
 json.user do
   json.id match_player.user.id
   json.name match_player.user.name
+  json.court_side match_player.user.court_side
+  json.court_side_label match_player.user.court_side_label
 end

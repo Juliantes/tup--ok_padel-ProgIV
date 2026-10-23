@@ -18,7 +18,9 @@ module Api
       private
 
       def user_params
-        params.permit(:name, :phone, :self_level, :bio)
+        permitted = params.permit(:name, :phone, :self_level, :bio, :court_side)
+        permitted[:court_side] = nil if permitted.key?(:court_side) && permitted[:court_side].blank?
+        permitted
       end
     end
   end

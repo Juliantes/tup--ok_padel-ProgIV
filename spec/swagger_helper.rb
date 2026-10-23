@@ -63,6 +63,8 @@ RSpec.configure do |config|
               phone: { type: :string, nullable: true },
               self_level: { type: :integer },
               category_label: { type: :string },
+              court_side: { type: :string, nullable: true, enum: %w[derecha reves] },
+              court_side_label: { type: :string, nullable: true },
               bio: { type: :string, nullable: true },
               average_level: { type: :string, nullable: true },
               average_stars: { type: :string, nullable: true },
@@ -158,7 +160,9 @@ RSpec.configure do |config|
                 type: :object,
                 properties: {
                   id: { type: :integer },
-                  name: { type: :string }
+                  name: { type: :string },
+                  court_side: { type: :string, nullable: true, enum: %w[derecha reves] },
+                  court_side_label: { type: :string, nullable: true }
                 },
                 required: %w[id name]
               }

@@ -17,6 +17,7 @@ RSpec.describe User, type: :model do
     it { is_expected.to validate_length_of(:name).is_at_most(255) }
     it { is_expected.to validate_length_of(:phone).is_at_most(255) }
     it { is_expected.to validate_inclusion_of(:self_level).in_range(User::SELF_LEVEL_RANGE) }
+    it { is_expected.to define_enum_for(:court_side).with_values(derecha: 0, reves: 1).backed_by_column_of_type(:integer) }
     it { is_expected.to validate_uniqueness_of(:phone).case_insensitive }
     it { is_expected.to allow_value("1144556677").for(:phone) }
     it { is_expected.not_to allow_value("123").for(:phone) }

@@ -581,6 +581,11 @@ paths:
                   type: string
                 self_level:
                   type: integer
+                court_side:
+                  type: string
+                  enum:
+                  - derecha
+                  - reves
 servers:
 - url: http://localhost:3000
 - url: http://127.0.0.1:3000
@@ -638,6 +643,15 @@ components:
           type: integer
         category_label:
           type: string
+        court_side:
+          type: string
+          nullable: true
+          enum:
+          - derecha
+          - reves
+        court_side_label:
+          type: string
+          nullable: true
         bio:
           type: string
           nullable: true
@@ -799,6 +813,15 @@ components:
               type: integer
             name:
               type: string
+            court_side:
+              type: string
+              nullable: true
+              enum:
+              - derecha
+              - reves
+            court_side_label:
+              type: string
+              nullable: true
           required:
           - id
           - name

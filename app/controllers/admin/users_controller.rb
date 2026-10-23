@@ -63,7 +63,7 @@ module Admin
     end
 
     def user_params
-      params.require(:user).permit(:email, :name, :phone, :self_level, :bio)
+      params.require(:user).permit(:email, :name, :phone, :self_level, :bio, :court_side)
     end
 
     def selected_roles(default_player: false)

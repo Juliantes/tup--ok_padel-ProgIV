@@ -364,6 +364,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.integer "court_side"
     t.integer "self_level", null: false
     t.integer "total_reviews", default: 0, null: false
     t.datetime "updated_at", null: false
@@ -372,6 +373,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.check_constraint "average_level >= 0::numeric AND average_level <= 99.9", name: "users_average_level_range"
     t.check_constraint "average_stars >= 0::numeric AND average_stars <= 9.99", name: "users_average_stars_range"
+    t.check_constraint "court_side IS NULL OR (court_side = ANY (ARRAY[0, 1]))", name: "users_court_side_range"
     t.check_constraint "self_level >= 1 AND self_level <= 8", name: "users_self_level_range"
   end
 

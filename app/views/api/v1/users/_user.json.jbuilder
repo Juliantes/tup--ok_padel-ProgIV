@@ -4,6 +4,8 @@ json.email user.email
 json.phone user.phone
 json.self_level user.self_level
 json.category_label user.category_label
+json.court_side user.court_side
+json.court_side_label user.court_side_label
 json.bio user.bio
 json.average_level user.average_level
 json.average_stars user.average_stars
