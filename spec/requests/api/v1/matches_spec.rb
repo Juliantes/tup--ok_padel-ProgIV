@@ -193,7 +193,12 @@ RSpec.describe "Api::V1::Matches", type: :request do
           expect(body_json["match"]["match_players"].size).to eq(1)
           player = body_json["match"]["match_players"].first
           expect(player["user_id"]).to eq(creator.id)
-          expect(player["user"]).to eq("id" => creator.id, "name" => creator.name)
+          expect(player["user"]).to eq(
+            "id" => creator.id,
+            "name" => creator.name,
+            "court_side" => nil,
+            "court_side_label" => nil
+          )
         end
       end
 
