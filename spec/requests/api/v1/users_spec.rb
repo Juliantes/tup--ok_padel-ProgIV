@@ -75,7 +75,8 @@ RSpec.describe "Api::V1::Users", type: :request do
           name: { type: :string },
           phone: { type: :string },
           bio: { type: :string },
-          self_level: { type: :integer }
+          self_level: { type: :integer },
+          court_side: { type: :string, enum: %w[derecha reves] }
         }
       }
 
@@ -114,6 +115,33 @@ RSpec.describe "Api::V1::Users", type: :request do
           body = JSON.parse(response.body)
           expect(body["error"]).to eq("unprocessable_entity")
           expect(body["errors"]["self_level"]).to be_present
+        end
+      end
+
+      response(200, "updates court_side") do
+        schema "$ref" => "#/components/schemas/UserResponse"
+
+        let(:Authorization) { auth_headers_for(user)["Authorization"] }
+        let(:body) { { court_side: "reves" } }
+
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["user"]["court_side"]).to eq("reves")
+          expect(body_json["user"]["court_side_label"]).to eq("Revés")
+          expect(user.reload.court_side).to eq("reves")
+        end
+      end
+
+      response(422, "returns 422 with invalid court_side") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { auth_headers_for(user)["Authorization"] }
+        let(:body) { { court_side: "invalid" } }
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["error"]).to eq("unprocessable_entity")
+          expect(body["errors"]["court_side"]).to be_present
         end
       end
 

@@ -1,7 +1,8 @@
 # Orígenes desde ENV (CSV). Fallback a localhost para dev.
 default_origins = [
   "http://localhost:3001", # React
-  "http://localhost:5173"  # Vite
+  "http://localhost:5173", # Vite
+  "http://localhost:4200"  # Angular
 ]
 
 origins = ENV.fetch("CORS_ORIGINS", default_origins.join(","))

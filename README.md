@@ -74,7 +74,10 @@ bin/rails db:prepare
 # 6. Datos demo
 bin/rails db:seed
 
-# 7. Servidor
+# 7. Variables para el front Angular (Firebase → JWT)
+export FIREBASE_PROJECT_ID=okpadel
+
+# 8. Servidor
 bin/rails s
 ```
 
@@ -129,7 +132,8 @@ Remoto configurado: `https://github.com/Juliantes/tup--ok_padel-ProgIV.git`. Si 
 | `JOIN_CUTOFF_HOURS` | opcional | Mínimo de horas antes del inicio para unirse a un partido con `time_slot` (default: `1`) |
 | `LEAVE_CUTOFF_HOURS` | opcional | Mínimo de horas antes del inicio para salir de un partido con `time_slot` (default: `2`) |
 | `PLAYED_CUTOFF_HOURS` | opcional | Máximo de horas antes del inicio para marcar `played` con `time_slot` (default: `24`) |
-| `CORS_ORIGINS` | opcional | Orígenes permitidos para CORS (CSV). Default en dev: `http://localhost:3001,http://localhost:5173`. En producción: dominio(s) del front-end, p. ej. `https://okpadel.com,https://www.okpadel.com` |
+| `CORS_ORIGINS` | opcional | Orígenes permitidos para CORS (CSV). Default en dev: `http://localhost:3001`, `http://localhost:5173`, `http://localhost:4200` (Angular). En producción: dominio(s) del front-end, p. ej. `https://okpadel.com,https://www.okpadel.com` |
+| `FIREBASE_PROJECT_ID` | dev / prod (Angular) | ID del proyecto Firebase Auth usado por el front (`okpadel` en local). Requerido para `POST /api/v1/oauth/google`. |
 
 ## CORS y rate limiting
 
@@ -139,7 +143,7 @@ El front-end externo (otro origen) consume la API con **JWT en header** (sin coo
 
 - Configuración: `config/initializers/cors.rb`.
 - Rutas: `/api/*` (métodos GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD).
-- Orígenes: variable `CORS_ORIGINS` (lista separada por comas). Si no está definida, se usan `http://localhost:3001` y `http://localhost:5173`.
+- Orígenes: variable `CORS_ORIGINS` (lista separada por comas). Si no está definida, se usan `http://localhost:3001`, `http://localhost:5173` y `http://localhost:4200` (Angular `ng serve`).
 - Headers expuestos al navegador: `Authorization`, `Retry-After`.
 - No se usa `credentials: true` ni `origins "*"`.
 
@@ -151,13 +155,23 @@ curl -i -H "Origin: http://localhost:3001" http://localhost:3000/api/v1/courts
 
 Deberías ver `Access-Control-Allow-Origin: http://localhost:3001` en la respuesta.
 
+### Front Angular (`tup--padel-match-`)
+
+Repositorio hermano con `ng serve` en `http://localhost:4200`. El login usa Firebase Google; el backend valida el Firebase ID token en `POST /api/v1/oauth/google` y devuelve el mismo JWT que el login por email. En desarrollo:
+
+```bash
+export FIREBASE_PROJECT_ID=okpadel
+```
+
+El JWT del front se envía en `Authorization: Bearer` en el resto de `/api/v1/*`. Guía del front: README del proyecto Angular.
+
 ### Rate limiting (`rack-attack`)
 
 - Configuración: `config/initializers/rack_attack.rb`.
 - **Backend de contadores:** `Rails.cache` (Solid Cache en producción; `memory_store` en desarrollo). No se requiere Redis.
 - **Safelist:** `GET /up` (health check) y peticiones `OPTIONS` (preflight CORS).
 - **Límites (por minuto):**
-  - `POST /api/v1/login`: 5 por IP.
+  - `POST /api/v1/login` y `POST /api/v1/oauth/google`: 5 por IP.
   - Escritura sin token o con Bearer inválido (POST/PATCH/PUT/DELETE): 20 por IP.
   - Escritura autenticada (JWT válido): 30 por usuario.
   - Lectura sin token o con Bearer inválido (GET): 60 por IP.
@@ -374,7 +388,7 @@ erDiagram
   bundle exec rake rswag:specs:swaggerize
   ```
 
-Los 15 endpoints de `api/v1` están documentados con schemas alineados a los Jbuilder de `app/views/api/v1/`.
+Los 16 endpoints de `api/v1` están documentados con schemas alineados a los Jbuilder de `app/views/api/v1/`.
 
 ## API v1
 
@@ -395,6 +409,7 @@ Base URL en desarrollo: `http://localhost:3000`
 | Método | Path | Auth | Descripción |
 |--------|------|------|-------------|
 | POST | `/api/v1/login` | No | Login; devuelve JWT y usuario |
+| POST | `/api/v1/oauth/google` | No | Intercambio de Firebase ID token (`id_token`) por JWT y usuario (front Angular) |
 | GET | `/api/v1/profile` | Sí | Perfil del usuario autenticado |
 | PATCH | `/api/v1/profile` | Sí | Actualizar `name`, `phone`, `self_level`, `bio` |
 | GET | `/api/v1/courts` | No | Listar canchas **activas** |

@@ -1,6 +1,9 @@
 class User < ApplicationRecord
   include PlayerCategory
+  include PlayerCourtSide
   include PhoneValidatable
+
+  enum :court_side, { derecha: 0, reves: 1 }, validate: { allow_nil: true }
   include ImageAttachable
 
   ROLES = %w[admin player club_owner].freeze

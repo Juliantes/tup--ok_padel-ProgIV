@@ -63,12 +63,18 @@ RSpec.configure do |config|
               phone: { type: :string, nullable: true },
               self_level: { type: :integer },
               category_label: { type: :string },
+              court_side: { type: :string, nullable: true, enum: %w[derecha reves] },
+              court_side_label: { type: :string, nullable: true },
               bio: { type: :string, nullable: true },
               average_level: { type: :string, nullable: true },
               average_stars: { type: :string, nullable: true },
-              matches_played: { type: :integer }
+              matches_played: { type: :integer },
+              roles: {
+                type: :array,
+                items: { type: :string, enum: %w[admin player club_owner] }
+              }
             },
-            required: %w[id name email self_level category_label matches_played]
+            required: %w[id name email self_level category_label matches_played roles]
           },
           LoginResponse: {
             type: :object,
@@ -125,14 +131,26 @@ RSpec.configure do |config|
             },
             required: [ "court" ]
           },
+          MatchClubSummary: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              name: { type: :string },
+              address: { type: :string }
+            },
+            required: %w[id name address]
+          },
           MatchCourtSummary: {
             type: :object,
             properties: {
               id: { type: :integer },
               name: { type: :string },
-              club_id: { type: :integer }
+              club_id: { type: :integer },
+              description: { type: :string, nullable: true },
+              price_per_hour: { type: :number },
+              club: { "$ref" => "#/components/schemas/MatchClubSummary" }
             },
-            required: %w[id name club_id]
+            required: %w[id name club_id price_per_hour club]
           },
           MatchCreatorSummary: {
             type: :object,
@@ -154,7 +172,9 @@ RSpec.configure do |config|
                 type: :object,
                 properties: {
                   id: { type: :integer },
-                  name: { type: :string }
+                  name: { type: :string },
+                  court_side: { type: :string, nullable: true, enum: %w[derecha reves] },
+                  court_side_label: { type: :string, nullable: true }
                 },
                 required: %w[id name]
               }
@@ -233,6 +253,7 @@ RSpec.configure do |config|
                 type: :string,
                 enum: %w[open eighth seventh sixth fifth fourth third second first]
               },
+              level_required_label: { type: :string, example: "5ta" },
               join_policy: {
                 type: :string,
                 enum: %w[auto manual auto_by_level],

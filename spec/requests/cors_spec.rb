@@ -40,4 +40,13 @@ RSpec.describe "CORS", type: :request do
       expect(response.headers["Access-Control-Allow-Origin"]).to be_nil
     end
   end
+
+  describe "Angular dev server origin" do
+    it "allows http://localhost:4200" do
+      get "/api/v1/courts", headers: { "Origin" => "http://localhost:4200" }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("http://localhost:4200")
+    end
+  end
 end

@@ -37,6 +37,14 @@
       required: true %>
   </div>
 
+  <div class="col-md-6">
+    <%= f.label :court_side, "Lado en cancha", class: "form-label" %>
+    <%= f.select :court_side,
+      options_for_select(User.court_side_options_for_select, user.court_side),
+      { include_blank: "Sin especificar" },
+      class: "form-select" %>
+  </div>
+
   <div class="col-12">
     <%= f.label :bio, class: "form-label" %>
     <%= f.text_area :bio, rows: 3, class: "form-control" %>

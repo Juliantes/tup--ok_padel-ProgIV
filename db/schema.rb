@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -353,6 +353,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
     t.decimal "average_level", precision: 3, scale: 1, default: "0.0"
     t.decimal "average_stars", precision: 3, scale: 2, default: "0.0"
     t.text "bio"
+    t.integer "court_side"
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -372,6 +373,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_26_100000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.check_constraint "average_level >= 0::numeric AND average_level <= 99.9", name: "users_average_level_range"
     t.check_constraint "average_stars >= 0::numeric AND average_stars <= 9.99", name: "users_average_stars_range"
+    t.check_constraint "court_side IS NULL OR (court_side = ANY (ARRAY[0, 1]))", name: "users_court_side_range"
     t.check_constraint "self_level >= 1 AND self_level <= 8", name: "users_self_level_range"
   end
 
