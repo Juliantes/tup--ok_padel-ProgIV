@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     module ClubOwnerAuthorization
@@ -12,7 +14,7 @@ module Api
       def require_club_owner!
         return if current_user&.club_owner?
 
-        render_error("Forbidden", status: :forbidden)
+        render_error("club owner role required", status: :forbidden)
       end
 
       def owned_clubs
