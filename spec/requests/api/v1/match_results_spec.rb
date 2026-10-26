@@ -211,6 +211,24 @@ RSpec.describe "Api::V1::MatchResults", type: :request do
         end
       end
 
+      response(200, "lets an admin delete another players result on a completed match") do
+        schema "$ref" => "#/components/schemas/MatchResultsMutationResponse"
+
+        let(:admin) { create(:user, :admin) }
+        let(:match_id) { match.id }
+        let(:Authorization) { auth_headers_for(admin)["Authorization"] }
+        let!(:result) do
+          create(:match_result, match: match, reported_by: player, result_sets: team_a_wins_2_0).tap do
+            expect(match.reload).to be_completed
+          end
+        end
+        let(:id) { result.id }
+
+        run_test! do
+          expect(MatchResult.exists?(result.id)).to be(false)
+        end
+      end
+
       response(401, "returns 401 token_missing without a token") do
         schema "$ref" => "#/components/schemas/UnauthorizedError"
 
