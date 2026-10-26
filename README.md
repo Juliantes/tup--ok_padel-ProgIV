@@ -157,7 +157,7 @@ Deberías ver `Access-Control-Allow-Origin: http://localhost:3001` en la respues
 
 ### Front Angular (`tup--padel-match-`)
 
-Repositorio hermano con `ng serve` en `http://localhost:4200`. El login usa Firebase Google; el backend valida el Firebase ID token en `POST /api/v1/oauth/google` y devuelve el mismo JWT que el login por email. En desarrollo:
+Repositorio hermano con `ng serve` en `http://localhost:4200`. El login con Google corre en el cliente (Firebase); Rails no abre OAuth contra Google. El backend **verifica** el Firebase ID token en `POST /api/v1/oauth/google` y devuelve el mismo JWT que el login por email. Contrato de tokens: [Autenticación: web vs API](#autenticación-web-vs-api). En desarrollo:
 
 ```bash
 export FIREBASE_PROJECT_ID=okpadel
@@ -243,7 +243,21 @@ Contraseña común de demo: **`password123`**
 | Web | Devise (cookie de sesión) | Registro, login, home, admin |
 | API | JWT en header `Authorization: Bearer <token>` | Cliente JSON (app móvil / SPA) |
 
-El token JWT expira a las **24 horas** (`JsonWebToken.encode`, claim `exp`).
+El JWT de la API (`JsonWebToken.encode`) lleva `user_id` y `exp` (**24 horas**). No hay `jti` ni lista de revocación: un Bearer válido sigue siéndolo hasta `exp`. El logout en el SPA borra el token en el cliente; no invalida tokens ya emitidos. Decisión deliberada para TP1 (TTL corto relativo a una app de partidos).
+
+#### Contrato Firebase → JWT (SPA Angular)
+
+Hay **dos tokens**. No se mezclan:
+
+| Token | Emisor | Dónde se usa | TTL típico |
+|-------|--------|----------------|------------|
+| Firebase ID token | Firebase Auth (Google en el front) | Solo el body de `POST /api/v1/oauth/google` (`id_token`) | ~1 hora |
+| JWT Rails | `JsonWebToken` | `Authorization: Bearer` en el resto de `/api/v1` | 24 horas |
+
+- El back **no** habla con Google para el login: valida firma y claims del ID token (`FirebaseIdTokenVerifier`: issuer, audience = `FIREBASE_PROJECT_ID`, email verificado) y provisiona usuario (`FirebaseOAuthUserProvisioner`, lookup por email).
+- El nombre `/oauth/google` es histórico: el endpoint es un **canje de Firebase ID token**, no un redirect OAuth de Rails. El mismo JWT sale de `POST /api/v1/login` (email/password).
+- Si el JWT expira (`401` `token_expired` o `token_invalid`), el front pide un ID token fresco a Firebase y vuelve a canjear. Las llamadas normales a la API **no** envían el token de Firebase.
+- Vinculación de cuenta: mismo email (password o Google) → el mismo `User`. No se persiste `firebase_uid`.
 
 ## Modelo de datos
 
@@ -398,7 +412,7 @@ Base URL en desarrollo: `http://localhost:3000`
 
 **Autenticación:** header `Authorization: Bearer <token>` en endpoints protegidos.
 
-**Login:** `POST /api/v1/login` con JSON `{ "email", "password" }` → `{ "token", "user" }`.
+**Login:** `POST /api/v1/login` con JSON `{ "email", "password" }` → `{ "token", "user" }`. Google/Firebase: `POST /api/v1/oauth/google` con `{ "id_token" }` → el mismo shape. Detalle de tokens: [Autenticación: web vs API](#autenticación-web-vs-api).
 
 **Errores:** cuerpo `{ "error": "<mensaje>", "request_id": "<uuid>" }` con el status HTTP correspondiente (`request_id` en respuestas que usan `render_error` del API base). Los mensajes de la API están en **inglés** (`Invalid credentials`, `Not found`, etc.). Un `401` de autenticación JWT usa un código: `token_missing` (sin header `Authorization: Bearer`), `token_invalid` (no decodifica o el usuario no existe) o `token_expired`. Filtros inválidos en `GET /api/v1/matches` → `400` (`invalid status`, `invalid date format`, etc.).
 
