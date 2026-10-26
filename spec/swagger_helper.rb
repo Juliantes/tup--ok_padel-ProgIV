@@ -100,6 +100,34 @@ RSpec.configure do |config|
             },
             required: %w[id name]
           },
+          OwnerClub: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              name: { type: :string },
+              address: { type: :string },
+              phone: { type: :string },
+              email: { type: :string, nullable: true }
+            },
+            required: %w[id name address phone]
+          },
+          OwnerClubsResponse: {
+            type: :object,
+            properties: {
+              clubs: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/OwnerClub" }
+              }
+            },
+            required: [ "clubs" ]
+          },
+          OwnerClubResponse: {
+            type: :object,
+            properties: {
+              club: { "$ref" => "#/components/schemas/OwnerClub" }
+            },
+            required: [ "club" ]
+          },
           Court: {
             type: :object,
             properties: {
