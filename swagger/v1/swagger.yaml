@@ -5,6 +5,268 @@ info:
   version: v1
   description: API REST JSON para jugadores (TP1 Programación IV).
 paths:
+  "/api/v1/clubs/{club_id}/courts":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List club courts
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: returns all courts for an owned club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CourtsResponse"
+        '404':
+          description: returns 404 for another owner's club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: returns 403 for a player
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    post:
+      summary: Create court
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: creates a court on an owned club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CourtResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                court_type:
+                  type: string
+                  enum:
+                  - indoor
+                  - outdoor
+                price_per_hour:
+                  type: number
+                description:
+                  type: string
+                  nullable: true
+                status:
+                  type: string
+                  enum:
+                  - active
+                  - maintenance
+                  - inactive
+              required:
+              - name
+              - court_type
+              - price_per_hour
+              - status
+  "/api/v1/clubs/{club_id}/courts/{id}":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Update court
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: updates a court on an owned club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CourtResponse"
+        '404':
+          description: returns 404 when the court belongs to another owner's club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                court_type:
+                  type: string
+                  enum:
+                  - indoor
+                  - outdoor
+                price_per_hour:
+                  type: number
+                description:
+                  type: string
+                  nullable: true
+                status:
+                  type: string
+                  enum:
+                  - active
+                  - maintenance
+                  - inactive
+    delete:
+      summary: Delete court
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: deletes a court without matches
+  "/api/v1/clubs":
+    get:
+      summary: List owned clubs
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: returns clubs owned by the current user
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OwnerClubsResponse"
+        '401':
+          description: returns 401 without a token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/UnauthorizedError"
+        '403':
+          description: returns 403 for a player without club_owner role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    post:
+      summary: Create club
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: creates a club for the current owner
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OwnerClubResponse"
+        '422':
+          description: returns validation errors
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  nullable: true
+              required:
+              - name
+              - address
+              - phone
+  "/api/v1/clubs/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Update club
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: updates an owned club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OwnerClubResponse"
+        '404':
+          description: returns 404 for another owner's club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  nullable: true
+    delete:
+      summary: Delete club
+      tags:
+      - Club owner
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: deletes an owned club without courts
+        '404':
+          description: returns 404 for another owner's club
   "/api/v1/courts":
     get:
       summary: List courts
@@ -44,6 +306,36 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Error"
+  "/api/v1/oauth/google":
+    post:
+      summary: Exchange Firebase ID token for API JWT
+      tags:
+      - Authentication
+      security: []
+      parameters: []
+      responses:
+        '200':
+          description: logs in an existing user without overwriting profile fields
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LoginResponse"
+        '401':
+          description: returns 401 when the Firebase token is invalid
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_token:
+                  type: string
+              required:
+              - id_token
   "/api/v1/matches/{match_id}/match_results":
     parameters:
     - name: match_id
@@ -456,36 +748,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Error"
-  "/api/v1/oauth/google":
-    post:
-      summary: Exchange Firebase ID token for API JWT
-      tags:
-      - Authentication
-      security: []
-      parameters: []
-      responses:
-        '200':
-          description: returns a token and user data with a valid Firebase ID token
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/LoginResponse"
-        '401':
-          description: returns 401 when the Firebase token is invalid
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/Error"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id_token:
-                  type: string
-              required:
-              - id_token
   "/api/v1/login":
     post:
       summary: Login
@@ -562,7 +824,7 @@ paths:
               schema:
                 "$ref": "#/components/schemas/UnauthorizedError"
         '422':
-          description: returns 422 with invalid data
+          description: returns 422 with invalid court_side
           content:
             application/json:
               schema:
@@ -588,7 +850,6 @@ paths:
                   - reves
 servers:
 - url: http://localhost:3000
-- url: http://127.0.0.1:3000
 - url: https://ok-padel-tup.fly.dev
 components:
   securitySchemes:
@@ -709,6 +970,41 @@ components:
       required:
       - id
       - name
+    OwnerClub:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+      required:
+      - id
+      - name
+      - address
+      - phone
+    OwnerClubsResponse:
+      type: object
+      properties:
+        clubs:
+          type: array
+          items:
+            "$ref": "#/components/schemas/OwnerClub"
+      required:
+      - clubs
+    OwnerClubResponse:
+      type: object
+      properties:
+        club:
+          "$ref": "#/components/schemas/OwnerClub"
+      required:
+      - club
     Court:
       type: object
       properties:

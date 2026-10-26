@@ -32,6 +32,10 @@ Rails.application.routes.draw do
 
       resources :courts, only: %i[index show]
 
+      resources :clubs, only: %i[index create update destroy] do
+        resources :courts, only: %i[index create update destroy], controller: "club_courts"
+      end
+
       get "me/matches", to: "matches#mine"
 
       resources :matches, only: %i[index show create] do

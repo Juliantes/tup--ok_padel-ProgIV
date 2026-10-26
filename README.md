@@ -388,7 +388,7 @@ erDiagram
   bundle exec rake rswag:specs:swaggerize
   ```
 
-Los 16 endpoints de `api/v1` están documentados con schemas alineados a los Jbuilder de `app/views/api/v1/`.
+Los endpoints de `api/v1` (incluido el CRUD de clubs y canchas para `club_owner`) están documentados con schemas alineados a los Jbuilder de `app/views/api/v1/`.
 
 ## API v1
 
@@ -424,6 +424,14 @@ Base URL en desarrollo: `http://localhost:3000`
 | POST | `/api/v1/matches/:match_id/match_results` | Sí | Reportar resultado (jugador activo) |
 | DELETE | `/api/v1/matches/:match_id/match_results/:id` | Sí | Borrar el propio reporte |
 | GET | `/api/v1/me/matches` | Sí | Partidos del usuario (inscripto o creador) |
+| GET | `/api/v1/clubs` | Sí (`club_owner`) | Listar clubs del dueño autenticado |
+| POST | `/api/v1/clubs` | Sí (`club_owner`) | Crear club (owner = usuario actual) |
+| PATCH | `/api/v1/clubs/:id` | Sí (`club_owner`) | Actualizar un club propio |
+| DELETE | `/api/v1/clubs/:id` | Sí (`club_owner`) | Borrar un club propio |
+| GET | `/api/v1/clubs/:club_id/courts` | Sí (`club_owner`) | Listar canchas del club (todos los estados) |
+| POST | `/api/v1/clubs/:club_id/courts` | Sí (`club_owner`) | Crear cancha en un club propio |
+| PATCH | `/api/v1/clubs/:club_id/courts/:id` | Sí (`club_owner`) | Actualizar cancha propia |
+| DELETE | `/api/v1/clubs/:club_id/courts/:id` | Sí (`club_owner`) | Borrar cancha propia |
 
 **Paginación (listados de partidos):** query `page` (default 1), `per_page` (default 20, máx. 50). Respuesta incluye `meta` con `current_page`, `per_page`, `total_pages`, `total_count`. La API v1 incluye `Pagy::Method` en `Api::V1::BaseController` (misma API que el back-office: `pagy(:offset, ...)`).
 
