@@ -33,3 +33,6 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 /config/master.key
+
+# Cursor workspace rules (local only)
+.cursor/rules/
