@@ -1,5 +1,9 @@
 # Guía para agentes — Ok Padel
 
+## Spec Kit (Specify)
+
+Flujo de features con Spec Kit, multi-repo con `tup--padel-match-`, comandos y quality gates: **[docs/speckit-workflow.md](docs/speckit-workflow.md)**. Principios obligatorios: **[.specify/memory/constitution.md](.specify/memory/constitution.md)**.
+
 ## Mailers
 
 - **Base:** `ApplicationMailer` define `from` / `reply_to` vía `ENV` (`MAILER_FROM`, `MAILER_REPLY_TO`) con fallbacks locales, layout `mailer` (HTML + texto) e helper `app_url` para armar URLs con `action_mailer.default_url_options`.
