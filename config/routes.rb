@@ -33,6 +33,9 @@ Rails.application.routes.draw do
       resources :courts, only: %i[index show]
 
       resources :clubs, only: %i[index show create update destroy] do
+        member do
+          get :schedule, controller: "club_schedules", action: :show
+        end
         resources :courts, only: %i[index show create update destroy], controller: "club_courts"
       end
 

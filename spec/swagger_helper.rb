@@ -128,6 +128,56 @@ RSpec.configure do |config|
             },
             required: [ "club" ]
           },
+          ClubScheduleCourt: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              name: { type: :string },
+              price_per_hour: { type: :number },
+              status: { type: :string, enum: %w[active maintenance inactive] }
+            },
+            required: %w[id name price_per_hour status]
+          },
+          ClubScheduleRow: {
+            type: :object,
+            properties: {
+              start_time: { type: :string, example: "10:00" },
+              end_time: { type: :string, example: "11:30" }
+            },
+            required: %w[start_time end_time]
+          },
+          ClubScheduleCell: {
+            type: :object,
+            properties: {
+              court_id: { type: :integer },
+              start_time: { type: :string, example: "10:00" },
+              state: { type: :string, enum: %w[empty blocked booked available] },
+              time_slot_id: { type: :integer, nullable: true },
+              end_time: { type: :string, nullable: true, example: "11:30" },
+              match_id: { type: :integer, nullable: true }
+            },
+            required: %w[court_id start_time state]
+          },
+          ClubScheduleResponse: {
+            type: :object,
+            properties: {
+              club: { "$ref" => "#/components/schemas/OwnerClub" },
+              date: { type: :string, format: :date },
+              courts: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/ClubScheduleCourt" }
+              },
+              rows: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/ClubScheduleRow" }
+              },
+              cells: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/ClubScheduleCell" }
+              }
+            },
+            required: %w[club date courts rows cells]
+          },
           Court: {
             type: :object,
             properties: {

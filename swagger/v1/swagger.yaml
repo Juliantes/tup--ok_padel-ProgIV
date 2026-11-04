@@ -5,6 +5,51 @@ info:
   version: v1
   description: API REST JSON para jugadores (TP1 Programación IV).
 paths:
+  "/api/v1/clubs/{id}/schedule":
+    parameters:
+    - name: id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: date
+      in: query
+      format: date
+      description: Schedule date (ISO 8601)
+      schema:
+        type: string
+    get:
+      summary: Club schedule for a date
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: returns empty rows when there are no slots for the weekday
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ClubScheduleResponse"
+        '422':
+          description: returns 422 when date is missing
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '403':
+          description: returns 403 for a player without club_owner role
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: returns 404 for a foreign club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
   "/api/v1/courts":
     get:
       summary: List courts
@@ -1022,6 +1067,93 @@ components:
           "$ref": "#/components/schemas/OwnerClub"
       required:
       - club
+    ClubScheduleCourt:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price_per_hour:
+          type: number
+        status:
+          type: string
+          enum:
+          - active
+          - maintenance
+          - inactive
+      required:
+      - id
+      - name
+      - price_per_hour
+      - status
+    ClubScheduleRow:
+      type: object
+      properties:
+        start_time:
+          type: string
+          example: '10:00'
+        end_time:
+          type: string
+          example: '11:30'
+      required:
+      - start_time
+      - end_time
+    ClubScheduleCell:
+      type: object
+      properties:
+        court_id:
+          type: integer
+        start_time:
+          type: string
+          example: '10:00'
+        state:
+          type: string
+          enum:
+          - empty
+          - blocked
+          - booked
+          - available
+        time_slot_id:
+          type: integer
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+          example: '11:30'
+        match_id:
+          type: integer
+          nullable: true
+      required:
+      - court_id
+      - start_time
+      - state
+    ClubScheduleResponse:
+      type: object
+      properties:
+        club:
+          "$ref": "#/components/schemas/OwnerClub"
+        date:
+          type: string
+          format: date
+        courts:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ClubScheduleCourt"
+        rows:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ClubScheduleRow"
+        cells:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ClubScheduleCell"
+      required:
+      - club
+      - date
+      - courts
+      - rows
+      - cells
     Court:
       type: object
       properties:
