@@ -51,7 +51,7 @@ RSpec.describe "Api::V1::OwnerClubs", type: :request do
         let(:Authorization) { auth_headers_for(player)["Authorization"] }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to eq("Forbidden")
+          expect(JSON.parse(response.body)["error"]).to eq("club owner role required")
         end
       end
     end

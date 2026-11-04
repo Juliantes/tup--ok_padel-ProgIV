@@ -194,7 +194,7 @@ No hay Pundit ni CanCan. La autorización está en el controller:
 - Cualquier usuario autenticado crea partidos, se une y reporta.
 - Solo un jugador activo marca `played` o reporta.
 - Solo el autor borra su resultado, salvo `current_user.admin?` (403 si no).
-- Roles `club_owner` no cambian nada en la API. El back-office es HTML con Devise (`devise :database_authenticatable, :registerable, :recoverable`). No hay `POST /api/v1/users` ni recuperación de contraseña en JSON.
+- Rol `club_owner`: CRUD JSON de sus clubs y canchas anidadas bajo `/api/v1/clubs` (JWT + `club_owner?`; solo `owned_clubs`). El back-office admin sigue siendo HTML con Devise. No hay `POST /api/v1/users` ni recuperación de contraseña en JSON.
 
 Login: mismo texto `"Invalid credentials"` si el mail no existe o la contraseña falla (`sessions_controller.rb` líneas 6–16), alineado con Devise `paranoid` (`devise.rb` línea 93). El límite es **5 POST /api/v1/login por minuto por IP**. En Fly, el sexto POST con credenciales inválidas respondió **429** `{"error":"Too many requests. Please retry later."}`. No hay límite por cuenta: muchas IPs pueden probar la misma casilla.
 

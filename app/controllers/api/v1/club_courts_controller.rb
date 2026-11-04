@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     class ClubCourtsController < BaseController
@@ -7,7 +9,7 @@ module Api
       before_action :set_court, only: %i[show update destroy]
 
       def index
-        @courts = @club.courts.order(:name)
+        @courts = @club.courts.includes(:club).order(:name)
         render :index
       end
 
@@ -19,6 +21,7 @@ module Api
         @court = @club.courts.build(court_attributes)
 
         if @court.save
+          @court = Court.includes(:club).find(@court.id)
           render :show, status: :created
         else
           render_record_errors(@court)
@@ -27,6 +30,7 @@ module Api
 
       def update
         if @court.update(court_attributes)
+          @court = Court.includes(:club).find(@court.id)
           render :show
         else
           render_record_errors(@court)
