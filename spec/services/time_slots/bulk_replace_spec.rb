@@ -46,7 +46,7 @@ RSpec.describe TimeSlots::BulkReplace do
         open_time: "08:00",
         close_time: "23:00",
         duration_minutes: 90,
-        day_of_weeks: [ 1, 2 ],
+        day_of_weeks: [ 1, 2 ]
       }
     end
 

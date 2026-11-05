@@ -149,9 +149,9 @@ RSpec.describe "Api::V1::OwnerClubTimeSlots", type: :request do
           open_time: { type: :string, example: "08:00" },
           close_time: { type: :string, example: "23:00" },
           duration_minutes: { type: :integer, example: 90 },
-          day_of_weeks: { type: :array, items: { type: :integer } },
+          day_of_weeks: { type: :array, items: { type: :integer } }
         },
-        required: %w[open_time close_time duration_minutes day_of_weeks],
+        required: %w[open_time close_time duration_minutes day_of_weeks]
       }
 
       let(:bulk_body) do
@@ -159,7 +159,7 @@ RSpec.describe "Api::V1::OwnerClubTimeSlots", type: :request do
           open_time: "08:00",
           close_time: "23:00",
           duration_minutes: 90,
-          day_of_weeks: [ 1, 2, 3, 4, 5 ],
+          day_of_weeks: [ 1, 2, 3, 4, 5 ]
         }
       end
 
@@ -168,8 +168,8 @@ RSpec.describe "Api::V1::OwnerClubTimeSlots", type: :request do
                properties: {
                  time_slots: {
                    type: :array,
-                   items: { "$ref" => "#/components/schemas/OwnerTimeSlot" },
-                 },
+                   items: { "$ref" => "#/components/schemas/OwnerTimeSlot" }
+                 }
                },
                required: [ "time_slots" ]
 
