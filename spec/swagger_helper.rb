@@ -154,9 +154,50 @@ RSpec.configure do |config|
               state: { type: :string, enum: %w[empty blocked booked available] },
               time_slot_id: { type: :integer, nullable: true },
               end_time: { type: :string, nullable: true, example: "11:30" },
-              match_id: { type: :integer, nullable: true }
+              match_id: { type: :integer, nullable: true },
+              walk_in: { type: :boolean }
             },
             required: %w[court_id start_time state]
+          },
+          OwnerTimeSlot: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              court_id: { type: :integer },
+              day_of_week: { type: :integer },
+              start_time: { type: :string, example: "10:00" },
+              end_time: { type: :string, example: "11:30" },
+              is_available: { type: :boolean }
+            },
+            required: %w[id court_id day_of_week start_time end_time is_available]
+          },
+          OwnerTimeSlotResponse: {
+            type: :object,
+            properties: {
+              time_slot: { "$ref" => "#/components/schemas/OwnerTimeSlot" }
+            },
+            required: [ "time_slot" ]
+          },
+          WalkInBookingMatch: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              court_id: { type: :integer },
+              time_slot_id: { type: :integer, nullable: true },
+              date: { type: :string, format: :date },
+              status: { type: :string },
+              walk_in: { type: :boolean },
+              walk_in_guest_name: { type: :string, nullable: true },
+              walk_in_guest_phone: { type: :string, nullable: true }
+            },
+            required: %w[id court_id date status walk_in]
+          },
+          WalkInBookingResponse: {
+            type: :object,
+            properties: {
+              match: { "$ref" => "#/components/schemas/WalkInBookingMatch" }
+            },
+            required: [ "match" ]
           },
           ClubScheduleResponse: {
             type: :object,

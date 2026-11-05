@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_04_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -121,6 +121,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
     t.integer "status", default: 0, null: false
     t.bigint "time_slot_id"
     t.datetime "updated_at", null: false
+    t.boolean "walk_in", default: false, null: false
+    t.string "walk_in_guest_name"
+    t.string "walk_in_guest_phone"
     t.index ["court_id"], name: "index_matches_on_court_id"
     t.index ["creator_id"], name: "index_matches_on_creator_id"
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
@@ -128,6 +131,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
     t.index ["roster_mode"], name: "index_matches_on_roster_mode"
     t.index ["status", "date"], name: "index_matches_on_status_and_date"
     t.index ["status"], name: "index_matches_on_status"
+    t.index ["time_slot_id", "date"], name: "index_matches_unique_active_slot_date", unique: true, where: "((time_slot_id IS NOT NULL) AND (status <> 4))"
     t.index ["time_slot_id"], name: "index_matches_on_time_slot_id"
     t.check_constraint "duration > 0 AND duration <= 240", name: "matches_duration_range"
   end

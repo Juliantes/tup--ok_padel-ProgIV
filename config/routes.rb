@@ -36,7 +36,10 @@ Rails.application.routes.draw do
         member do
           get :schedule, controller: "club_schedules", action: :show
         end
-        resources :courts, only: %i[index show create update destroy], controller: "club_courts"
+        resources :courts, only: %i[index show create update destroy], controller: "club_courts" do
+          resources :time_slots, only: %i[index create update destroy], controller: "club_court_time_slots"
+        end
+        resources :walk_in_bookings, only: %i[create destroy]
       end
 
       get "me/matches", to: "matches#mine"

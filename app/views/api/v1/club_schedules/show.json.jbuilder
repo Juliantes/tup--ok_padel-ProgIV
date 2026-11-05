@@ -26,4 +26,5 @@ json.cells @schedule[:cells] do |cell|
   json.time_slot_id cell.time_slot_id
   json.end_time cell.end_time
   json.match_id cell.match_id
+  json.walk_in cell.walk_in
 end
