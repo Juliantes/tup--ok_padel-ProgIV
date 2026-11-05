@@ -29,6 +29,17 @@
 
 en:
   hello: "Hello world"
+  time_slots:
+    bulk_replace:
+      no_slots_fit: "No time slots fit in the given range with that duration"
+      future_bookings: "Cannot replace time slots with future bookings; cancel them first"
+      invalid_days: "Select one or more valid weekdays (0–6)"
+      invalid_duration: "Duration must be a positive number of minutes"
+      invalid_times: "Invalid time"
+      open_before_close: "Opening time must be before closing time"
+    day_override:
+      future_bookings: "Cannot change this day while it has active bookings; cancel them first"
+      invalid_times: "Invalid start or end time"
   activerecord:
     errors:
       models:

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ClubScheduleBuilder
-  CellState = Data.define(:court_id, :start_time, :time_slot_id, :end_time, :state, :match_id)
+  CellState = Data.define(:court_id, :start_time, :time_slot_id, :end_time, :state, :match_id, :walk_in)
 
   def initialize(club:, date:)
     @club = club
@@ -11,14 +11,14 @@ class ClubScheduleBuilder
   def build
     courts = @club.courts.order(:name).to_a
     court_ids = courts.map(&:id)
-    day_of_week = @date.wday
 
-    slots = TimeSlot.where(court_id: court_ids, day_of_week: day_of_week).order(:start_time, :court_id).to_a
+    slots = TimeSlots::ForDate.slots_for_courts(court_ids: court_ids, date: @date)
     slots_by_court_and_time = slots.index_by { |slot| [ slot.court_id, format_time(slot.start_time) ] }
 
     booked_matches = Match.where(court_id: court_ids, time_slot_id: slots.map(&:id))
                           .where(date: @date.all_day)
                           .where.not(time_slot_id: nil)
+                          .where.not(status: :cancelled)
                           .index_by(&:time_slot_id)
 
     start_times = slots.map { |slot| format_time(slot.start_time) }.uniq.sort
@@ -52,23 +52,24 @@ class ClubScheduleBuilder
 
     if slot.nil?
       return CellState.new(court_id: court.id, start_time: start_time, time_slot_id: nil,
-                           end_time: nil, state: "empty", match_id: nil)
+                           end_time: nil, state: "empty", match_id: nil, walk_in: false)
     end
 
     end_time = format_time(slot.end_time)
     unless court.active? && slot.is_available
       return CellState.new(court_id: court.id, start_time: start_time, time_slot_id: slot.id,
-                           end_time: end_time, state: "blocked", match_id: nil)
+                           end_time: end_time, state: "blocked", match_id: nil, walk_in: false)
     end
 
     booked = booked_matches[slot.id]
     if booked
       return CellState.new(court_id: court.id, start_time: start_time, time_slot_id: slot.id,
-                           end_time: end_time, state: "booked", match_id: booked.id)
+                           end_time: end_time, state: "booked", match_id: booked.id,
+                           walk_in: booked.walk_in?)
     end
 
     CellState.new(court_id: court.id, start_time: start_time, time_slot_id: slot.id,
-                  end_time: end_time, state: "available", match_id: nil)
+                  end_time: end_time, state: "available", match_id: nil, walk_in: false)
   end
 
   def format_time(value)

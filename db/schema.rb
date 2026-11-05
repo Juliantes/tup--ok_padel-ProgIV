@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
     t.string "phone", null: false
     t.datetime "updated_at", null: false
     t.index ["owner_id"], name: "index_clubs_on_owner_id"
+  end
+
+  create_table "court_day_overrides", force: :cascade do |t|
+    t.bigint "court_id", null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["court_id", "date"], name: "index_court_day_overrides_on_court_id_and_date", unique: true
+    t.index ["court_id"], name: "index_court_day_overrides_on_court_id"
   end
 
   create_table "courts", force: :cascade do |t|
@@ -121,6 +130,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
     t.integer "status", default: 0, null: false
     t.bigint "time_slot_id"
     t.datetime "updated_at", null: false
+    t.boolean "walk_in", default: false, null: false
+    t.string "walk_in_guest_name"
+    t.string "walk_in_guest_phone"
     t.index ["court_id"], name: "index_matches_on_court_id"
     t.index ["creator_id"], name: "index_matches_on_creator_id"
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
@@ -128,6 +140,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
     t.index ["roster_mode"], name: "index_matches_on_roster_mode"
     t.index ["status", "date"], name: "index_matches_on_status_and_date"
     t.index ["status"], name: "index_matches_on_status"
+    t.index ["time_slot_id", "date"], name: "index_matches_unique_active_slot_date", unique: true, where: "((time_slot_id IS NOT NULL) AND (status <> 4))"
     t.index ["time_slot_id"], name: "index_matches_on_time_slot_id"
     t.check_constraint "duration > 0 AND duration <= 240", name: "matches_duration_range"
   end
@@ -331,11 +344,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
     t.bigint "court_id", null: false
     t.datetime "created_at", null: false
     t.integer "day_of_week", null: false
+    t.date "effective_on"
     t.time "end_time", null: false
     t.boolean "is_available", default: true, null: false
     t.time "start_time", null: false
     t.datetime "updated_at", null: false
-    t.index ["court_id", "day_of_week", "start_time", "end_time"], name: "index_time_slots_unique_per_court", unique: true
+    t.index ["court_id", "day_of_week", "start_time", "end_time"], name: "index_time_slots_weekly_unique_per_court", unique: true, where: "(effective_on IS NULL)"
+    t.index ["court_id", "effective_on", "start_time", "end_time"], name: "index_time_slots_override_unique_per_court", unique: true, where: "(effective_on IS NOT NULL)"
     t.index ["court_id"], name: "index_time_slots_on_court_id"
   end
 
@@ -380,6 +395,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_205838) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "clubs", "users", column: "owner_id"
+  add_foreign_key "court_day_overrides", "courts"
   add_foreign_key "courts", "clubs"
   add_foreign_key "match_players", "matches"
   add_foreign_key "match_players", "users"

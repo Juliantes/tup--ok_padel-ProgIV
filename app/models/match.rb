@@ -268,7 +268,7 @@ class Match < ApplicationRecord
 
   def date_matches_time_slot_day
     return if time_slot.blank? || date.blank?
-    return if date.wday == time_slot.day_of_week
+    return if time_slot.applies_on?(date)
 
     errors.add(:time_slot, "day of week must match match date")
   end

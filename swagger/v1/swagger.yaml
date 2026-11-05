@@ -680,6 +680,279 @@ paths:
       responses:
         '204':
           description: deletes a court without matches
+  "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: court_id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List time slots for owned court
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters:
+      - name: date
+        in: query
+        required: false
+        description: ISO date for effective slots
+        schema:
+          type: string
+      responses:
+        '200':
+          description: lists effective slots for a date
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  time_slots:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/OwnerTimeSlot"
+                required:
+                - time_slots
+                "$ref": "#/components/schemas/OwnerTimeSlotsForDateResponse"
+        '404':
+          description: returns 404 for foreign club
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+    post:
+      summary: Create time slot
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: creates a time slot
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OwnerTimeSlotResponse"
+        '422':
+          description: returns 422 when slots overlap
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                day_of_week:
+                  type: integer
+                start_time:
+                  type: string
+                  example: '10:00'
+                end_time:
+                  type: string
+                  example: '11:30'
+                is_available:
+                  type: boolean
+              required:
+              - day_of_week
+              - start_time
+              - end_time
+  "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/bulk":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: court_id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Bulk replace time slots
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: replaces slots and returns full court list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  time_slots:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/OwnerTimeSlot"
+                required:
+                - time_slots
+        '422':
+          description: blocked by future booking
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                open_time:
+                  type: string
+                  example: '08:00'
+                close_time:
+                  type: string
+                  example: '23:00'
+                duration_minutes:
+                  type: integer
+                  example: 90
+                day_of_weeks:
+                  type: array
+                  items:
+                    type: integer
+              required:
+              - open_time
+              - close_time
+              - duration_minutes
+              - day_of_weeks
+  "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/day_override":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: court_id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    put:
+      summary: Replace time slots for a single date
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: stores override for date
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OwnerTimeSlotsForDateResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                slots:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      start_time:
+                        type: string
+                      end_time:
+                        type: string
+                      is_available:
+                        type: boolean
+                    required:
+                    - start_time
+                    - end_time
+              required:
+              - date
+              - slots
+    delete:
+      summary: Clear date override
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters:
+      - name: date
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: removes override
+  "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/{id}":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: court_id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    - name: id
+      in: path
+      description: Time slot ID
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Update time slot
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: updates a time slot
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OwnerTimeSlotResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_available:
+                  type: boolean
+    delete:
+      summary: Delete time slot
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: deletes a time slot
   "/api/v1/clubs":
     get:
       summary: List owned clubs
@@ -910,6 +1183,82 @@ paths:
                   enum:
                   - derecha
                   - reves
+  "/api/v1/clubs/{club_id}/walk_in_bookings":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Create walk-in booking
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: creates a confirmed walk-in match
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/WalkInBookingResponse"
+        '422':
+          description: returns 422 when court is inactive
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                court_id:
+                  type: integer
+                time_slot_id:
+                  type: integer
+                date:
+                  type: string
+                  format: date
+                walk_in_guest_name:
+                  type: string
+                  nullable: true
+                walk_in_guest_phone:
+                  type: string
+                  nullable: true
+              required:
+              - court_id
+              - time_slot_id
+              - date
+  "/api/v1/clubs/{club_id}/walk_in_bookings/{id}":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: id
+      in: path
+      description: Match ID
+      required: true
+      schema:
+        type: integer
+    delete:
+      summary: Cancel walk-in booking
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: cancels a walk-in match
+        '422':
+          description: returns 422 when match is not walk-in
 servers:
 - url: http://localhost:3000
 - url: https://ok-padel-tup.fly.dev
@@ -1124,10 +1473,102 @@ components:
         match_id:
           type: integer
           nullable: true
+        walk_in:
+          type: boolean
       required:
       - court_id
       - start_time
       - state
+    OwnerTimeSlot:
+      type: object
+      properties:
+        id:
+          type: integer
+        court_id:
+          type: integer
+        day_of_week:
+          type: integer
+        effective_on:
+          type: string
+          format: date
+          nullable: true
+        start_time:
+          type: string
+          example: '10:00'
+        end_time:
+          type: string
+          example: '11:30'
+        is_available:
+          type: boolean
+      required:
+      - id
+      - court_id
+      - day_of_week
+      - start_time
+      - end_time
+      - is_available
+    OwnerTimeSlotsForDateResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        day_of_week:
+          type: integer
+        customized:
+          type: boolean
+        time_slots:
+          type: array
+          items:
+            "$ref": "#/components/schemas/OwnerTimeSlot"
+      required:
+      - date
+      - day_of_week
+      - customized
+      - time_slots
+    OwnerTimeSlotResponse:
+      type: object
+      properties:
+        time_slot:
+          "$ref": "#/components/schemas/OwnerTimeSlot"
+      required:
+      - time_slot
+    WalkInBookingMatch:
+      type: object
+      properties:
+        id:
+          type: integer
+        court_id:
+          type: integer
+        time_slot_id:
+          type: integer
+          nullable: true
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+        walk_in:
+          type: boolean
+        walk_in_guest_name:
+          type: string
+          nullable: true
+        walk_in_guest_phone:
+          type: string
+          nullable: true
+      required:
+      - id
+      - court_id
+      - date
+      - status
+      - walk_in
+    WalkInBookingResponse:
+      type: object
+      properties:
+        match:
+          "$ref": "#/components/schemas/WalkInBookingMatch"
+      required:
+      - match
     ClubScheduleResponse:
       type: object
       properties:

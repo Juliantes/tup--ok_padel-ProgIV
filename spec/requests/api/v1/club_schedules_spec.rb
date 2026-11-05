@@ -87,6 +87,23 @@ RSpec.describe "Api::V1::ClubSchedules", type: :request do
         end
       end
 
+      response(200, "repeats weekly slots on any date with the same weekday") do
+        schema "$ref" => "#/components/schemas/ClubScheduleResponse"
+
+        let(:Authorization) { auth_headers_for(owner)["Authorization"] }
+        let(:id) { club.id }
+        let(:date) { (schedule_date + 7.days).iso8601 }
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["date"]).to eq(date)
+          expect(body["rows"].map { |row| row["start_time"] }).to eq([ "10:00" ])
+
+          cells = body["cells"]
+          expect(cells.count { |cell| cell["state"] == "available" }).to eq(2)
+        end
+      end
+
       response(200, "returns empty rows when there are no slots for the weekday") do
         schema "$ref" => "#/components/schemas/ClubScheduleResponse"
 

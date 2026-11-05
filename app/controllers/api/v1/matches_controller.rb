@@ -6,7 +6,7 @@ module Api
       def index
         return unless validate_match_list_params!
 
-        scope = Match.where(status: %i[open full])
+        scope = Match.where(status: %i[open full]).where(walk_in: false)
         scope = apply_list_filters(scope)
         scope = scope.includes(:creator, court: :club, match_players: :user).order(date: :asc)
         @pagy, @matches = pagy(:offset, scope, limit: api_per_page)
