@@ -11,9 +11,8 @@ class ClubScheduleBuilder
   def build
     courts = @club.courts.order(:name).to_a
     court_ids = courts.map(&:id)
-    day_of_week = @date.wday
 
-    slots = TimeSlot.where(court_id: court_ids, day_of_week: day_of_week).order(:start_time, :court_id).to_a
+    slots = TimeSlots::ForDate.slots_for_courts(court_ids: court_ids, date: @date)
     slots_by_court_and_time = slots.index_by { |slot| [ slot.court_id, format_time(slot.start_time) ] }
 
     booked_matches = Match.where(court_id: court_ids, time_slot_id: slots.map(&:id))

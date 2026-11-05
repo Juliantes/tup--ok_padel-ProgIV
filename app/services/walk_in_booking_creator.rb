@@ -17,8 +17,9 @@ class WalkInBookingCreator
     booking_date = parse_date(@params[:date])
     return failure("Invalid date") if booking_date.nil?
 
-    unless booking_date.wday == time_slot.day_of_week
-      return failure("Date weekday does not match time slot")
+    resolver = TimeSlots::ForDate.new(court: court, date: booking_date)
+    unless resolver.slots.any? { |slot| slot.id == time_slot.id }
+      return failure("Time slot is not available for this date")
     end
 
     unless court.active? && time_slot.is_available

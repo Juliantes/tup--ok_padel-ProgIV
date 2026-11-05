@@ -700,9 +700,16 @@ paths:
       - Owner clubs
       security:
       - bearer_auth: []
+      parameters:
+      - name: date
+        in: query
+        required: false
+        description: ISO date for effective slots
+        schema:
+          type: string
       responses:
         '200':
-          description: lists time slots
+          description: lists effective slots for a date
           content:
             application/json:
               schema:
@@ -714,6 +721,7 @@ paths:
                       "$ref": "#/components/schemas/OwnerTimeSlot"
                 required:
                 - time_slots
+                "$ref": "#/components/schemas/OwnerTimeSlotsForDateResponse"
         '404':
           description: returns 404 for foreign club
           content:
@@ -825,6 +833,75 @@ paths:
               - close_time
               - duration_minutes
               - day_of_weeks
+  "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/day_override":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: court_id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    put:
+      summary: Replace time slots for a single date
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: stores override for date
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/OwnerTimeSlotsForDateResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                slots:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      start_time:
+                        type: string
+                      end_time:
+                        type: string
+                      is_available:
+                        type: boolean
+                    required:
+                    - start_time
+                    - end_time
+              required:
+              - date
+              - slots
+    delete:
+      summary: Clear date override
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters:
+      - name: date
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: removes override
   "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/{id}":
     parameters:
     - name: club_id
@@ -1411,6 +1488,10 @@ components:
           type: integer
         day_of_week:
           type: integer
+        effective_on:
+          type: string
+          format: date
+          nullable: true
         start_time:
           type: string
           example: '10:00'
@@ -1426,6 +1507,25 @@ components:
       - start_time
       - end_time
       - is_available
+    OwnerTimeSlotsForDateResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        day_of_week:
+          type: integer
+        customized:
+          type: boolean
+        time_slots:
+          type: array
+          items:
+            "$ref": "#/components/schemas/OwnerTimeSlot"
+      required:
+      - date
+      - day_of_week
+      - customized
+      - time_slots
     OwnerTimeSlotResponse:
       type: object
       properties:

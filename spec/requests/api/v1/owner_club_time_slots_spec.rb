@@ -26,6 +26,7 @@ RSpec.describe "Api::V1::OwnerClubTimeSlots", type: :request do
       tags "Owner clubs"
       produces "application/json"
       security [ { bearer_auth: [] } ]
+      parameter name: :date, in: :query, type: :string, required: false, description: "ISO date for effective slots"
 
       response(200, "lists time slots") do
         schema type: :object,
@@ -47,6 +48,25 @@ RSpec.describe "Api::V1::OwnerClubTimeSlots", type: :request do
 
         run_test! do |response|
           body = JSON.parse(response.body)
+          expect(body["time_slots"].length).to eq(1)
+        end
+      end
+
+      response(200, "lists effective slots for a date") do
+        schema "$ref" => "#/components/schemas/OwnerTimeSlotsForDateResponse"
+
+        let(:Authorization) { auth_headers_for(owner)["Authorization"] }
+        let(:club_id) { club.id }
+        let(:court_id) { court.id }
+        let(:date) { Date.current.next_occurring(:monday).iso8601 }
+
+        before do
+          create(:time_slot, court: court, day_of_week: 1, start_time: "09:00", end_time: "10:00")
+        end
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["customized"]).to be(false)
           expect(body["time_slots"].length).to eq(1)
         end
       end
@@ -190,6 +210,84 @@ RSpec.describe "Api::V1::OwnerClubTimeSlots", type: :request do
             status: :confirmed,
             walk_in: true,
           )
+        end
+
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/day_override" do
+    parameter name: :club_id, in: :path, type: :integer, description: "Club ID"
+    parameter name: :court_id, in: :path, type: :integer, description: "Court ID"
+
+    put "Replace time slots for a single date" do
+      tags "Owner clubs"
+      consumes "application/json"
+      produces "application/json"
+      security [ { bearer_auth: [] } ]
+
+      parameter name: :body, in: :body, schema: {
+        type: :object,
+        properties: {
+          date: { type: :string, format: :date },
+          slots: {
+            type: :array,
+            items: {
+              type: :object,
+              properties: {
+                start_time: { type: :string },
+                end_time: { type: :string },
+                is_available: { type: :boolean }
+              },
+              required: %w[start_time end_time]
+            }
+          }
+        },
+        required: %w[date slots]
+      }
+
+      response(200, "stores override for date") do
+        schema "$ref" => "#/components/schemas/OwnerTimeSlotsForDateResponse"
+
+        let(:Authorization) { auth_headers_for(owner)["Authorization"] }
+        let(:club_id) { club.id }
+        let(:court_id) { court.id }
+        let(:override_date) { Date.current.next_occurring(:monday) }
+        let(:body) do
+          {
+            date: override_date.iso8601,
+            slots: [
+              { start_time: "09:00", end_time: "10:30", is_available: true }
+            ]
+          }
+        end
+
+        run_test! do |response|
+          parsed = JSON.parse(response.body)
+          expect(parsed["customized"]).to be(true)
+          expect(parsed["time_slots"].length).to eq(1)
+        end
+      end
+    end
+
+    delete "Clear date override" do
+      tags "Owner clubs"
+      security [ { bearer_auth: [] } ]
+      parameter name: :date, in: :query, type: :string, required: true
+
+      response(204, "removes override") do
+        let(:Authorization) { auth_headers_for(owner)["Authorization"] }
+        let(:club_id) { club.id }
+        let(:court_id) { court.id }
+        let(:date) { Date.current.next_occurring(:monday).iso8601 }
+
+        before do
+          TimeSlots::DayOverrideReplace.new(
+            court: court,
+            date: Date.iso8601(date),
+            slots: [ { start_time: "09:00", end_time: "10:00", is_available: true } ],
+          ).call
         end
 
         run_test!

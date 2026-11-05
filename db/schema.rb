@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_190000) do
     t.string "phone", null: false
     t.datetime "updated_at", null: false
     t.index ["owner_id"], name: "index_clubs_on_owner_id"
+  end
+
+  create_table "court_day_overrides", force: :cascade do |t|
+    t.bigint "court_id", null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["court_id", "date"], name: "index_court_day_overrides_on_court_id_and_date", unique: true
+    t.index ["court_id"], name: "index_court_day_overrides_on_court_id"
   end
 
   create_table "courts", force: :cascade do |t|
@@ -335,11 +344,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_190000) do
     t.bigint "court_id", null: false
     t.datetime "created_at", null: false
     t.integer "day_of_week", null: false
+    t.date "effective_on"
     t.time "end_time", null: false
     t.boolean "is_available", default: true, null: false
     t.time "start_time", null: false
     t.datetime "updated_at", null: false
-    t.index ["court_id", "day_of_week", "start_time", "end_time"], name: "index_time_slots_unique_per_court", unique: true
+    t.index ["court_id", "day_of_week", "start_time", "end_time"], name: "index_time_slots_weekly_unique_per_court", unique: true, where: "(effective_on IS NULL)"
+    t.index ["court_id", "effective_on", "start_time", "end_time"], name: "index_time_slots_override_unique_per_court", unique: true, where: "(effective_on IS NOT NULL)"
     t.index ["court_id"], name: "index_time_slots_on_court_id"
   end
 
@@ -384,6 +395,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_190000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "clubs", "users", column: "owner_id"
+  add_foreign_key "court_day_overrides", "courts"
   add_foreign_key "courts", "clubs"
   add_foreign_key "match_players", "matches"
   add_foreign_key "match_players", "users"

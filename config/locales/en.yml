@@ -37,6 +37,9 @@ en:
       invalid_duration: "Duration must be a positive number of minutes"
       invalid_times: "Invalid time"
       open_before_close: "Opening time must be before closing time"
+    day_override:
+      future_bookings: "Cannot change this day while it has active bookings; cancel them first"
+      invalid_times: "Invalid start or end time"
   activerecord:
     errors:
       models:

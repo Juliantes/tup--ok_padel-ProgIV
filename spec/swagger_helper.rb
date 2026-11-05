@@ -165,11 +165,25 @@ RSpec.configure do |config|
               id: { type: :integer },
               court_id: { type: :integer },
               day_of_week: { type: :integer },
+              effective_on: { type: :string, format: :date, nullable: true },
               start_time: { type: :string, example: "10:00" },
               end_time: { type: :string, example: "11:30" },
               is_available: { type: :boolean }
             },
             required: %w[id court_id day_of_week start_time end_time is_available]
+          },
+          OwnerTimeSlotsForDateResponse: {
+            type: :object,
+            properties: {
+              date: { type: :string, format: :date },
+              day_of_week: { type: :integer },
+              customized: { type: :boolean },
+              time_slots: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/OwnerTimeSlot" }
+              }
+            },
+            required: %w[date day_of_week customized time_slots]
           },
           OwnerTimeSlotResponse: {
             type: :object,

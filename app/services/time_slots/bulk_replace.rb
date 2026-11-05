@@ -43,7 +43,7 @@ module TimeSlots
       return failure(base: [ I18n.t("time_slots.bulk_replace.no_slots_fit") ]) if intervals.empty?
 
       days = @day_of_weeks
-      slots_to_remove = @court.time_slots.where(day_of_week: days)
+      slots_to_remove = @court.time_slots.weekly_template.where(day_of_week: days)
 
       if future_bookings?(slots_to_remove)
         return failure(base: [ I18n.t("time_slots.bulk_replace.future_bookings") ])
@@ -56,6 +56,7 @@ module TimeSlots
           intervals.each do |start_time, end_time|
             @court.time_slots.create!(
               day_of_week: day_of_week,
+              effective_on: nil,
               start_time: start_time,
               end_time: end_time,
               is_available: true,
