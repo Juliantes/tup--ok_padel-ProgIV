@@ -760,6 +760,71 @@ paths:
               - day_of_week
               - start_time
               - end_time
+  "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/bulk":
+    parameters:
+    - name: club_id
+      in: path
+      description: Club ID
+      required: true
+      schema:
+        type: integer
+    - name: court_id
+      in: path
+      description: Court ID
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Bulk replace time slots
+      tags:
+      - Owner clubs
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: replaces slots and returns full court list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  time_slots:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/OwnerTimeSlot"
+                required:
+                - time_slots
+        '422':
+          description: blocked by future booking
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                open_time:
+                  type: string
+                  example: '08:00'
+                close_time:
+                  type: string
+                  example: '23:00'
+                duration_minutes:
+                  type: integer
+                  example: 90
+                day_of_weeks:
+                  type: array
+                  items:
+                    type: integer
+              required:
+              - open_time
+              - close_time
+              - duration_minutes
+              - day_of_weeks
   "/api/v1/clubs/{club_id}/courts/{court_id}/time_slots/{id}":
     parameters:
     - name: club_id

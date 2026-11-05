@@ -24,6 +24,21 @@ module Api
         end
       end
 
+      def bulk
+        result = TimeSlots::BulkReplace.new(court: @court, params: bulk_params).call
+
+        if result.success?
+          @time_slots = result.time_slots
+          render :index, status: :created
+        else
+          render json: {
+            error: "unprocessable_entity",
+            errors: result.errors,
+            request_id: request.request_id
+          }, status: :unprocessable_content
+        end
+      end
+
       def update
         if @time_slot.update(time_slot_attributes)
           render :show
@@ -59,6 +74,10 @@ module Api
         end
 
         attrs
+      end
+
+      def bulk_params
+        params.permit(:open_time, :close_time, :duration_minutes, day_of_weeks: [])
       end
     end
   end
