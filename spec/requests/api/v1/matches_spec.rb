@@ -532,6 +532,18 @@ RSpec.describe "Api::V1::Matches", type: :request do
           ids = body["matches"].map { |match| match["id"] }
           expect(ids).to include(open_match.id, full_match.id, confirmed_match.id)
           expect(ids).not_to include(create(:match, court: court, creator: other_player).id)
+
+          court_booking = create(
+            :match,
+            court: court,
+            creator: creator,
+            status: :confirmed,
+            player_booking: true,
+            walk_in: false,
+          )
+          get "/api/v1/me/matches", headers: auth_headers_for(creator), as: :json
+          refreshed_ids = JSON.parse(response.body)["matches"].map { |match| match["id"] }
+          expect(refreshed_ids).not_to include(court_booking.id)
         end
       end
 

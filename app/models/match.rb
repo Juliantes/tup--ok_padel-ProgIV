@@ -48,6 +48,7 @@ class Match < ApplicationRecord
         id: MatchResult.group(:match_id).having("MAX(created_at) < ?", cutoff).select(:match_id)
       )
   }
+  scope :player_bookings, -> { where(player_booking: true) }
 
   def active_match_players
     match_players.where.not(status: :cancelled)

@@ -88,6 +88,7 @@ module Api
 
         enrolled_ids = MatchPlayer.active.where(user_id: current_user.id).select(:match_id)
         scope = Match.where(creator_id: current_user.id).or(Match.where(id: enrolled_ids))
+        scope = scope.where(player_booking: false)
         scope = apply_status_filter(scope)
         scope = apply_court_filter(scope)
         scope = apply_date_filter(scope)
