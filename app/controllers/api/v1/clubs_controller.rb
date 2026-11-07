@@ -46,7 +46,7 @@ module Api
       private
 
       def club_attributes
-        params.permit(:name, :address, :phone, :email)
+        params.permit(:name, :address, :phone, :email, :card_theme)
       end
     end
   end

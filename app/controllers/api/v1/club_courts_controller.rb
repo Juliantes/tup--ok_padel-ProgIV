@@ -52,7 +52,7 @@ module Api
       end
 
       def court_attributes
-        params.permit(:name, :court_type, :price_per_hour, :description, :status)
+        params.permit(:name, :court_type, :price_per_hour, :description, :status, :color)
       end
     end
   end

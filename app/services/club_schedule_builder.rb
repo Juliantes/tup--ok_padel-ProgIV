@@ -3,13 +3,14 @@
 class ClubScheduleBuilder
   CellState = Data.define(:court_id, :start_time, :time_slot_id, :end_time, :state, :match_id, :walk_in)
 
-  def initialize(club:, date:)
+  def initialize(club:, date:, courts_scope: nil)
     @club = club
     @date = date.to_date
+    @courts_scope = courts_scope
   end
 
   def build
-    courts = @club.courts.order(:name).to_a
+    courts = (@courts_scope || @club.courts).order(:name).to_a
     court_ids = courts.map(&:id)
 
     slots = TimeSlots::ForDate.slots_for_courts(court_ids: court_ids, date: @date)

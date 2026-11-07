@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,13 +50,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
     t.bigint "owner_id", null: false
     t.string "phone", null: false
     t.datetime "updated_at", null: false
+    t.integer "card_theme", default: 0, null: false
     t.index ["owner_id"], name: "index_clubs_on_owner_id"
   end
 
   create_table "court_day_overrides", force: :cascade do |t|
     t.bigint "court_id", null: false
-    t.datetime "created_at", null: false
     t.date "date", null: false
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["court_id", "date"], name: "index_court_day_overrides_on_court_id_and_date", unique: true
     t.index ["court_id"], name: "index_court_day_overrides_on_court_id"
@@ -71,6 +72,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
     t.decimal "price_per_hour", precision: 10, scale: 2, null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.integer "color", default: 0, null: false
     t.index ["club_id", "name"], name: "index_courts_on_club_id_and_name", unique: true
     t.index ["club_id"], name: "index_courts_on_club_id"
     t.check_constraint "price_per_hour > 0::numeric AND price_per_hour <= 99999999.99", name: "courts_price_per_hour_range"
@@ -130,9 +132,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
     t.integer "status", default: 0, null: false
     t.bigint "time_slot_id"
     t.datetime "updated_at", null: false
-    t.boolean "walk_in", default: false, null: false
     t.string "walk_in_guest_name"
     t.string "walk_in_guest_phone"
+    t.boolean "walk_in", default: false, null: false
+    t.boolean "player_booking", default: false, null: false
     t.index ["court_id"], name: "index_matches_on_court_id"
     t.index ["creator_id"], name: "index_matches_on_creator_id"
     t.index ["date", "court_id"], name: "index_matches_on_date_and_court_id"
@@ -344,11 +347,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
     t.bigint "court_id", null: false
     t.datetime "created_at", null: false
     t.integer "day_of_week", null: false
-    t.date "effective_on"
     t.time "end_time", null: false
     t.boolean "is_available", default: true, null: false
     t.time "start_time", null: false
     t.datetime "updated_at", null: false
+    t.date "effective_on"
     t.index ["court_id", "day_of_week", "start_time", "end_time"], name: "index_time_slots_weekly_unique_per_court", unique: true, where: "(effective_on IS NULL)"
     t.index ["court_id", "effective_on", "start_time", "end_time"], name: "index_time_slots_override_unique_per_court", unique: true, where: "(effective_on IS NOT NULL)"
     t.index ["court_id"], name: "index_time_slots_on_court_id"
@@ -368,7 +371,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
     t.decimal "average_level", precision: 3, scale: 1, default: "0.0"
     t.decimal "average_stars", precision: 3, scale: 2, default: "0.0"
     t.text "bio"
-    t.integer "court_side"
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -383,6 +385,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_193000) do
     t.integer "self_level", null: false
     t.integer "total_reviews", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.integer "court_side"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["phone"], name: "index_users_on_phone", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true

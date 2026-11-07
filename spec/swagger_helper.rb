@@ -96,7 +96,8 @@ RSpec.configure do |config|
             properties: {
               id: { type: :integer },
               name: { type: :string },
-              address: { type: :string, nullable: true }
+              address: { type: :string, nullable: true },
+              card_theme: { type: :integer, minimum: 0, maximum: 4 }
             },
             required: %w[id name]
           },
@@ -107,9 +108,10 @@ RSpec.configure do |config|
               name: { type: :string },
               address: { type: :string },
               phone: { type: :string },
-              email: { type: :string, nullable: true }
+              email: { type: :string, nullable: true },
+              card_theme: { type: :integer, minimum: 0, maximum: 4 }
             },
-            required: %w[id name address phone]
+            required: %w[id name address phone card_theme]
           },
           OwnerClubsResponse: {
             type: :object,
@@ -134,9 +136,10 @@ RSpec.configure do |config|
               id: { type: :integer },
               name: { type: :string },
               price_per_hour: { type: :number },
-              status: { type: :string, enum: %w[active maintenance inactive] }
+              status: { type: :string, enum: %w[active maintenance inactive] },
+              color: { type: :integer, minimum: 0, maximum: 4 }
             },
-            required: %w[id name price_per_hour status]
+            required: %w[id name price_per_hour status color]
           },
           ClubScheduleRow: {
             type: :object,
@@ -233,6 +236,101 @@ RSpec.configure do |config|
             },
             required: %w[club date courts rows cells]
           },
+          PlayerAvailabilityCell: {
+            type: :object,
+            properties: {
+              court_id: { type: :integer },
+              start_time: { type: :string, example: "10:00" },
+              state: { type: :string, enum: %w[empty blocked booked available] },
+              time_slot_id: { type: :integer, nullable: true },
+              end_time: { type: :string, nullable: true, example: "11:30" }
+            },
+            required: %w[court_id start_time state]
+          },
+          PlayerAvailabilityResponse: {
+            type: :object,
+            properties: {
+              club: { "$ref" => "#/components/schemas/OwnerClub" },
+              date: { type: :string, format: :date },
+              courts: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/ClubScheduleCourt" }
+              },
+              rows: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/ClubScheduleRow" }
+              },
+              cells: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/PlayerAvailabilityCell" }
+              }
+            },
+            required: %w[club date courts rows cells]
+          },
+          CourtBookingItem: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              court_id: { type: :integer },
+              time_slot_id: { type: :integer, nullable: true },
+              date: { type: :string, format: :"date-time" },
+              duration: { type: :integer },
+              status: { type: :string },
+              player_booking: { type: :boolean },
+              estimated_price: { type: :number },
+              cancellable: { type: :boolean }
+            },
+            required: %w[id date duration status player_booking estimated_price cancellable]
+          },
+          CourtBookingResponse: {
+            type: :object,
+            properties: {
+              court_booking: { "$ref" => "#/components/schemas/CourtBookingItem" }
+            },
+            required: [ "court_booking" ]
+          },
+          CourtBookingListItem: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              date: { type: :string, format: :"date-time" },
+              duration: { type: :integer },
+              status: { type: :string },
+              estimated_price: { type: :number },
+              cancellable: { type: :boolean },
+              court: {
+                type: :object,
+                properties: {
+                  id: { type: :integer },
+                  name: { type: :string },
+                  price_per_hour: { type: :number }
+                },
+                required: %w[id name price_per_hour]
+              },
+              club: { "$ref" => "#/components/schemas/MatchClubSummary" },
+              time_slot: {
+                type: :object,
+                nullable: true,
+                properties: {
+                  id: { type: :integer },
+                  start_time: { type: :string },
+                  end_time: { type: :string }
+                },
+                required: %w[id start_time end_time]
+              }
+            },
+            required: %w[id date duration status estimated_price cancellable court club]
+          },
+          CourtBookingsIndexResponse: {
+            type: :object,
+            properties: {
+              court_bookings: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/CourtBookingListItem" }
+              }
+            },
+            required: [ "court_bookings" ]
+          },
           Court: {
             type: :object,
             properties: {
@@ -242,10 +340,11 @@ RSpec.configure do |config|
               court_type: { type: :string, enum: %w[indoor outdoor] },
               price_per_hour: { type: :number },
               status: { type: :string, enum: %w[active maintenance inactive] },
+              color: { type: :integer, minimum: 0, maximum: 4 },
               club: { "$ref" => "#/components/schemas/ClubSummary" },
               image_url: { type: :string, format: :uri, nullable: true }
             },
-            required: %w[id name court_type price_per_hour status club]
+            required: %w[id name court_type price_per_hour status color club]
           },
           CourtsResponse: {
             type: :object,
