@@ -6,7 +6,7 @@
   <div class="card-body">
     <dl class="row mb-0">
       <dt class="col-sm-3">Match</dt>
-      <dd class="col-sm-9"><%= @match.court.name %> — <%= @match.date.strftime("%d/%m/%Y %H:%M") %></dd>
+      <dd class="col-sm-9"><%= @match.court&.name || "Sin cancha" %> — <%= @match.date.strftime("%d/%m/%Y %H:%M") %></dd>
       <dt class="col-sm-3">Reporter</dt>
       <dd class="col-sm-9"><%= @match_result.reported_by.name %></dd>
       <% if @match_result.forced_by_admin? %>

@@ -492,7 +492,10 @@ RSpec.configure do |config|
                 enum: %w[auto manual auto_by_level],
                 example: "auto"
               },
-              court: { "$ref" => "#/components/schemas/MatchCourtSummary" },
+              court: {
+                allOf: [ { "$ref" => "#/components/schemas/MatchCourtSummary" } ],
+                nullable: true
+              },
               creator: { "$ref" => "#/components/schemas/MatchCreatorSummary" },
               match_players: {
                 type: :array,

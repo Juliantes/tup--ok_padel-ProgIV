@@ -445,6 +445,7 @@ paths:
               properties:
                 court_id:
                   type: integer
+                  nullable: true
                 time_slot_id:
                   type: integer
                   nullable: true
@@ -469,7 +470,6 @@ paths:
                   - manual
                   - auto_by_level
               required:
-              - court_id
               - date
               - duration
               - roster_mode
@@ -2185,7 +2185,9 @@ components:
           - auto_by_level
           example: auto
         court:
-          "$ref": "#/components/schemas/MatchCourtSummary"
+          allOf:
+          - "$ref": "#/components/schemas/MatchCourtSummary"
+          nullable: true
         creator:
           "$ref": "#/components/schemas/MatchCreatorSummary"
         match_players:

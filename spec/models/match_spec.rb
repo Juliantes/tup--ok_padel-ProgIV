@@ -5,13 +5,18 @@ RSpec.describe Match, type: :model do
   subject { build(:match) }
 
   describe "associations" do
-    it { is_expected.to belong_to(:court) }
+    it { is_expected.to belong_to(:court).optional }
     it { is_expected.to belong_to(:creator).class_name("User") }
     it { is_expected.to belong_to(:time_slot).optional }
     it { is_expected.to have_many(:match_results).dependent(:destroy) }
   end
 
   describe "validations" do
+    it "allows a match without a court when no time slot is set" do
+      match = build(:match, court: nil, time_slot: nil)
+      expect(match).to be_valid
+    end
+
     it { is_expected.to validate_presence_of(:date) }
     it { is_expected.to validate_presence_of(:duration) }
     it { is_expected.to validate_numericality_of(:duration).only_integer.is_greater_than(0) }

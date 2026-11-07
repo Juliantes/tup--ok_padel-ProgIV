@@ -52,7 +52,13 @@
       <tbody>
         <% @recent_matches.each do |match| %>
           <tr>
-            <td><%= link_to match.court.name, admin_match_path(match) %></td>
+            <td>
+              <% if match.court %>
+                <%= link_to match.court.name, admin_match_path(match) %>
+              <% else %>
+                Sin cancha
+              <% end %>
+            </td>
             <td><%= match.creator.name %></td>
             <td><%= match.date.strftime("%d/%m/%Y %H:%M") %></td>
             <td><span class="badge text-bg-secondary"><%= match.status %></span></td>

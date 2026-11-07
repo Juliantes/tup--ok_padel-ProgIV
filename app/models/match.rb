@@ -1,7 +1,7 @@
 class Match < ApplicationRecord
   include PlayerCategory
 
-  belongs_to :court
+  belongs_to :court, optional: true
   belongs_to :creator, class_name: "User"
   belongs_to :time_slot, optional: true
 
@@ -37,6 +37,7 @@ class Match < ApplicationRecord
               only_integer: true
             }
 
+  validate :court_required_with_time_slot
   validate :time_slot_belongs_to_court
   validate :date_matches_time_slot_day
   validate :roster_fits_pairs_mode, if: :will_save_change_to_roster_mode?
@@ -261,8 +262,16 @@ class Match < ApplicationRecord
     ENV.fetch("PLAYED_CUTOFF_HOURS", "24").to_i
   end
 
+  def court_required_with_time_slot
+    return if time_slot.blank?
+    return if court_id.present?
+
+    errors.add(:court, "must be present when a time slot is assigned")
+  end
+
   def time_slot_belongs_to_court
-    return if time_slot.blank? || time_slot.court_id == court_id
+    return if time_slot.blank? || court_id.blank?
+    return if time_slot.court_id == court_id
 
     errors.add(:time_slot, "must belong to the same court")
   end

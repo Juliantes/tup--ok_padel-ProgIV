@@ -120,7 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_210000) do
   create_table "matches", force: :cascade do |t|
     t.datetime "auto_approved_at"
     t.integer "best_of", default: 3, null: false
-    t.bigint "court_id", null: false
+    t.bigint "court_id"
     t.datetime "created_at", null: false
     t.bigint "creator_id", null: false
     t.datetime "date", null: false
