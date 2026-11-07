@@ -3,6 +3,7 @@ json.club do
   json.name @schedule[:club].name
   json.address @schedule[:club].address
   json.phone @schedule[:club].phone
+  json.card_theme @schedule[:club].card_theme
 end
 
 json.date @schedule[:date].iso8601
@@ -12,6 +13,7 @@ json.courts @schedule[:courts] do |court|
   json.name court.name
   json.price_per_hour court.price_per_hour.to_f
   json.status court.status
+  json.color court.color
 end
 
 json.rows @schedule[:rows] do |row|

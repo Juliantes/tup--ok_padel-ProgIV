@@ -37,9 +37,9 @@ club = Club.find_or_create_by!(name: "Ok Padel Club") do |record|
 end
 
 courts_data = [
-  { name: "Cancha 1", court_type: :indoor, price_per_hour: 8000, description: "Indoor · Césped sintético" },
-  { name: "Cancha 2", court_type: :outdoor, price_per_hour: 6000, description: "Outdoor · Cemento" },
-  { name: "Cancha 3", court_type: :indoor, price_per_hour: 8500, description: "Indoor · Césped sintético premium" }
+  { name: "Cancha 1", court_type: :indoor, price_per_hour: 8000, description: "Indoor · Césped sintético", color: 0 },
+  { name: "Cancha 2", court_type: :outdoor, price_per_hour: 6000, description: "Outdoor · Cemento", color: 1 },
+  { name: "Cancha 3", court_type: :indoor, price_per_hour: 8500, description: "Indoor · Césped sintético premium", color: 2 }
 ]
 
 courts = courts_data.map do |data|

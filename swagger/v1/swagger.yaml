@@ -692,7 +692,7 @@ paths:
               schema:
                 "$ref": "#/components/schemas/CourtResponse"
         '422':
-          description: returns 422 for invalid price
+          description: returns 422 for invalid color
           content:
             application/json:
               schema:
@@ -721,6 +721,10 @@ paths:
                   - active
                   - maintenance
                   - inactive
+                color:
+                  type: integer
+                  minimum: 0
+                  maximum: 4
               required:
               - name
               - court_type
@@ -790,6 +794,10 @@ paths:
                   - active
                   - maintenance
                   - inactive
+                color:
+                  type: integer
+                  minimum: 0
+                  maximum: 4
     delete:
       summary: Delete court for owned club
       tags:
@@ -1567,11 +1575,16 @@ components:
           - active
           - maintenance
           - inactive
+        color:
+          type: integer
+          minimum: 0
+          maximum: 4
       required:
       - id
       - name
       - price_per_hour
       - status
+      - color
     ClubScheduleRow:
       type: object
       properties:
@@ -1907,6 +1920,10 @@ components:
           - active
           - maintenance
           - inactive
+        color:
+          type: integer
+          minimum: 0
+          maximum: 4
         club:
           "$ref": "#/components/schemas/ClubSummary"
         image_url:
@@ -1919,6 +1936,7 @@ components:
       - court_type
       - price_per_hour
       - status
+      - color
       - club
     CourtsResponse:
       type: object

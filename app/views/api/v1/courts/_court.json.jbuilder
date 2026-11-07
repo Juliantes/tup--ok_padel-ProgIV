@@ -4,6 +4,7 @@ json.description court.description
 json.court_type court.court_type
 json.price_per_hour court.price_per_hour.to_f
 json.status court.status
+json.color court.color
 json.club do
   json.id court.club.id
   json.name court.club.name

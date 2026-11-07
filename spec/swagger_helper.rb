@@ -136,9 +136,10 @@ RSpec.configure do |config|
               id: { type: :integer },
               name: { type: :string },
               price_per_hour: { type: :number },
-              status: { type: :string, enum: %w[active maintenance inactive] }
+              status: { type: :string, enum: %w[active maintenance inactive] },
+              color: { type: :integer, minimum: 0, maximum: 4 }
             },
-            required: %w[id name price_per_hour status]
+            required: %w[id name price_per_hour status color]
           },
           ClubScheduleRow: {
             type: :object,
@@ -339,10 +340,11 @@ RSpec.configure do |config|
               court_type: { type: :string, enum: %w[indoor outdoor] },
               price_per_hour: { type: :number },
               status: { type: :string, enum: %w[active maintenance inactive] },
+              color: { type: :integer, minimum: 0, maximum: 4 },
               club: { "$ref" => "#/components/schemas/ClubSummary" },
               image_url: { type: :string, format: :uri, nullable: true }
             },
-            required: %w[id name court_type price_per_hour status club]
+            required: %w[id name court_type price_per_hour status color club]
           },
           CourtsResponse: {
             type: :object,

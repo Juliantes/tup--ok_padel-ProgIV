@@ -17,7 +17,8 @@ RSpec.describe "Api::V1::OwnerClubCourts", type: :request do
       court_type: "indoor",
       price_per_hour: 7500,
       description: "Césped",
-      status: "active"
+      status: "active",
+      color: 2
     }
   end
 
@@ -65,7 +66,8 @@ RSpec.describe "Api::V1::OwnerClubCourts", type: :request do
           court_type: { type: :string, enum: %w[indoor outdoor] },
           price_per_hour: { type: :number },
           description: { type: :string, nullable: true },
-          status: { type: :string, enum: %w[active maintenance inactive] }
+          status: { type: :string, enum: %w[active maintenance inactive] },
+          color: { type: :integer, minimum: 0, maximum: 4 }
         },
         required: %w[name court_type price_per_hour]
       }
@@ -77,7 +79,9 @@ RSpec.describe "Api::V1::OwnerClubCourts", type: :request do
         let(:club_id) { club.id }
         let(:body) { valid_court_body }
 
-        run_test!
+        run_test! do
+          expect(Court.order(:id).last.color).to eq(2)
+        end
       end
 
       response(422, "returns 422 for invalid price") do
@@ -86,6 +90,16 @@ RSpec.describe "Api::V1::OwnerClubCourts", type: :request do
         let(:Authorization) { auth_headers_for(owner)["Authorization"] }
         let(:club_id) { club.id }
         let(:body) { valid_court_body.merge(price_per_hour: 0) }
+
+        run_test!
+      end
+
+      response(422, "returns 422 for invalid color") do
+        schema "$ref" => "#/components/schemas/Error"
+
+        let(:Authorization) { auth_headers_for(owner)["Authorization"] }
+        let(:club_id) { club.id }
+        let(:body) { valid_court_body.merge(color: 9) }
 
         run_test!
       end
@@ -125,7 +139,8 @@ RSpec.describe "Api::V1::OwnerClubCourts", type: :request do
           court_type: { type: :string, enum: %w[indoor outdoor] },
           price_per_hour: { type: :number },
           description: { type: :string, nullable: true },
-          status: { type: :string, enum: %w[active maintenance inactive] }
+          status: { type: :string, enum: %w[active maintenance inactive] },
+          color: { type: :integer, minimum: 0, maximum: 4 }
         }
       }
 
@@ -135,10 +150,12 @@ RSpec.describe "Api::V1::OwnerClubCourts", type: :request do
         let(:Authorization) { auth_headers_for(owner)["Authorization"] }
         let(:club_id) { club.id }
         let(:id) { active_court.id }
-        let(:body) { { status: "maintenance" } }
+        let(:body) { { status: "maintenance", color: 3 } }
 
         run_test! do
-          expect(active_court.reload.status).to eq("maintenance")
+          active_court.reload
+          expect(active_court.status).to eq("maintenance")
+          expect(active_court.color).to eq(3)
         end
       end
     end

@@ -46,7 +46,7 @@ module Admin
     end
 
     def court_params
-      params.require(:court).permit(:club_id, :name, :court_type, :price_per_hour, :description, :status, :image)
+      params.require(:court).permit(:club_id, :name, :court_type, :price_per_hour, :description, :status, :color, :image)
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_021340) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_021340) do
     t.decimal "price_per_hour", precision: 10, scale: 2, null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.integer "color", default: 0, null: false
     t.index ["club_id", "name"], name: "index_courts_on_club_id_and_name", unique: true
     t.index ["club_id"], name: "index_courts_on_club_id"
     t.check_constraint "price_per_hour > 0::numeric AND price_per_hour <= 99999999.99", name: "courts_price_per_hour_range"

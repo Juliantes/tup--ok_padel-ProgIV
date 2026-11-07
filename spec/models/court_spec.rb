@@ -20,6 +20,7 @@ RSpec.describe Court, type: :model do
     }
     it { is_expected.to validate_length_of(:name).is_at_most(255) }
     it { is_expected.to validate_uniqueness_of(:name).scoped_to(:club_id) }
+    it { is_expected.to validate_inclusion_of(:color).in_array(Court::COLORS) }
 
     it "rejects zero price" do
       court = build(:court, price_per_hour: 0)

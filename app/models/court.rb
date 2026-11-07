@@ -2,6 +2,7 @@ class Court < ApplicationRecord
   include ImageAttachable
 
   MAX_PRICE_PER_HOUR = BigDecimal("99999999.99")
+  COLORS = [ 0, 1, 2, 3, 4 ].freeze
 
   belongs_to :club
 
@@ -15,6 +16,7 @@ class Court < ApplicationRecord
   enum :status, { active: 0, maintenance: 1, inactive: 2 }, validate: true
 
   validates :name, :price_per_hour, presence: true
+  validates :color, inclusion: { in: COLORS }
   validates :name, uniqueness: { scope: :club_id }, length: { maximum: 255 }
   validates :price_per_hour,
             numericality: {
