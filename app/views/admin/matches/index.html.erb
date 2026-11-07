@@ -25,7 +25,7 @@
       <tbody>
         <% @matches.each do |match| %>
           <tr>
-            <td><%= match.court.name %></td>
+            <td><%= match.court&.name || "Sin cancha" %></td>
             <td><%= match.creator.name %></td>
             <td><%= match.date.strftime("%d/%m/%Y %H:%M") %></td>
             <td><%= match.duration %> min</td>

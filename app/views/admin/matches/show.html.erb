@@ -9,7 +9,7 @@
   <div class="card-body">
     <dl class="row mb-0">
       <dt class="col-sm-3">Court</dt>
-      <dd class="col-sm-9"><%= @match.court.name %></dd>
+      <dd class="col-sm-9"><%= @match.court&.name || "Sin cancha" %></dd>
       <dt class="col-sm-3">Creator</dt>
       <dd class="col-sm-9"><%= @match.creator.name %></dd>
       <dt class="col-sm-3">Date</dt>

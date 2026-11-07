@@ -162,7 +162,7 @@ RSpec.describe "Api::V1::Matches", type: :request do
       parameter name: :body, in: :body, schema: {
         type: :object,
         properties: {
-          court_id: { type: :integer },
+          court_id: { type: :integer, nullable: true },
           time_slot_id: { type: :integer, nullable: true },
           date: { type: :string, format: "date-time" },
           duration: { type: :integer },
@@ -171,8 +171,52 @@ RSpec.describe "Api::V1::Matches", type: :request do
           auto_join: { type: :boolean },
           join_policy: { type: :string, enum: %w[auto manual auto_by_level] }
         },
-        required: %w[court_id date duration roster_mode level_required]
+        required: %w[date duration roster_mode level_required]
       }
+
+      response(201, "creates a match without a court") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
+
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+        let(:body) do
+          valid_create_body.except(:court_id)
+        end
+
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["match"]["court"]).to be_nil
+        end
+      end
+
+      response(201, "creates a match with court and time slot") do
+        schema "$ref" => "#/components/schemas/MatchResponse"
+
+        let(:Authorization) { auth_headers_for(creator)["Authorization"] }
+        let(:match_date) { 1.week.from_now.in_time_zone.change(hour: 10, min: 0, sec: 0) }
+        let!(:slot) do
+          create(
+            :time_slot,
+            court: court,
+            day_of_week: match_date.wday,
+            start_time: Time.zone.parse("10:00"),
+            end_time: Time.zone.parse("11:30"),
+            is_available: true
+          )
+        end
+        let(:body) do
+          valid_create_body.merge(
+            time_slot_id: slot.id,
+            date: match_date.iso8601,
+            duration: 90
+          )
+        end
+
+        run_test! do |response|
+          body_json = JSON.parse(response.body)
+          expect(body_json["match"]["court"]["id"]).to eq(court.id)
+          expect(body_json["match"]["time_slot"]["id"]).to eq(slot.id)
+        end
+      end
 
       response(201, "creates a match and enrolls the creator by default") do
         schema "$ref" => "#/components/schemas/MatchResponse"
