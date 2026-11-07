@@ -27,4 +27,7 @@ json.cells @schedule[:cells] do |cell|
   json.state cell.state
   json.time_slot_id cell.time_slot_id
   json.end_time cell.end_time
+  if cell.state == "booked" && cell.match_id.present? && !cell.player_booking && !cell.walk_in
+    json.match_id cell.match_id
+  end
 end

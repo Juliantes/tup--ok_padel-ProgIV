@@ -243,7 +243,8 @@ RSpec.configure do |config|
               start_time: { type: :string, example: "10:00" },
               state: { type: :string, enum: %w[empty blocked booked available] },
               time_slot_id: { type: :integer, nullable: true },
-              end_time: { type: :string, nullable: true, example: "11:30" }
+              end_time: { type: :string, nullable: true, example: "11:30" },
+              match_id: { type: :integer, nullable: true }
             },
             required: %w[court_id start_time state]
           },

@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ClubScheduleBuilder
-  CellState = Data.define(:court_id, :start_time, :time_slot_id, :end_time, :state, :match_id, :walk_in)
+  CellState = Data.define(:court_id, :start_time, :time_slot_id, :end_time, :state, :match_id, :walk_in,
+                          :player_booking)
 
   def initialize(club:, date:, courts_scope: nil)
     @club = club
@@ -53,24 +54,27 @@ class ClubScheduleBuilder
 
     if slot.nil?
       return CellState.new(court_id: court.id, start_time: start_time, time_slot_id: nil,
-                           end_time: nil, state: "empty", match_id: nil, walk_in: false)
+                           end_time: nil, state: "empty", match_id: nil, walk_in: false,
+                           player_booking: false)
     end
 
     end_time = format_time(slot.end_time)
     unless court.active? && slot.is_available
       return CellState.new(court_id: court.id, start_time: start_time, time_slot_id: slot.id,
-                           end_time: end_time, state: "blocked", match_id: nil, walk_in: false)
+                           end_time: end_time, state: "blocked", match_id: nil, walk_in: false,
+                           player_booking: false)
     end
 
     booked = booked_matches[slot.id]
     if booked
       return CellState.new(court_id: court.id, start_time: start_time, time_slot_id: slot.id,
                            end_time: end_time, state: "booked", match_id: booked.id,
-                           walk_in: booked.walk_in?)
+                           walk_in: booked.walk_in?, player_booking: booked.player_booking?)
     end
 
     CellState.new(court_id: court.id, start_time: start_time, time_slot_id: slot.id,
-                  end_time: end_time, state: "available", match_id: nil, walk_in: false)
+                  end_time: end_time, state: "available", match_id: nil, walk_in: false,
+                  player_booking: false)
   end
 
   def format_time(value)

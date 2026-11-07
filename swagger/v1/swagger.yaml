@@ -27,7 +27,7 @@ paths:
       - bearer_auth: []
       responses:
         '200':
-          description: returns availability without inactive courts
+          description: returns match_id only for booked matches that are not court-only
           content:
             application/json:
               schema:
@@ -1766,6 +1766,9 @@ components:
           type: string
           nullable: true
           example: '11:30'
+        match_id:
+          type: integer
+          nullable: true
       required:
       - court_id
       - start_time

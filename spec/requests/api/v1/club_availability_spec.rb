@@ -47,6 +47,65 @@ RSpec.describe "Api::V1::ClubAvailability", type: :request do
         end
       end
 
+      response(200, "returns match_id only for booked matches that are not court-only") do
+        schema "$ref" => "#/components/schemas/PlayerAvailabilityResponse"
+
+        let(:Authorization) { auth_headers_for(player)["Authorization"] }
+        let(:id) { club.id }
+
+        let!(:court_b) { create(:court, club: club, name: "B", status: :active) }
+        let!(:slot_b) do
+          create(
+            :time_slot,
+            court: court_b,
+            day_of_week: schedule_date.wday,
+            start_time: Time.zone.parse("10:00"),
+            end_time: Time.zone.parse("11:30"),
+          )
+        end
+
+        let!(:court_only_booking) do
+          create(
+            :match,
+            court: active_court,
+            creator: player,
+            time_slot: slot,
+            date: schedule_date.in_time_zone.change(hour: 10),
+            status: :confirmed,
+            player_booking: true,
+            walk_in: false,
+          )
+        end
+
+        let!(:scheduled_match) do
+          create(
+            :match,
+            court: court_b,
+            creator: player,
+            time_slot: slot_b,
+            date: schedule_date.in_time_zone.change(hour: 10),
+            status: :open,
+            player_booking: false,
+            walk_in: false,
+          )
+        end
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          court_only = body["cells"].find do |cell|
+            cell["court_id"] == active_court.id && cell["start_time"] == "10:00"
+          end
+          expect(court_only["state"]).to eq("booked")
+          expect(court_only).not_to have_key("match_id")
+
+          with_match = body["cells"].find do |cell|
+            cell["court_id"] == court_b.id && cell["start_time"] == "10:00"
+          end
+          expect(with_match["state"]).to eq("booked")
+          expect(with_match["match_id"]).to eq(scheduled_match.id)
+        end
+      end
+
       response(403, "returns 403 without player role") do
         schema "$ref" => "#/components/schemas/Error"
 
