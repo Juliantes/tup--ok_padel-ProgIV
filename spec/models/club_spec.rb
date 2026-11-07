@@ -18,5 +18,6 @@ RSpec.describe Club, type: :model do
     it { is_expected.to validate_length_of(:email).is_at_most(255) }
     it { is_expected.to allow_value("1144556677").for(:phone) }
     it { is_expected.not_to allow_value("abc").for(:phone) }
+    it { is_expected.to validate_inclusion_of(:card_theme).in_array(Club::CARD_THEMES) }
   end
 end

@@ -68,7 +68,8 @@ RSpec.describe "Api::V1::OwnerClubs", type: :request do
           name: { type: :string },
           address: { type: :string },
           phone: { type: :string },
-          email: { type: :string, nullable: true }
+          email: { type: :string, nullable: true },
+          card_theme: { type: :integer, minimum: 0, maximum: 4 }
         },
         required: %w[name address phone]
       }
@@ -137,7 +138,8 @@ RSpec.describe "Api::V1::OwnerClubs", type: :request do
           name: { type: :string },
           address: { type: :string },
           phone: { type: :string },
-          email: { type: :string, nullable: true }
+          email: { type: :string, nullable: true },
+          card_theme: { type: :integer, minimum: 0, maximum: 4 }
         }
       }
 
@@ -184,6 +186,16 @@ RSpec.describe "Api::V1::OwnerClubs", type: :request do
       expect(response).to have_http_status(:created)
       club_id = JSON.parse(response.body).fetch("club").fetch("id")
       expect(Club.find(club_id).owner_id).to eq(owner.id)
+    end
+
+    it "returns 422 when card_theme is out of range" do
+      patch "/api/v1/clubs/#{owned_club_a.id}",
+            params: { card_theme: 9 },
+            headers: auth_headers_for(owner),
+            as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(owned_club_a.reload.card_theme).to eq(0)
     end
 
     it "returns 404 when another owner tries to update a foreign club" do

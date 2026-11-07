@@ -8,6 +8,7 @@ json.club do
   json.id court.club.id
   json.name court.club.name
   json.address court.club.address
+  json.card_theme court.club.card_theme
 end
 if court.image.attached?
   json.image_url rails_blob_url(court.image)

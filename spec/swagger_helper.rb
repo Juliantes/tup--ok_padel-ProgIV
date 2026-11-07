@@ -96,7 +96,8 @@ RSpec.configure do |config|
             properties: {
               id: { type: :integer },
               name: { type: :string },
-              address: { type: :string, nullable: true }
+              address: { type: :string, nullable: true },
+              card_theme: { type: :integer, minimum: 0, maximum: 4 }
             },
             required: %w[id name]
           },
@@ -107,9 +108,10 @@ RSpec.configure do |config|
               name: { type: :string },
               address: { type: :string },
               phone: { type: :string },
-              email: { type: :string, nullable: true }
+              email: { type: :string, nullable: true },
+              card_theme: { type: :integer, minimum: 0, maximum: 4 }
             },
-            required: %w[id name address phone]
+            required: %w[id name address phone card_theme]
           },
           OwnerClubsResponse: {
             type: :object,

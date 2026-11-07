@@ -1133,6 +1133,10 @@ paths:
                 email:
                   type: string
                   nullable: true
+                card_theme:
+                  type: integer
+                  minimum: 0
+                  maximum: 4
               required:
               - name
               - address
@@ -1193,6 +1197,10 @@ paths:
                 email:
                   type: string
                   nullable: true
+                card_theme:
+                  type: integer
+                  minimum: 0
+                  maximum: 4
     delete:
       summary: Delete owned club
       tags:
@@ -1497,6 +1505,10 @@ components:
         address:
           type: string
           nullable: true
+        card_theme:
+          type: integer
+          minimum: 0
+          maximum: 4
       required:
       - id
       - name
@@ -1514,11 +1526,16 @@ components:
         email:
           type: string
           nullable: true
+        card_theme:
+          type: integer
+          minimum: 0
+          maximum: 4
       required:
       - id
       - name
       - address
       - phone
+      - card_theme
     OwnerClubsResponse:
       type: object
       properties:

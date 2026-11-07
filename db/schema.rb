@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_05_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_021340) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_210000) do
     t.bigint "owner_id", null: false
     t.string "phone", null: false
     t.datetime "updated_at", null: false
+    t.integer "card_theme", default: 0, null: false
     t.index ["owner_id"], name: "index_clubs_on_owner_id"
   end
 
