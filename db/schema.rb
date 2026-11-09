@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_160200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_210000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "addresses", force: :cascade do |t|
+    t.string "street", limit: 255
+    t.string "housenumber", limit: 64
+    t.string "city", limit: 255
+    t.string "province", limit: 255
+    t.string "postcode", limit: 32
+    t.string "country", limit: 255
+    t.text "formatted", null: false
+    t.decimal "lat", precision: 10, scale: 7
+    t.decimal "lng", precision: 11, scale: 7
+    t.string "place_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["city"], name: "index_addresses_on_city_prefix", opclass: :varchar_pattern_ops
+    t.index ["formatted"], name: "index_addresses_on_formatted_prefix", opclass: :text_pattern_ops
+    t.index ["place_id"], name: "index_addresses_on_place_id", unique: true
+    t.index ["street"], name: "index_addresses_on_street_prefix", opclass: :varchar_pattern_ops
+  end
+
   create_table "clubs", force: :cascade do |t|
     t.string "address", null: false
     t.datetime "created_at", null: false
@@ -51,7 +70,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_210000) do
     t.string "phone", null: false
     t.datetime "updated_at", null: false
     t.integer "card_theme", default: 0, null: false
+    t.string "country", limit: 255
+    t.string "province", limit: 255
+    t.string "city", limit: 255
+    t.decimal "lat", precision: 10, scale: 7
+    t.decimal "lng", precision: 11, scale: 7
+    t.string "place_id", limit: 255
     t.index ["owner_id"], name: "index_clubs_on_owner_id"
+    t.index ["place_id"], name: "index_clubs_on_place_id"
   end
 
   create_table "court_day_overrides", force: :cascade do |t|

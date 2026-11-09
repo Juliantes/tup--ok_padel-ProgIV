@@ -9,6 +9,9 @@ json.club do
   json.id court.club.id
   json.name court.club.name
   json.address court.club.address
+  json.country court.club.country
+  json.province court.club.province
+  json.city court.club.city
   json.card_theme court.club.card_theme
 end
 if court.image.attached?

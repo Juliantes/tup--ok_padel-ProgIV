@@ -1,6 +1,12 @@
 json.id club.id
 json.name club.name
 json.address club.address
+json.country club.country
+json.province club.province
+json.city club.city
+json.lat club.lat&.to_f
+json.lng club.lng&.to_f
+json.place_id club.place_id
 json.phone club.phone
 json.email club.email
 json.card_theme club.card_theme

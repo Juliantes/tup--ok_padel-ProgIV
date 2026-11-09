@@ -2,6 +2,9 @@ json.club do
   json.id @schedule[:club].id
   json.name @schedule[:club].name
   json.address @schedule[:club].address
+  json.country @schedule[:club].country
+  json.province @schedule[:club].province
+  json.city @schedule[:club].city
   json.phone @schedule[:club].phone
   json.card_theme @schedule[:club].card_theme
 end

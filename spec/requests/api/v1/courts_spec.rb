@@ -42,6 +42,19 @@ RSpec.describe "Api::V1::Courts", type: :request do
       get "/api/v1/courts", headers: { "If-None-Match" => etag }, as: :json
       expect(response).to have_http_status(:not_modified)
     end
+
+    it "invalidates etag when club address changes" do
+      get "/api/v1/courts", as: :json
+      etag_before = response.headers["ETag"]
+
+      active_court.club.update!(address: "Direccion renovada 456")
+
+      get "/api/v1/courts", as: :json
+      etag_after = response.headers["ETag"]
+
+      expect(etag_after).to be_present
+      expect(etag_after).not_to eq(etag_before)
+    end
   end
 
   path "/api/v1/courts/{id}" do

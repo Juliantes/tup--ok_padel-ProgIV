@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ejemplo autocompletado híbrido (API propia)</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 32rem;
+        margin: 2rem auto;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        border: 1px solid #ccc;
+      }
+      li button {
+        width: 100%;
+        text-align: left;
+        padding: 0.5rem 0.75rem;
+        border: none;
+        background: #fff;
+        cursor: pointer;
+      }
+      li button:hover {
+        background: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Dirección (autocomplete híbrido)</h1>
+    <p>
+      Debounce 300&nbsp;ms, máximo 5 sugerencias. El navegador llama al backend; Geoapify queda en el
+      servidor con filtro <code>countrycode:ar</code>.
+    </p>
+
+    <label for="address-input">Buscar dirección</label>
+    <input id="address-input" type="search" autocomplete="off" />
+
+    <ul id="suggestions" hidden></ul>
+
+    <pre id="selection"></pre>
+
+    <script>
+      const API_BASE = 'http://localhost:3000/api/v1';
+      const DEBOUNCE_MS = 300;
+      const MIN_CHARS = 3;
+
+      const input = document.getElementById('address-input');
+      const list = document.getElementById('suggestions');
+      const selection = document.getElementById('selection');
+      let debounceTimer = null;
+      let authToken = ''; // JWT del usuario club_owner
+
+      input.addEventListener('input', () => {
+        const query = input.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (query.length < MIN_CHARS) {
+          list.hidden = true;
+          list.replaceChildren();
+          return;
+        }
+
+        debounceTimer = setTimeout(() => void searchAddresses(query), DEBOUNCE_MS);
+      });
+
+      async function searchAddresses(query) {
+        const url = new URL(`${API_BASE}/addresses/autocomplete`);
+        url.searchParams.set('q', query);
+
+        const response = await fetch(url, {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        });
+
+        if (!response.ok) {
+          list.hidden = true;
+          return;
+        }
+
+        const body = await response.json();
+        const addresses = body.addresses ?? [];
+
+        list.replaceChildren();
+        for (const item of addresses.slice(0, 5)) {
+          const li = document.createElement('li');
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = item.formatted ?? item.address;
+          button.addEventListener('click', () => onSelect(item));
+          li.appendChild(button);
+          list.appendChild(li);
+        }
+        list.hidden = addresses.length === 0;
+      }
+
+      function onSelect(item) {
+        const payload = {
+          address: item.formatted ?? item.address,
+          lat: item.lat,
+          lng: item.lng,
+          place_id: item.place_id,
+        };
+
+        selection.textContent = JSON.stringify(payload, null, 2);
+        input.value = payload.address;
+        list.hidden = true;
+
+        // En la app real: PATCH /api/v1/clubs/:id con address, country, province, city, lat, lng, place_id
+        console.log('Enviar al backend:', payload);
+      }
+    </script>
+  </body>
+</html>
