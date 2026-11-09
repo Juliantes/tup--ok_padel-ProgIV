@@ -12,6 +12,8 @@ json.club do
   json.country court.club.country
   json.province court.club.province
   json.city court.club.city
+  json.lat court.club.lat&.to_f
+  json.lng court.club.lng&.to_f
   json.card_theme court.club.card_theme
 end
 if court.image.attached?

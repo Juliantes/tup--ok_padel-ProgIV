@@ -5,6 +5,8 @@ json.club do
   json.country @schedule[:club].country
   json.province @schedule[:club].province
   json.city @schedule[:club].city
+  json.lat @schedule[:club].lat&.to_f
+  json.lng @schedule[:club].lng&.to_f
   json.phone @schedule[:club].phone
   json.card_theme @schedule[:club].card_theme
 end

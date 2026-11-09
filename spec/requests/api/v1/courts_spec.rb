@@ -23,6 +23,24 @@ RSpec.describe "Api::V1::Courts", type: :request do
     end
   end
 
+  describe "GET /api/v1/courts geocoded club" do
+    it "includes lat and lng on nested club when geocoded" do
+      active_court.club.update!(
+        lat: -32.94682,
+        lng: -60.63932,
+        place_id: "geoapify-test-place",
+      )
+
+      get "/api/v1/courts", as: :json
+      expect(response).to have_http_status(:ok)
+
+      body = JSON.parse(response.body)
+      court = body["courts"].find { |row| row["id"] == active_court.id }
+      expect(court["club"]["lat"]).to be_within(0.0001).of(-32.94682)
+      expect(court["club"]["lng"]).to be_within(0.0001).of(-60.63932)
+    end
+  end
+
   describe "GET /api/v1/courts ETag" do
     around do |example|
       previous_base = ActionController::Base.perform_caching

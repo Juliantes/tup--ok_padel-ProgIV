@@ -100,6 +100,8 @@ RSpec.configure do |config|
               country: { type: :string, nullable: true },
               province: { type: :string, nullable: true },
               city: { type: :string, nullable: true },
+              lat: { type: :number, nullable: true },
+              lng: { type: :number, nullable: true },
               card_theme: { type: :integer, minimum: 0, maximum: 4 }
             },
             required: %w[id name]
@@ -408,7 +410,9 @@ RSpec.configure do |config|
               address: { type: :string },
               country: { type: :string, nullable: true },
               province: { type: :string, nullable: true },
-              city: { type: :string, nullable: true }
+              city: { type: :string, nullable: true },
+              lat: { type: :number, nullable: true },
+              lng: { type: :number, nullable: true }
             },
             required: %w[id name address]
           },

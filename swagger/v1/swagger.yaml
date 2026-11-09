@@ -1550,6 +1550,12 @@ components:
         city:
           type: string
           nullable: true
+        lat:
+          type: number
+          nullable: true
+        lng:
+          type: number
+          nullable: true
         card_theme:
           type: integer
           minimum: 0
@@ -2075,6 +2081,12 @@ components:
           nullable: true
         city:
           type: string
+          nullable: true
+        lat:
+          type: number
+          nullable: true
+        lng:
+          type: number
           nullable: true
       required:
       - id

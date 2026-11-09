@@ -20,6 +20,8 @@ if match.court
       json.country match.court.club.country
       json.province match.court.club.province
       json.city match.court.club.city
+      json.lat match.court.club.lat&.to_f
+      json.lng match.court.club.lng&.to_f
     end
   end
 else

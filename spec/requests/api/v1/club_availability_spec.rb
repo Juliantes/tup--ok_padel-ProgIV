@@ -47,6 +47,23 @@ RSpec.describe "Api::V1::ClubAvailability", type: :request do
         end
       end
 
+      response(200, "includes club lat and lng when geocoded") do
+        schema "$ref" => "#/components/schemas/PlayerAvailabilityResponse"
+
+        let(:Authorization) { auth_headers_for(player)["Authorization"] }
+        let(:id) { club.id }
+
+        before do
+          club.update!(lat: -32.94682, lng: -60.63932, place_id: "geoapify-test-place")
+        end
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body["club"]["lat"]).to be_within(0.0001).of(-32.94682)
+          expect(body["club"]["lng"]).to be_within(0.0001).of(-60.63932)
+        end
+      end
+
       response(200, "returns match_id only for booked matches that are not court-only") do
         schema "$ref" => "#/components/schemas/PlayerAvailabilityResponse"
 
