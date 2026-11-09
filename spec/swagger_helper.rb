@@ -97,6 +97,9 @@ RSpec.configure do |config|
               id: { type: :integer },
               name: { type: :string },
               address: { type: :string, nullable: true },
+              country: { type: :string, nullable: true },
+              province: { type: :string, nullable: true },
+              city: { type: :string, nullable: true },
               card_theme: { type: :integer, minimum: 0, maximum: 4 }
             },
             required: %w[id name]
@@ -107,11 +110,44 @@ RSpec.configure do |config|
               id: { type: :integer },
               name: { type: :string },
               address: { type: :string },
+              country: { type: :string, nullable: true },
+              province: { type: :string, nullable: true },
+              city: { type: :string, nullable: true },
+              lat: { type: :number, nullable: true },
+              lng: { type: :number, nullable: true },
+              place_id: { type: :string, nullable: true },
               phone: { type: :string },
               email: { type: :string, nullable: true },
               card_theme: { type: :integer, minimum: 0, maximum: 4 }
             },
             required: %w[id name address phone card_theme]
+          },
+          AddressSuggestion: {
+            type: :object,
+            properties: {
+              street: { type: :string, nullable: true },
+              housenumber: { type: :string, nullable: true },
+              city: { type: :string, nullable: true },
+              province: { type: :string, nullable: true },
+              postcode: { type: :string, nullable: true },
+              country: { type: :string, nullable: true },
+              formatted: { type: :string },
+              address: { type: :string },
+              lat: { type: :number },
+              lng: { type: :number },
+              place_id: { type: :string }
+            },
+            required: %w[formatted address lat lng place_id]
+          },
+          AddressAutocompleteResponse: {
+            type: :object,
+            properties: {
+              addresses: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/AddressSuggestion" }
+              }
+            },
+            required: [ "addresses" ]
           },
           OwnerClubsResponse: {
             type: :object,
@@ -369,7 +405,10 @@ RSpec.configure do |config|
             properties: {
               id: { type: :integer },
               name: { type: :string },
-              address: { type: :string }
+              address: { type: :string },
+              country: { type: :string, nullable: true },
+              province: { type: :string, nullable: true },
+              city: { type: :string, nullable: true }
             },
             required: %w[id name address]
           },

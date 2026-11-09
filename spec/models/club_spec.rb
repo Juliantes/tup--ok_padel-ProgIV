@@ -19,5 +19,22 @@ RSpec.describe Club, type: :model do
     it { is_expected.to allow_value("1144556677").for(:phone) }
     it { is_expected.not_to allow_value("abc").for(:phone) }
     it { is_expected.to validate_inclusion_of(:card_theme).in_array(Club::CARD_THEMES) }
+    it { is_expected.to validate_length_of(:country).is_at_most(255) }
+    it { is_expected.to validate_length_of(:province).is_at_most(255) }
+    it { is_expected.to validate_length_of(:city).is_at_most(255) }
+
+    it "requires country, province, and city together" do
+      club = build(:club, country: "Argentina", province: nil, city: "Rosario")
+
+      expect(club).not_to be_valid
+      expect(club.errors[:base]).to include("country, province, and city must all be present or all blank")
+    end
+
+    it "requires lat, lng, and place_id together" do
+      club = build(:club, lat: BigDecimal("-34.6"), lng: nil, place_id: "place-1")
+
+      expect(club).not_to be_valid
+      expect(club.errors[:base]).to include("lat, lng, and place_id must all be present or all blank")
+    end
   end
 end

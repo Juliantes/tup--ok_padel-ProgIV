@@ -17,6 +17,9 @@ if match.court
       json.id match.court.club.id
       json.name match.court.club.name
       json.address match.court.club.address
+      json.country match.court.club.country
+      json.province match.court.club.province
+      json.city match.court.club.city
     end
   end
 else

@@ -14,6 +14,9 @@ json.court_bookings @court_bookings do |match|
     json.id match.court.club.id
     json.name match.court.club.name
     json.address match.court.club.address
+    json.country match.court.club.country
+    json.province match.court.club.province
+    json.city match.court.club.city
   end
   if match.time_slot
     json.time_slot do

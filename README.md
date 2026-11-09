@@ -134,6 +134,7 @@ Remoto configurado: `https://github.com/Juliantes/tup--ok_padel-ProgIV.git`. Si 
 | `PLAYED_CUTOFF_HOURS` | opcional | Máximo de horas antes del inicio para marcar `played` con `time_slot` (default: `24`) |
 | `CORS_ORIGINS` | opcional | Orígenes permitidos para CORS (CSV). Default en dev: `http://localhost:3001`, `http://localhost:5173`, `http://localhost:4200` (Angular). En producción: dominio(s) del front-end, p. ej. `https://okpadel.com,https://www.okpadel.com` |
 | `FIREBASE_PROJECT_ID` | dev / prod (Angular) | ID del proyecto Firebase Auth usado por el front (`okpadel` en local). Requerido para `POST /api/v1/oauth/google`. |
+| `GEOAPIFY_API_KEY` | dev / prod | API key de Geoapify para `GET /api/v1/addresses/autocomplete` cuando no hay coincidencias en caché local. Sin key, el autocomplete sigue sirviendo direcciones ya guardadas. |
 
 ## CORS y rate limiting
 

@@ -5,7 +5,7 @@ module Api
 
       def index
         @courts = Court.includes(:club).active.order(:name)
-        if stale?(etag: @courts, public: true)
+        if stale?(etag: courts_index_etag(@courts), public: true)
           render :index
         end
       end
@@ -13,6 +13,12 @@ module Api
       def show
         @court = Court.includes(:club).active.find(params[:id])
         render :show
+      end
+
+      private
+
+      def courts_index_etag(courts)
+        courts.map { |court| "#{court.cache_key_with_version}:#{court.club.cache_key_with_version}" }.join(",")
       end
     end
   end

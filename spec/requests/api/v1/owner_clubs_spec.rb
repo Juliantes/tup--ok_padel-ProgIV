@@ -137,6 +137,9 @@ RSpec.describe "Api::V1::OwnerClubs", type: :request do
         properties: {
           name: { type: :string },
           address: { type: :string },
+          country: { type: :string },
+          province: { type: :string },
+          city: { type: :string },
           phone: { type: :string },
           email: { type: :string, nullable: true },
           card_theme: { type: :integer, minimum: 0, maximum: 4 }
@@ -196,6 +199,55 @@ RSpec.describe "Api::V1::OwnerClubs", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(owned_club_a.reload.card_theme).to eq(0)
+    end
+
+    it "updates address with structured location fields" do
+      patch "/api/v1/clubs/#{owned_club_a.id}",
+            params: {
+              address: "Avenida Corrientes 1234, Buenos Aires, Argentina",
+              country: "Argentina",
+              province: "Ciudad Autónoma de Buenos Aires",
+              city: "Buenos Aires"
+            },
+            headers: auth_headers_for(owner),
+            as: :json
+
+      expect(response).to have_http_status(:ok)
+      owned_club_a.reload
+      expect(owned_club_a.country).to eq("Argentina")
+      expect(owned_club_a.province).to eq("Ciudad Autónoma de Buenos Aires")
+      expect(owned_club_a.city).to eq("Buenos Aires")
+    end
+
+    it "updates address with geocoding fields" do
+      patch "/api/v1/clubs/#{owned_club_a.id}",
+            params: {
+              address: "Avenida Corrientes 1234, Buenos Aires, Argentina",
+              country: "Argentina",
+              province: "Ciudad Autónoma de Buenos Aires",
+              city: "Buenos Aires",
+              lat: -34.6037,
+              lng: -58.3816,
+              place_id: "geoapify-test-place"
+            },
+            headers: auth_headers_for(owner),
+            as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)["club"]
+      expect(body["lat"]).to be_present
+      expect(body["lng"]).to be_present
+      expect(body["place_id"]).to eq("geoapify-test-place")
+    end
+
+    it "returns 422 when only some location fields are sent" do
+      patch "/api/v1/clubs/#{owned_club_a.id}",
+            params: { country: "Argentina", city: "Rosario" },
+            headers: auth_headers_for(owner),
+            as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(owned_club_a.reload.country).to be_nil
     end
 
     it "returns 404 when another owner tries to update a foreign club" do

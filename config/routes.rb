@@ -32,6 +32,8 @@ Rails.application.routes.draw do
 
       resources :courts, only: %i[index show]
 
+      get "addresses/autocomplete", to: "addresses#autocomplete"
+
       resources :clubs, only: %i[index show create update destroy] do
         member do
           get :schedule, controller: "club_schedules", action: :show

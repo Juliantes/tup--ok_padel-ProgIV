@@ -1,0 +1,11 @@
+json.street address.street
+json.housenumber address.housenumber
+json.city address.city
+json.province address.province
+json.postcode address.postcode
+json.country address.country
+json.formatted address.formatted
+json.address address.formatted
+json.lat address.lat&.to_f
+json.lng address.lng&.to_f
+json.place_id address.place_id
