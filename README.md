@@ -109,7 +109,7 @@ Levanta PostgreSQL, la API (imagen de producción del `Dockerfile`), el worker d
 
 ```bash
 cp .env.example .env
-# Editar .env y pegar RAILS_MASTER_KEY (contenido de config/master.key)
+# Editar .env: RAILS_MASTER_KEY (config/master.key) y FIREBASE_* (mismo bloque que environment.ts del front)
 docker compose up --build
 ```
 
@@ -125,7 +125,7 @@ docker compose exec web bin/rails db:seed
 | http://localhost:3000/up | Health check de la API |
 | http://localhost:3000/api-docs | Swagger |
 
-El front llama a la API en `http://localhost:3000` (CORS incluye `http://localhost:4200`). Para login con Google en el contenedor, configurá Firebase en el build del front (ver README del proyecto Angular). `RAILS_FORCE_SSL=false` solo aplica en Compose; Fly sigue forzando HTTPS.
+El front llama a la API en `http://localhost:3000` (CORS incluye `http://localhost:4200`). Las variables `FIREBASE_*` y `API_BASE_URL` del `.env` se pasan como build args al servicio `frontend`; sin ellas el login usa placeholders y Firebase falla. Tras cambiar Firebase en `.env`, reconstruí el front: `docker compose build frontend && docker compose up`. `RAILS_FORCE_SSL=false` solo aplica en Compose; Fly sigue forzando HTTPS.
 
 ### Publicar en GitHub (primera vez)
 
