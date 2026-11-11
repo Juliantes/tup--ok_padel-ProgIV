@@ -575,6 +575,94 @@ RSpec.configure do |config|
             },
             required: %w[current_page per_page total_pages total_count]
           },
+          PlayerReviewer: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              name: { type: :string }
+            },
+            required: %w[id name]
+          },
+          PlayerReview: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              stars: { type: :integer },
+              comment: { type: :string, nullable: true },
+              level_rating: { type: :integer },
+              level_category_label: { type: :string },
+              created_at: { type: :string, format: :"date-time" },
+              reviewer: { "$ref" => "#/components/schemas/PlayerReviewer" }
+            },
+            required: %w[id stars level_rating level_category_label created_at reviewer]
+          },
+          PlayerSummary: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              name: { type: :string },
+              self_level: { type: :integer },
+              category_label: { type: :string },
+              court_side: { type: :string, nullable: true, enum: %w[derecha reves] },
+              court_side_label: { type: :string, nullable: true },
+              bio: { type: :string, nullable: true },
+              wins: { type: :integer },
+              losses: { type: :integer },
+              played: { type: :integer },
+              win_rate: { type: :string, nullable: true },
+              current_streak: { type: :integer },
+              best_streak: { type: :integer },
+              average_stars: { type: :number, nullable: true },
+              reviews_count: { type: :integer }
+            },
+            required: %w[
+              id name self_level category_label wins losses played
+              current_streak best_streak reviews_count
+            ]
+          },
+          PlayersResponse: {
+            type: :object,
+            properties: {
+              players: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/PlayerSummary" }
+              },
+              meta: { "$ref" => "#/components/schemas/PaginationMeta" }
+            },
+            required: %w[players meta]
+          },
+          PlayerDetailResponse: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              name: { type: :string },
+              self_level: { type: :integer },
+              category_label: { type: :string },
+              court_side: { type: :string, nullable: true, enum: %w[derecha reves] },
+              court_side_label: { type: :string, nullable: true },
+              bio: { type: :string, nullable: true },
+              wins: { type: :integer },
+              losses: { type: :integer },
+              played: { type: :integer },
+              win_rate: { type: :string, nullable: true },
+              current_streak: { type: :integer },
+              best_streak: { type: :integer },
+              average_stars: { type: :number, nullable: true },
+              reviews_count: { type: :integer },
+              star_counts: {
+                type: :object,
+                additionalProperties: { type: :integer }
+              },
+              reviews: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/PlayerReview" }
+              }
+            },
+            required: %w[
+              id name self_level category_label wins losses played
+              current_streak best_streak reviews_count star_counts reviews
+            ]
+          },
           MatchesResponse: {
             type: :object,
             properties: {

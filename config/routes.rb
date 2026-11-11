@@ -53,6 +53,8 @@ Rails.application.routes.draw do
       post "court_bookings", to: "court_bookings#create"
       delete "court_bookings/:id", to: "court_bookings#destroy"
 
+      resources :players, only: %i[index show]
+
       resources :matches, only: %i[index show create] do
         member do
           post :join
