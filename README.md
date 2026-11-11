@@ -101,6 +101,32 @@ bin/jobs
 
 Sin el worker, los jobs quedan en cola hasta que ejecutes `bin/jobs` o uses `perform_now` / `deliver_now` en consola.
 
+## Docker (stack local)
+
+Levanta PostgreSQL, la API (imagen de producción del `Dockerfile`), el worker de Solid Queue y el front Angular (repositorio hermano `tup--padel-match-` al mismo nivel que este proyecto).
+
+**Requisitos:** Docker y Docker Compose v2. Ambos repos en la carpeta padre, p. ej. `2TP1_Prog_IV/ok_padel` y `2TP1_Prog_IV/tup--padel-match-`.
+
+```bash
+cp .env.example .env
+# Editar .env y pegar RAILS_MASTER_KEY (contenido de config/master.key)
+docker compose up --build
+```
+
+En otra terminal, datos demo (opcional):
+
+```bash
+docker compose exec web bin/rails db:seed
+```
+
+| URL | Uso |
+|-----|-----|
+| http://localhost:4200 | Angular (nginx) |
+| http://localhost:3000/up | Health check de la API |
+| http://localhost:3000/api-docs | Swagger |
+
+El front llama a la API en `http://localhost:3000` (CORS incluye `http://localhost:4200`). Para login con Google en el contenedor, configurá Firebase en el build del front (ver README del proyecto Angular). `RAILS_FORCE_SSL=false` solo aplica en Compose; Fly sigue forzando HTTPS.
+
 ### Publicar en GitHub (primera vez)
 
 Si el repositorio remoto aún no existe, desde la raíz del proyecto (con [GitHub CLI](https://cli.github.com/) autenticado):
